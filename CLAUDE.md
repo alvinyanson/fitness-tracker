@@ -34,7 +34,7 @@ conflict.
 
 ```bash
 pnpm start            # Metro (dev client, not Expo Go)
-pnpm android          # expo run:android — required for BLE
+pnpm android          # expo run:android — required for native modules
 pnpm test             # jest-expo
 ```
 
@@ -42,23 +42,55 @@ pnpm test             # jest-expo
 
 ## Layout
 
-Target structure under `src/` (placeholder — still being shaped, confirm before relying
-on it): `app/` (expo-router routes), `components/`, `contexts/`, `hooks/`,
-`interfaces/`, `services/`, `store/`, `tasks/`, `theme/`, `utils/`.
+```
+src/
+  app/             # expo-router file-based routes (the route root)
+  components/      # reusable UI components
+  hooks/           # React hooks — adapts services to React
+  interfaces/      # shared TypeScript types and interfaces
+  services/        # plain TypeScript — no React imports, portable and unit-testable
+  store/           # zustand stores
+  theme/           # design tokens (colors, typography, layout)
+  utils/           # pure utility functions
+```
 
-Keep the layering strict regardless of how the tree settles: `services/` is plain
-TypeScript with no React imports, so it stays portable and unit-testable. `hooks/` adapts
-services to React. `components/` never talks to a service directly.
+Path alias: `@/*` → `./src/*`. Modules under `src/` import each other via `@/…`.
+Relative imports are allowed only between co-located siblings inside one directory.
+
+Layering contract:
+
+```
+app/ ──▶ components/ ──▶ hooks/ ──▶ services/ ──▶ interfaces/
+  │              │                        │
+  └──────────────┴────────▶ theme/        └──▶ utils/
+```
+
+- `services/` imports no React and nothing from `app/`, `components/`, `hooks/`, `store/`,
+  or `theme/`. It is plain TypeScript, unit-testable without a renderer. Native-module
+  access inside a service adapter (e.g. `react-native-ble-plx`) is intentional — the rule
+  is no *React* imports, not no native imports.
+- `components/` never imports from `services/`; it goes through `hooks/`.
+- `interfaces/` and `theme/` import nothing from the app.
+- `interfaces/` (not `types/`) is the home for shared TypeScript types.
+
+Only directories with real files are created. `components/`, `hooks/`, `interfaces/`,
+`services/`, `store/`, `utils/` are agreed future homes — they will be created by the
+issues that first need them.
 
 ## UI & theming
 
 `docs/ui-reference/design.md` is the visual source of truth. Its frontmatter holds the
 authoritative "Kinetic Precision" tokens (Material-3-style color roles, the Hanken
 Grotesk / Inter / JetBrains Mono type scale, radii, 4px spacing baseline); the prose
-below explains how to apply them. Port the tokens into `src/theme/` and consume them from
-there — never hardcode a hex, font size, or radius in a component. The three fonts need
-loading via `expo-font`; until they are, fall back to the system face rather than
-substituting a different family into the tokens.
+below explains how to apply them. Tokens live in `src/theme/` — import from `@/theme`,
+never from individual token files. Never hardcode a hex, font size, or radius in a
+component.
+
+**Fonts are pending.** The three custom fonts (Hanken Grotesk, Inter, JetBrains Mono)
+need `expo-font` and their font files loaded in a separate issue. Until then, fall back
+to the system face rather than substituting a different family into the tokens. The
+`fontFamily` values exist as string constants in `src/theme/typography.ts` but must not
+be applied to `Text` styles until the fonts are loaded.
 
 The `.png` mockups alongside it are **reference ONLY** — intended look and feel, not a
 spec. Not pixel-perfect targets, no asset or measurement extraction, and don't build a
@@ -83,12 +115,12 @@ the RN module/transform resolution that plain Jest does not. Pair with
 **Do not add a deferred package until its milestone starts.**
 
 **Milestone 1** — `expo` 56 / `react-native` 0.85 / `react` 19 · `expo-router` (the
-History → Summary list→detail flow earns file routing) · `react-native-ble-plx` (already
-wired) · `zustand` (session state machine + settings) · `react-native-mmkv` ·
-`expo-keep-awake` (the live screen must not sleep mid-session) · `react-native-reanimated`,
-`-gesture-handler`, `-screens`, `-safe-area-context` (expo-router deps, also the animated
-BPM readout) · `jest-expo`, `@testing-library/react-native` · `oxlint`, `prettier`,
-`husky`, `lint-staged`.
+History → Summary list→detail flow earns file routing) · `react-native-ble-plx` (not yet
+installed — needs its own issue with permission review) · `zustand` (session state machine
++ settings) · `react-native-mmkv` · `expo-keep-awake` (the live screen must not sleep
+mid-session) · `react-native-reanimated`, `-gesture-handler`, `-screens`,
+`-safe-area-context` (expo-router deps, also the animated BPM readout) · `jest-expo`,
+`@testing-library/react-native` · `oxlint`, `prettier`, `husky`, `lint-staged`.
 
 **Milestone 2** — `react-native-health-connect` (Google Fit is deprecated, never use it) ·
 `expo-build-properties` (Health Connect needs an explicit `minSdkVersion` /
@@ -133,12 +165,13 @@ storage layer as the seam so that swap stays local.
 
 ## Native config
 
-`app.json` permissions must stay in sync with any new native module. Currently
+`app.json` permissions must stay in sync with any new native module. Currently no
+BLE-related permissions or plugins are configured — `react-native-ble-plx` and its
 `BLUETOOTH_SCAN`, `BLUETOOTH_CONNECT`, `BLUETOOTH`, `BLUETOOTH_ADMIN`,
-`ACCESS_FINE_LOCATION`, plus the `react-native-ble-plx` plugin. Health Connect (M2) adds
-its own permission set and config plugin, and requires the Health Connect app present on
-the device — handle the "not available" case. Changing `app.json` plugins requires a
-native rebuild, not a Metro reload.
+`ACCESS_FINE_LOCATION` permissions need their own issue to be re-introduced with proper
+permission review. Health Connect (M2) adds its own permission set and config plugin, and
+requires the Health Connect app present on the device — handle the "not available" case.
+Changing `app.json` plugins requires a native rebuild, not a Metro reload.
 
 ## Milestones
 
