@@ -1,0 +1,18 @@
+allowBuilds:
+  # RN Firebase uses the native SDKs, not the JS protobuf path, so these JS
+  # build scripts aren't needed — decline them (silences ERR_PNPM_IGNORED_BUILDS).
+  '@firebase/util': false
+  protobufjs: false
+  unrs-resolver: true
+
+minimumReleaseAgeExclude:
+  - expo-background-fetch@56.0.23
+  - expo-task-manager@56.0.23
+  - expo-background-task@56.0.23
+
+# React Native / Expo native builds expect a flat node_modules layout.
+# pnpm's default isolated (symlinked) layout breaks the Android CMake/prefab
+# native build on Windows (react-native-worklets configureCMakeDebug resolving
+# through the deep .pnpm symlink target). Hoist so native tooling resolves
+# modules like npm/yarn.
+nodeLinker: hoisted
