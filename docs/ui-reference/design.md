@@ -115,7 +115,7 @@ The visual style is a hybrid of **Minimalism** and **Glassmorphism**. It priorit
 
 ## Colors
 
-The palette is optimized for high-contrast visibility in varying light conditions (e.g., outdoor running or dimly lit gyms). 
+The palette is optimized for high-contrast visibility in varying light conditions (e.g., outdoor running or dimly lit gyms).
 
 - **Primary (Electric Cyan):** Used exclusively for active states, progress indicators, and "Go" actions. It provides the "energy" within the dark interface.
 - **Secondary (Deep Charcoal):** The primary canvas color. It reduces eye strain and makes the screen edges disappear on OLED devices.
@@ -125,7 +125,7 @@ The palette is optimized for high-contrast visibility in varying light condition
 
 ## Typography
 
-This design system utilizes a three-font strategy to balance athleticism with technical precision. 
+This design system utilizes a three-font strategy to balance athleticism with technical precision.
 
 **Hanken Grotesk** serves as the primary headline face, providing a contemporary, sharp look for health titles and large metric displays. **Inter** is used for all body text and UI controls for its exceptional readability at smaller scales. **JetBrains Mono** is introduced for technical data labels and timestamps, reinforcing the "precision instrument" feel of the application.
 
@@ -133,7 +133,7 @@ For workout screens, use `display-metrics` for the primary variable (e.g., Heart
 
 ## Layout & Spacing
 
-The layout follows a **Fluid Grid** model designed for mobile-first interaction. It utilizes a 4px baseline shift to maintain a strict vertical rhythm. 
+The layout follows a **Fluid Grid** model designed for mobile-first interaction. It utilizes a 4px baseline shift to maintain a strict vertical rhythm.
 
 - **Margins:** Standard horizontal padding is 20px to prevent content from hitting the screen edge while maximizing data real estate.
 - **Card Layouts:** Fitness metrics are housed in cards that span either full-width (1-column) or half-width (2-columns) with a 12px gutter.
@@ -146,7 +146,7 @@ Hierarchy is established through **Tonal Layers** and **Glassmorphism** rather t
 
 - **Level 0 (Base):** Deep Charcoal (#1A1A1C).
 - **Level 1 (Cards):** Graphite (#2C2C2E) with a subtle 1px inner border (opacity 10% white) to define edges.
-- **Level 2 (Overlays/Modals):** A semi-transparent blur (Backdrop Filter: blur 20px) using the Graphite color at 80% opacity. 
+- **Level 2 (Overlays/Modals):** A semi-transparent blur (Backdrop Filter: blur 20px) using the Graphite color at 80% opacity.
 - **Active State:** Elements do not "lift" via shadows; instead, they utilize an outer glow (0px 0px 12px) using the Primary Electric Cyan at 30% opacity to indicate focus or active tracking.
 
 ## Shapes
@@ -161,16 +161,21 @@ The shape language is consistently **Rounded**, reflecting the organic nature of
 ## Components
 
 ### Progress Rings & Stat Cards
+
 Progress rings should use a thick, secondary-colored track with a primary-colored active segment. The center of the ring displays the primary metric in `headline-lg`. Stat cards use the Level 1 elevation background with the label in `label-caps` positioned at the top left.
 
 ### Sleek Workout Controls
+
 The "Primary Action" button (Start/Pause) is a large, pill-shaped button with a solid Electric Cyan background and black text. The "Secondary Action" (Stop/Lap) uses an outlined style with a 2px stroke.
 
 ### Connection Status
+
 Status indicators for wearable devices use a small, pulsing Primary Cyan dot next to the device name in `label-sm`. If disconnected, the dot turns to a 10% white opacity "ghost" state.
 
 ### Lists & Inputs
+
 Lists should be separated by 1px dividers in Tertiary Graphite. Input fields for health data (weight, height) use a "minimalist underline" style or a subtle Level 1 box with no border, using `body-lg` for the input value to ensure visibility.
 
 ### Chips
+
 Used for workout tags (e.g., "Strength", "HIIT"). These are low-contrast: Graphite background with White text in `label-sm`, using a 12px corner radius.

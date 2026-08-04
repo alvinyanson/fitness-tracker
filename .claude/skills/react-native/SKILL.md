@@ -65,7 +65,11 @@ type Props = {
 
 export const PrimaryButton = ({ title, onPress }: Props): ReactElement => {
   return (
-    <Pressable accessibilityRole="button" onPress={onPress} style={styles.button}>
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={styles.button}
+    >
       <Text style={styles.label}>{title}</Text>
     </Pressable>
   );

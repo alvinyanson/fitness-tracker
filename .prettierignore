@@ -1,0 +1,5 @@
+android/
+.expo/
+dist/
+web-build/
+pnpm-lock.yaml

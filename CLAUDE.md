@@ -68,7 +68,7 @@ app/ ──▶ components/ ──▶ hooks/ ──▶ services/ ──▶ interf
 - `services/` imports no React and nothing from `app/`, `components/`, `hooks/`, `store/`,
   or `theme/`. It is plain TypeScript, unit-testable without a renderer. Native-module
   access inside a service adapter (e.g. `react-native-ble-plx`) is intentional — the rule
-  is no *React* imports, not no native imports.
+  is no _React_ imports, not no native imports.
 - `components/` never imports from `services/`; it goes through `hooks/`.
 - `interfaces/` and `theme/` import nothing from the app.
 - `interfaces/` (not `types/`) is the home for shared TypeScript types.
@@ -117,10 +117,11 @@ the RN module/transform resolution that plain Jest does not. Pair with
 **Milestone 1** — `expo` 56 / `react-native` 0.85 / `react` 19 · `expo-router` (the
 History → Summary list→detail flow earns file routing) · `react-native-ble-plx` (not yet
 installed — needs its own issue with permission review) · `zustand` (session state machine
-+ settings) · `react-native-mmkv` · `expo-keep-awake` (the live screen must not sleep
-mid-session) · `react-native-reanimated`, `-gesture-handler`, `-screens`,
-`-safe-area-context` (expo-router deps, also the animated BPM readout) · `jest-expo`,
-`@testing-library/react-native` · `oxlint`, `prettier`, `husky`, `lint-staged`.
+
+- settings) · `react-native-mmkv` · `expo-keep-awake` (the live screen must not sleep
+  mid-session) · `react-native-reanimated`, `-gesture-handler`, `-screens`,
+  `-safe-area-context` (expo-router deps, also the animated BPM readout) · `jest-expo`,
+  `@testing-library/react-native` · `oxlint`, `prettier`, `husky`, `lint-staged`.
 
 **Milestone 2** — `react-native-health-connect` (Google Fit is deprecated, never use it) ·
 `expo-build-properties` (Health Connect needs an explicit `minSdkVersion` /
@@ -150,7 +151,7 @@ storage layer as the seam so that swap stays local.
 ## Domain conventions
 
 - **Connection state is an explicit union**, not booleans: `idle | scanning | connecting |
-  connected | disconnected | error`. Every new async flow follows this shape.
+connected | disconnected | error`. Every new async flow follows this shape.
 - **A disconnect never kills an active session.** Reconnecting indicator, timer keeps
   running. BLE drops are routine.
 - **HR is optional per session.** Every stat, and the calorie formula, must work with zero
