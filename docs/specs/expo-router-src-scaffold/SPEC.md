@@ -15,7 +15,7 @@ the app".
 - **Problem statement:** `docs/specs.md` M1 needs four screens and a list → detail flow
   (History → Summary, `docs/specs.md:36-40`). The app today is the unmodified Expo blank
   template: `index.ts` calls `registerRootComponent(App)`, and `App.tsx:4-11` renders
-  *"Open up App.tsx to start working on your app!"*. There is no navigator, no route tree,
+  _"Open up App.tsx to start working on your app!"_. There is no navigator, no route tree,
   and `src/` exists but is empty.
 - **Current code (verified this session, not assumed):**
   - `index.ts` — `registerRootComponent(App)`.
@@ -50,7 +50,7 @@ the app".
     `expo-constants`, `expo-dev-client`.
   - `expo-linking` and `expo-constants` are required by the SDK 56 installation guide but
     are missing from the issue's checklist. `expo-dev-client` is added because `CLAUDE.md`
-    § Non-negotiables rules out Expo Go and the acceptance criterion is a *dev client* boot.
+    § Non-negotiables rules out Expo Go and the acceptance criterion is a _dev client_ boot.
   - `expo-status-bar` (already present) stays.
   - Blocks: every other M1 screen issue, plus the BLE re-introduction issue.
   - Config verified against https://docs.expo.dev/versions/v56.0.0/sdk/router/ ,
@@ -93,13 +93,13 @@ Two typed shapes are introduced, both presentational:
 
 ### Route tree (`src/app/`)
 
-| Route file          | URL            | Contract                                                                                                                                                                                                 |
-| ------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `_layout.tsx`       | —              | Default export: root layout. Renders `<GestureHandlerRootView style={{ flex: 1 }}>` wrapping `<Stack>`, with `screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.surface } }}`. Also renders `<StatusBar style="light" />` from `expo-status-bar`. Screens own their own chrome, matching the full-bleed dark mockups in `docs/ui-reference/`. |
-| `index.tsx`         | `/`            | Placeholder pairing route. Title text plus `<Link>`s to `/workout` and `/history` so the graph is navigable end to end.                                                                                    |
-| `workout.tsx`       | `/workout`     | Placeholder. Title text plus a `<Link href="/">` back affordance.                                                                                                                                          |
-| `history.tsx`       | `/history`     | Placeholder. Title text plus a `<Link href="/summary/demo">` so the list → detail edge is exercised.                                                                                                       |
-| `summary/[id].tsx`  | `/summary/:id` | Placeholder. Reads `const { id } = useLocalSearchParams<{ id: string }>()` and renders it, proving dynamic-segment params resolve.                                                                          |
+| Route file         | URL            | Contract                                                                                                                                                                                                                                                                                                                                                                 |
+| ------------------ | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `_layout.tsx`      | —              | Default export: root layout. Renders `<GestureHandlerRootView style={{ flex: 1 }}>` wrapping `<Stack>`, with `screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.surface } }}`. Also renders `<StatusBar style="light" />` from `expo-status-bar`. Screens own their own chrome, matching the full-bleed dark mockups in `docs/ui-reference/`. |
+| `index.tsx`        | `/`            | Placeholder pairing route. Title text plus `<Link>`s to `/workout` and `/history` so the graph is navigable end to end.                                                                                                                                                                                                                                                  |
+| `workout.tsx`      | `/workout`     | Placeholder. Title text plus a `<Link href="/">` back affordance.                                                                                                                                                                                                                                                                                                        |
+| `history.tsx`      | `/history`     | Placeholder. Title text plus a `<Link href="/summary/demo">` so the list → detail edge is exercised.                                                                                                                                                                                                                                                                     |
+| `summary/[id].tsx` | `/summary/:id` | Placeholder. Reads `const { id } = useLocalSearchParams<{ id: string }>()` and renders it, proving dynamic-segment params resolve.                                                                                                                                                                                                                                       |
 
 Every placeholder is content-free by design — it exists to make the route graph real and
 navigable, and to be replaced wholesale by its own issue. Each styles itself only from
@@ -109,11 +109,23 @@ navigable, and to be replaced wholesale by its own issue. Each styles itself onl
 
 ```ts
 // @/theme
-export const colors: Readonly<Record<ColorToken, string>>  // 47 M3 role tokens from design.md
-export const type: Readonly<Record<TypeToken, TypeStyle>>  // 8 named text styles
-export const radii: Readonly<Record<RadiusToken, number>>  // sm|base|md|lg|xl|full
-export const space: { unit: 4; containerPadding: 20; stackGap: 16; gridGutter: 12; safeAreaBottom: 34 }
-export type TypeStyle = { fontFamily: string; fontSize: number; fontWeight: TextStyle['fontWeight']; lineHeight: number; letterSpacing?: number }
+export const colors: Readonly<Record<ColorToken, string>>; // 47 M3 role tokens from design.md
+export const type: Readonly<Record<TypeToken, TypeStyle>>; // 8 named text styles
+export const radii: Readonly<Record<RadiusToken, number>>; // sm|base|md|lg|xl|full
+export const space: {
+  unit: 4;
+  containerPadding: 20;
+  stackGap: 16;
+  gridGutter: 12;
+  safeAreaBottom: 34;
+};
+export type TypeStyle = {
+  fontFamily: string;
+  fontSize: number;
+  fontWeight: TextStyle['fontWeight'];
+  lineHeight: number;
+  letterSpacing?: number;
+};
 ```
 
 Consumers import from the `@/theme` barrel, never from the individual token files — that
@@ -149,29 +161,29 @@ app/ ──▶ components/ ──▶ hooks/ ──▶ services/ ──▶ interf
 
 ## Files Created
 
-| File                       | Purpose                                                                                                                                                                             |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| File                       | Purpose                                                                                                                                                                                  |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `babel.config.js`          | Explicit `babel-preset-expo`. Not strictly required (Expo CLI falls back to it), but that preset is what auto-injects the Reanimated worklets plugin, so the dependency is made visible. |
-| `src/app/_layout.tsx`      | Root `Stack` + `GestureHandlerRootView` + status bar; sets the app-wide dark surface.                                                                                                  |
-| `src/app/index.tsx`        | Placeholder pairing route — the app's entry screen.                                                                                                                                    |
-| `src/app/workout.tsx`      | Placeholder live-workout route; the navigation target for the acceptance smoke test.                                                                                                   |
-| `src/app/history.tsx`      | Placeholder history route; origin of the list → detail edge.                                                                                                                           |
-| `src/app/summary/[id].tsx` | Placeholder summary detail route; proves dynamic params resolve.                                                                                                                       |
-| `src/theme/colors.ts`      | The 47 Material-3 color roles from `design.md` frontmatter, `as const`.                                                                                                                |
-| `src/theme/typography.ts`  | The 8 named type styles, px strings converted to RN numbers, `em` letter-spacing resolved against each style's font size.                                                              |
-| `src/theme/layout.ts`      | `radii` (rem → px) and `space` (4px baseline, container padding, stack gap, grid gutter, safe-area bottom).                                                                             |
-| `src/theme/index.ts`       | Barrel re-exporting `colors`, `type`, `radii`, `space` and their token types. The only theme import path components may use.                                                           |
+| `src/app/_layout.tsx`      | Root `Stack` + `GestureHandlerRootView` + status bar; sets the app-wide dark surface.                                                                                                    |
+| `src/app/index.tsx`        | Placeholder pairing route — the app's entry screen.                                                                                                                                      |
+| `src/app/workout.tsx`      | Placeholder live-workout route; the navigation target for the acceptance smoke test.                                                                                                     |
+| `src/app/history.tsx`      | Placeholder history route; origin of the list → detail edge.                                                                                                                             |
+| `src/app/summary/[id].tsx` | Placeholder summary detail route; proves dynamic params resolve.                                                                                                                         |
+| `src/theme/colors.ts`      | The 47 Material-3 color roles from `design.md` frontmatter, `as const`.                                                                                                                  |
+| `src/theme/typography.ts`  | The 8 named type styles, px strings converted to RN numbers, `em` letter-spacing resolved against each style's font size.                                                                |
+| `src/theme/layout.ts`      | `radii` (rem → px) and `space` (4px baseline, container padding, stack gap, grid gutter, safe-area bottom).                                                                              |
+| `src/theme/index.ts`       | Barrel re-exporting `colors`, `type`, `radii`, `space` and their token types. The only theme import path components may use.                                                             |
 
 ## Files Modified
 
-| File            | Change                                                                                                                                                                                                                                                                                                       |
-| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `package.json`  | `"main": "expo-router/entry"`. Change `"android"` from `"expo start --android"` to `"expo run:android"` — the current script launches Expo Go, which `CLAUDE.md` forbids and which cannot satisfy this issue's acceptance criterion. Add the eight packages at `npx expo install`-resolved versions. Leave `ios` / `web` scripts as-is (`CLAUDE.md` calls them known-dead leftovers). |
-| `app.json`      | Add `"scheme": "fitnesstracker"`, `"plugins": ["expo-router"]`, `"experiments": { "typedRoutes": true }`, and restore `"android": { "package": "com.arcanys.yansonalvin.fitnesstracker" }` alongside the existing `adaptiveIcon` / `predictiveBackGestureEnabled` keys — without an explicit applicationId, prebuild invents `com.anonymous.*` and the installed app identity churns. Do **not** add anything to the `ios` block. |
-| `tsconfig.json` | Add `"baseUrl": "."`, `"paths": { "@/*": ["src/*"] }`, and `"include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]`. `"strict": true` is already set — keep it, add nothing stricter.                                                                                                        |
+| File            | Change                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `package.json`  | `"main": "expo-router/entry"`. Change `"android"` from `"expo start --android"` to `"expo run:android"` — the current script launches Expo Go, which `CLAUDE.md` forbids and which cannot satisfy this issue's acceptance criterion. Add the eight packages at `npx expo install`-resolved versions. Leave `ios` / `web` scripts as-is (`CLAUDE.md` calls them known-dead leftovers).                                                                                                                                    |
+| `app.json`      | Add `"scheme": "fitnesstracker"`, `"plugins": ["expo-router"]`, `"experiments": { "typedRoutes": true }`, and restore `"android": { "package": "com.arcanys.yansonalvin.fitnesstracker" }` alongside the existing `adaptiveIcon` / `predictiveBackGestureEnabled` keys — without an explicit applicationId, prebuild invents `com.anonymous.*` and the installed app identity churns. Do **not** add anything to the `ios` block.                                                                                        |
+| `tsconfig.json` | Add `"baseUrl": "."`, `"paths": { "@/*": ["src/*"] }`, and `"include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]`. `"strict": true` is already set — keep it, add nothing stricter.                                                                                                                                                                                                                                                                                                                |
 | `CLAUDE.md`     | § Layout: drop the "(placeholder — still being shaped, confirm before relying on it)" hedge and record the settled tree, the `@/*` alias, and the layering contract above; note `interfaces/` (not `types/`) as the home for shared types. § Tech stack / § Native config: correct the stale claims that ble-plx is "already wired" and that `app.json` carries BLE permissions — neither holds after the reset. § UI & theming: point at `src/theme/` as the live token location and note that fonts are still pending. |
-| `App.tsx`       | **Deleted** — superseded by `src/app/_layout.tsx` + `src/app/index.tsx`.                                                                                                                                                                                                                                     |
-| `index.ts`      | **Deleted** — superseded by the `expo-router/entry` main field.                                                                                                                                                                                                                                              |
+| `App.tsx`       | **Deleted** — superseded by `src/app/_layout.tsx` + `src/app/index.tsx`.                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `index.ts`      | **Deleted** — superseded by the `expo-router/entry` main field.                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 
 `.gitignore` needs no change: `.expo/` and `expo-env.d.ts` are already ignored
 (`.gitignore:7-10`), which covers the generated typed-routes output.
@@ -184,7 +196,7 @@ app/ ──▶ components/ ──▶ hooks/ ──▶ services/ ──▶ interf
 4. **Aliases.** Add `baseUrl`, `paths`, and `include` to `tsconfig.json`.
 5. **Route tree.** Create `src/app/_layout.tsx`, `index.tsx`, `workout.tsx`, `history.tsx`, `summary/[id].tsx` per the Interfaces table.
 6. **Confirm route-root resolution.** The SDK 56 installation guide documents `src/app/_layout.tsx` as a supported root, but the `expo-router` plugin's `root` option still defaults to `"app"`. Start the bundler and check the routes register. **If no routes are found, set `"root": "./src/app"` on the plugin entry** and record it in `CLAUDE.md`. This is the one item to verify empirically rather than assume.
-7. **Theme port.** Transcribe `docs/ui-reference/design.md` frontmatter into `src/theme/{colors,typography,layout,index}.ts`, converting units as described in Data Model. Restyle the five route files to draw every color, size, and radius from `@/theme`. *(Cuttable — see the Scope decision note. If cut, the route files must still avoid literals, which in practice means leaving them unstyled.)*
+7. **Theme port.** Transcribe `docs/ui-reference/design.md` frontmatter into `src/theme/{colors,typography,layout,index}.ts`, converting units as described in Data Model. Restyle the five route files to draw every color, size, and radius from `@/theme`. _(Cuttable — see the Scope decision note. If cut, the route files must still avoid literals, which in practice means leaving them unstyled.)_
 8. **Directory decisions.** Create only directories that gain a real file here — `src/app/` and `src/theme/`. Record `components/`, `hooks/`, `interfaces/`, `services/`, `store/`, `utils/` as the agreed future homes in `CLAUDE.md` **without** creating them. Git cannot track an empty directory, and a `.gitkeep` or a stub module is a commitment made before there is anything to commit to. This is the deliberate reading of the issue's "settle the rest of the tree" checkbox: decide and write it down, not scaffold-and-abandon.
 9. **Type-check.** `npx tsc --noEmit`. Run this before touching native — it catches every alias and token mistake without a 5-minute rebuild.
 10. **Build native.** `npx expo prebuild --clean -p android`, then `pnpm android`. A config plugin, a `scheme`, and an `android.package` are native config; a Metro reload will not pick them up, and Expo Go is not a valid verification path (`CLAUDE.md` § Non-negotiables).
@@ -210,8 +222,8 @@ app/ ──▶ components/ ──▶ hooks/ ──▶ services/ ──▶ interf
   `@react-navigation/*` packages in application code. Use `expo-router`'s own exports
   (`Stack`, `Link`, `useRouter`, `useLocalSearchParams`). No `@react-navigation/*` entry
   should appear in `package.json`.
-- **Deviation, flagged:** issue #1's acceptance criterion *"Nothing under `services/`
-  imports React or a native module directly"* is vacuously true here — `src/services/`
+- **Deviation, flagged:** issue #1's acceptance criterion _"Nothing under `services/`
+  imports React or a native module directly"_ is vacuously true here — `src/services/`
   does not exist yet. It will not stay vacuous. When BLE returns, a BLE service has to
   import `react-native-ble-plx`, and a permission helper has to import `PermissionsAndroid`;
   a service forbidden from touching its own native module has nowhere to live. The workable
@@ -237,9 +249,9 @@ app/ ──▶ components/ ──▶ hooks/ ──▶ services/ ──▶ interf
 - [ ] `App.tsx` and `index.ts` no longer exist, and nothing imports them.
 - [ ] No literal hex, font size, or border radius appears in any file under `src/app/`
       (`grep -rnE "#[0-9a-fA-F]{3,8}|fontSize: *[0-9]|borderRadius: *[0-9]" src/app` returns
-      nothing). *(Waived if step 7 is cut.)*
+      nothing). _(Waived if step 7 is cut.)_
 - [ ] Every token key in `docs/ui-reference/design.md` frontmatter has a counterpart in
-      `src/theme/`, with no invented values. *(Waived if step 7 is cut.)*
+      `src/theme/`, with no invented values. _(Waived if step 7 is cut.)_
 - [ ] No `@react-navigation/*` entry in `package.json` and no such import under `src/`.
 - [ ] `app.json` gains no `ios` additions, and `android.package` reads
       `com.arcanys.yansonalvin.fitnesstracker`.

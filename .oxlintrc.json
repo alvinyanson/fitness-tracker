@@ -1,0 +1,13 @@
+{
+  "plugins": ["eslint", "typescript", "unicorn", "oxc", "react"],
+  "categories": {
+    "correctness": "error"
+  },
+  "ignorePatterns": [
+    "android/**",
+    ".expo/**",
+    "dist/**",
+    "web-build/**",
+    "node_modules/**"
+  ]
+}
