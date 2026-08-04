@@ -1,0 +1,9 @@
+allowBuilds:
+  unrs-resolver: true
+
+# React Native / Expo native builds expect a flat node_modules layout.
+# pnpm's default isolated (symlinked) layout breaks the Android CMake/prefab
+# native build on Windows (react-native-worklets configureCMakeDebug resolving
+# through the deep .pnpm symlink target). Hoist so native tooling resolves
+# modules like npm/yarn.
+nodeLinker: hoisted
