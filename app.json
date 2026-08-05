@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "fitness-tracker",
-    "slug": "fitness-tracker",
+    "slug": "expo-fitness-tracker-app",
     "version": "1.0.0",
     "scheme": "fitnesstracker",
     "orientation": "portrait",
@@ -26,6 +26,19 @@
     "plugins": ["expo-router"],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "b7bf3e78-004e-44e9-a711-3af0b1742732"
+      }
+    },
+    "owner": "alvin-yanson-organization",
+    "runtimeVersion": {
+      "policy": "fingerprint"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/b7bf3e78-004e-44e9-a711-3af0b1742732"
     }
   }
 }
