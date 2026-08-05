@@ -115,8 +115,10 @@ the RN module/transform resolution that plain Jest does not. Pair with
 **Do not add a deferred package until its milestone starts.**
 
 **Milestone 1** — `expo` 56 / `react-native` 0.85 / `react` 19 · `expo-router` (the
-History → Summary list→detail flow earns file routing) · `react-native-ble-plx` (not yet
-installed — needs its own issue with permission review) · `zustand` (session state machine
+History → Summary list→detail flow earns file routing) · `react-native-ble-plx`
+(installed; its Android 12+ runtime permission gate and adapter-state check landed in
+`docs/specs/android-ble-permission-gate/SPEC.md` — scanning/connect logic is still a
+separate, not-yet-filed issue) · `zustand` (session state machine
 
 - settings) · `react-native-mmkv` · `expo-keep-awake` (the live screen must not sleep
   mid-session) · `react-native-reanimated`, `-gesture-handler`, `-screens`,
@@ -166,13 +168,16 @@ connected | disconnected | error`. Every new async flow follows this shape.
 
 ## Native config
 
-`app.json` permissions must stay in sync with any new native module. Currently no
-BLE-related permissions or plugins are configured — `react-native-ble-plx` and its
-`BLUETOOTH_SCAN`, `BLUETOOTH_CONNECT`, `BLUETOOTH`, `BLUETOOTH_ADMIN`,
-`ACCESS_FINE_LOCATION` permissions need their own issue to be re-introduced with proper
-permission review. Health Connect (M2) adds its own permission set and config plugin, and
-requires the Health Connect app present on the device — handle the "not available" case.
-Changing `app.json` plugins requires a native rebuild, not a Metro reload.
+`app.json` permissions must stay in sync with any new native module. `react-native-ble-plx`
+is configured: its Expo config plugin is registered and `android.permissions` declares
+`BLUETOOTH`, `BLUETOOTH_ADMIN`, `BLUETOOTH_CONNECT`, `BLUETOOTH_SCAN`, and
+`ACCESS_FINE_LOCATION`, added and permission-reviewed in
+`docs/specs/android-ble-permission-gate/SPEC.md`. The pairing screen (`src/app/index.tsx`)
+gates on these via `useBlePermissionGate` before rendering anything else — see
+`src/services/ble/blePermissionGate.ts` for the permission/adapter-state precedence.
+Health Connect (M2) adds its own permission set and config plugin, and requires the
+Health Connect app present on the device — handle the "not available" case. Changing
+`app.json` plugins requires a native rebuild, not a Metro reload.
 
 ## Milestones
 
