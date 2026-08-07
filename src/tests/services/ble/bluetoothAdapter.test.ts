@@ -14,23 +14,23 @@ describe('getBluetoothAdapterStatus', () => {
 
   it('returns poweredOn when state is PoweredOn', async () => {
     manager.__setAdapterState(State.PoweredOn);
-    const status = await getBluetoothAdapterStatus();
+    const status = await getBluetoothAdapterStatus(manager);
     expect(status).toBe('poweredOn');
   });
 
   it('returns poweredOff when state is PoweredOff', async () => {
     manager.__setAdapterState(State.PoweredOff);
-    const status = await getBluetoothAdapterStatus();
+    const status = await getBluetoothAdapterStatus(manager);
     expect(status).toBe('poweredOff');
   });
 
   it('returns unknown when state is Unknown or Unauthorized or Resetting', async () => {
     manager.__setAdapterState(State.Unknown);
-    let status = await getBluetoothAdapterStatus();
+    let status = await getBluetoothAdapterStatus(manager);
     expect(status).toBe('unknown');
 
     manager.__setAdapterState(State.Unauthorized);
-    status = await getBluetoothAdapterStatus();
+    status = await getBluetoothAdapterStatus(manager);
     expect(status).toBe('unknown');
   });
 });

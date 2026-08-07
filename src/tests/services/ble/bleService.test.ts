@@ -277,4 +277,35 @@ describe('BleService', () => {
     managerInstance.__setAdapterState(State.PoweredOff);
     expect(listenerSpy).not.toHaveBeenCalled();
   });
+
+  it('passes serviceUUIDs to manager.startDeviceScan when provided', () => {
+    const startDeviceScanSpy = jest.spyOn(managerInstance, 'startDeviceScan');
+
+    const onDeviceFound = jest.fn();
+    const uuids = ['0000180d-0000-1000-8000-00805f9b34fb'];
+    service.startScan(onDeviceFound, uuids);
+
+    expect(startDeviceScanSpy).toHaveBeenCalledWith(
+      uuids,
+      { allowDuplicates: false },
+      expect.any(Function),
+    );
+
+    service.stopScan();
+  });
+
+  it('passes null to manager.startDeviceScan when serviceUUIDs is omitted', () => {
+    const startDeviceScanSpy = jest.spyOn(managerInstance, 'startDeviceScan');
+
+    const onDeviceFound = jest.fn();
+    service.startScan(onDeviceFound);
+
+    expect(startDeviceScanSpy).toHaveBeenCalledWith(
+      null,
+      { allowDuplicates: false },
+      expect.any(Function),
+    );
+
+    service.stopScan();
+  });
 });
