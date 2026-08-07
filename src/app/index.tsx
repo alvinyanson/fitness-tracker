@@ -2,9 +2,22 @@ import { Link } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from '@/hooks/useTranslation';
 import { colors, type as typeStyles, space } from '@/theme';
+import { BlePermissionGateView } from '@/components/BlePermissionGateView';
+import { useBlePermissionGate } from '@/hooks/useBlePermissionGate';
 
 export default function PairingScreen() {
   const { t } = useTranslation();
+  const { status, retry, openAppSettings } = useBlePermissionGate();
+
+  if (status !== 'ready') {
+    return (
+      <BlePermissionGateView
+        status={status}
+        onRetry={retry}
+        onOpenSettings={openAppSettings}
+      />
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -24,6 +37,7 @@ export default function PairingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.background,
     justifyContent: 'center',
     alignItems: 'center',
     padding: space.containerPadding,

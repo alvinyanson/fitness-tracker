@@ -10,8 +10,11 @@ export type Subscription = { remove(): void };
 
 export enum State {
   Unknown = 'Unknown',
-  PoweredOn = 'PoweredOn',
+  Resetting = 'Resetting',
+  Unsupported = 'Unsupported',
+  Unauthorized = 'Unauthorized',
   PoweredOff = 'PoweredOff',
+  PoweredOn = 'PoweredOn',
 }
 
 declare module 'react-native-ble-plx' {
@@ -20,6 +23,7 @@ declare module 'react-native-ble-plx' {
     __connectOutcome(outcome: 'success' | { error: Error }): void;
     __emitNotification(characteristicUUID: string, base64Value: string): void;
     __emitDisconnect(error?: Error): void;
+    __setAdapterState(state: State): void;
   }
 }
 
@@ -82,6 +86,8 @@ export class Device {
   }
 }
 
+let sharedAdapterState: State = State.PoweredOn;
+
 export class BleManager {
   private queuedScanResults: ScriptedScanResult[] = [];
   private scanListener:
@@ -90,6 +96,14 @@ export class BleManager {
   private notificationListeners = new Set<NotificationItem>();
   private disconnectListeners = new Set<DisconnectItem>();
   private devicesById = new Map<string, Device>();
+
+  __setAdapterState(state: State): void {
+    sharedAdapterState = state;
+  }
+
+  async state(): Promise<State> {
+    return sharedAdapterState;
+  }
 
   __scanResults(results: ScriptedScanResult[]): void {
     this.queuedScanResults = [...results];
@@ -158,6 +172,7 @@ export class BleManager {
     this.notificationListeners.clear();
     this.disconnectListeners.clear();
     this.devicesById.clear();
+    sharedAdapterState = State.PoweredOn;
   }
 
   /** @internal */
