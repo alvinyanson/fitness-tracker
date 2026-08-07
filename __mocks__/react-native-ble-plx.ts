@@ -20,7 +20,7 @@ export enum State {
 declare module 'react-native-ble-plx' {
   interface BleManager {
     __scanResults(results: ScriptedScanResult[]): void;
-    __connectOutcome(outcome: 'success' | { error: Error }): void;
+    __connectOutcome(outcome: 'success' | 'pending' | { error: Error }): void;
     __emitNotification(characteristicUUID: string, base64Value: string): void;
     __emitDisconnect(error?: Error): void;
     __setAdapterState(state: State): void;
@@ -87,18 +87,38 @@ export class Device {
 }
 
 let sharedAdapterState: State = State.PoweredOn;
+const stateChangeListeners = new Set<(state: State) => void>();
 
 export class BleManager {
   private queuedScanResults: ScriptedScanResult[] = [];
   private scanListener:
     ((error: Error | null, device: Device | null) => void) | null = null;
-  private connectOutcomeState: 'success' | { error: Error } = 'success';
+  private connectOutcomeState: 'success' | 'pending' | { error: Error } =
+    'success';
   private notificationListeners = new Set<NotificationItem>();
   private disconnectListeners = new Set<DisconnectItem>();
   private devicesById = new Map<string, Device>();
 
   __setAdapterState(state: State): void {
     sharedAdapterState = state;
+    for (const listener of Array.from(stateChangeListeners)) {
+      listener(sharedAdapterState);
+    }
+  }
+
+  onStateChange(
+    listener: (state: State) => void,
+    emitCurrentState?: boolean,
+  ): Subscription {
+    stateChangeListeners.add(listener);
+    if (emitCurrentState) {
+      listener(sharedAdapterState);
+    }
+    return {
+      remove: () => {
+        stateChangeListeners.delete(listener);
+      },
+    };
   }
 
   async state(): Promise<State> {
@@ -112,7 +132,7 @@ export class BleManager {
     }
   }
 
-  __connectOutcome(outcome: 'success' | { error: Error }): void {
+  __connectOutcome(outcome: 'success' | 'pending' | { error: Error }): void {
     this.connectOutcomeState = outcome;
   }
 
@@ -152,6 +172,9 @@ export class BleManager {
   }
 
   async connectToDevice(deviceId: string): Promise<Device> {
+    if (this.connectOutcomeState === 'pending') {
+      return new Promise<Device>(() => {});
+    }
     if (
       typeof this.connectOutcomeState === 'object' &&
       'error' in this.connectOutcomeState
@@ -166,12 +189,28 @@ export class BleManager {
     return device;
   }
 
+  async cancelDeviceConnection(deviceId: string): Promise<Device> {
+    let device = this.devicesById.get(deviceId);
+    if (!device) {
+      device = new Device(deviceId, null, null, this);
+      this.devicesById.set(deviceId, device);
+    }
+    const listeners = Array.from(this.disconnectListeners).filter(
+      (item) => item.device.id === deviceId,
+    );
+    for (const item of listeners) {
+      item.listener(null, item.device);
+    }
+    return device;
+  }
+
   destroy(): void {
     this.scanListener = null;
     this.queuedScanResults = [];
     this.notificationListeners.clear();
     this.disconnectListeners.clear();
     this.devicesById.clear();
+    stateChangeListeners.clear();
     sharedAdapterState = State.PoweredOn;
   }
 
