@@ -52,6 +52,10 @@ export class BleService {
     return this.snapshot;
   }
 
+  getManager(): BleManager {
+    return this.manager;
+  }
+
   subscribe(listener: (snapshot: BleConnectionSnapshot) => void): () => void {
     this.listeners.add(listener);
     return () => {
@@ -59,7 +63,10 @@ export class BleService {
     };
   }
 
-  startScan(onDeviceFound: (device: DiscoveredDevice) => void): void {
+  startScan(
+    onDeviceFound: (device: DiscoveredDevice) => void,
+    serviceUUIDs?: string[] | null,
+  ): void {
     if (
       this.snapshot.state === 'disconnected' ||
       this.snapshot.state === 'error'
@@ -81,7 +88,7 @@ export class BleService {
     }, this.scanTimeoutMs);
 
     this.manager.startDeviceScan(
-      null,
+      serviceUUIDs ?? null,
       { allowDuplicates: false },
       (error, device) => {
         if (error || !device) return;
