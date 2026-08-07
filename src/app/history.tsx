@@ -1,13 +1,16 @@
 import { Link } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from '@/hooks/useTranslation';
 import { colors, type as typeStyles, space } from '@/theme';
 
 export default function HistoryScreen() {
+  const { t } = useTranslation();
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>History</Text>
+      <Text style={styles.title}>{t('history.title')}</Text>
       <Link href="/summary/demo" style={styles.link}>
-        <Text style={styles.linkText}>View Demo Summary</Text>
+        <Text style={styles.linkText}>{t('history.viewDemoSummary')}</Text>
       </Link>
     </View>
   );

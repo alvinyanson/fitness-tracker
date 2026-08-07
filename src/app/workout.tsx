@@ -1,13 +1,16 @@
 import { Link } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from '@/hooks/useTranslation';
 import { colors, type as typeStyles, space } from '@/theme';
 
 export default function WorkoutScreen() {
+  const { t } = useTranslation();
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Workout</Text>
+      <Text style={styles.title}>{t('workout.title')}</Text>
       <Link href="/" style={styles.link}>
-        <Text style={styles.linkText}>Back to Pairing</Text>
+        <Text style={styles.linkText}>{t('workout.backToPairing')}</Text>
       </Link>
     </View>
   );

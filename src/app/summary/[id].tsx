@@ -1,16 +1,18 @@
 import { Link, useLocalSearchParams } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from '@/hooks/useTranslation';
 import { colors, type as typeStyles, space } from '@/theme';
 
 export default function SummaryScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { t } = useTranslation();
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Summary</Text>
+      <Text style={styles.title}>{t('summary.title')}</Text>
       <Text style={styles.paramText}>{id}</Text>
       <Link href="/history" style={styles.link}>
-        <Text style={styles.linkText}>Back to History</Text>
+        <Text style={styles.linkText}>{t('summary.backToHistory')}</Text>
       </Link>
     </View>
   );

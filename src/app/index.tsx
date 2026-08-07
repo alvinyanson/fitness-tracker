@@ -1,17 +1,20 @@
 import { Link } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from '@/hooks/useTranslation';
 import { colors, type as typeStyles, space } from '@/theme';
 
 export default function PairingScreen() {
+  const { t } = useTranslation();
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Pairing</Text>
+      <Text style={styles.title}>{t('pairing.title')}</Text>
       <View style={styles.links}>
         <Link href="/workout" style={styles.link}>
-          <Text style={styles.linkText}>Go to Workout</Text>
+          <Text style={styles.linkText}>{t('pairing.goToWorkout')}</Text>
         </Link>
         <Link href="/history" style={styles.link}>
-          <Text style={styles.linkText}>Go to History</Text>
+          <Text style={styles.linkText}>{t('pairing.goToHistory')}</Text>
         </Link>
       </View>
     </View>
