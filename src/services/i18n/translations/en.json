@@ -1,0 +1,26 @@
+{
+  "pairing": {
+    "title": "Pairing",
+    "goToWorkout": "Go to Workout",
+    "goToHistory": "Go to History",
+    "goToSettings": "Go to Settings"
+  },
+  "history": {
+    "title": "History",
+    "viewDemoSummary": "View Demo Summary"
+  },
+  "workout": {
+    "title": "Workout",
+    "backToPairing": "Back to Pairing"
+  },
+  "summary": {
+    "title": "Summary",
+    "backToHistory": "Back to History"
+  },
+  "settings": {
+    "title": "Settings",
+    "languageLabel": "Language",
+    "languageEnglish": "English",
+    "languageJapanese": "Japanese"
+  }
+}

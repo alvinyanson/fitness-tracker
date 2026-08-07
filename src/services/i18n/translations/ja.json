@@ -1,0 +1,26 @@
+{
+  "pairing": {
+    "title": "ペアリング",
+    "goToWorkout": "ワークアウトへ移動",
+    "goToHistory": "履歴へ移動",
+    "goToSettings": "設定へ移動"
+  },
+  "history": {
+    "title": "履歴",
+    "viewDemoSummary": "デモ概要を表示"
+  },
+  "workout": {
+    "title": "ワークアウト",
+    "backToPairing": "ペアリングに戻る"
+  },
+  "summary": {
+    "title": "概要",
+    "backToHistory": "履歴に戻る"
+  },
+  "settings": {
+    "title": "設定",
+    "languageLabel": "言語",
+    "languageEnglish": "英語",
+    "languageJapanese": "日本語"
+  }
+}
