@@ -12,6 +12,7 @@ export type BleConnectionEvent =
   | { type: 'connectSucceeded'; device: PairedDevice }
   | { type: 'connectTimedOut' }
   | { type: 'connectRejected'; message: string }
+  | { type: 'connectCancelled' }
   | { type: 'disconnectRequested' }
   | { type: 'disconnected'; reason: BleDisconnectReason; device: PairedDevice }
   | { type: 'adapterPoweredOff' }
@@ -82,6 +83,12 @@ export function reduceBleConnectionState(
           cause: 'connectRejected',
           message: event.message,
         };
+      }
+      return current;
+
+    case 'connectCancelled':
+      if (current.state === 'connecting') {
+        return { state: 'idle' };
       }
       return current;
 

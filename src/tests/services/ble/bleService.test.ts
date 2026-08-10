@@ -96,6 +96,68 @@ describe('BleService', () => {
     });
   });
 
+  it('cancelConnect() while connecting clears timer, calls cancelDeviceConnection, and resets snapshot to idle', () => {
+    const cancelConnectSpy = jest.spyOn(
+      managerInstance,
+      'cancelDeviceConnection',
+    );
+    managerInstance.__connectOutcome('pending');
+
+    service.connect('dev-1');
+    expect(service.getSnapshot()).toEqual({
+      state: 'connecting',
+      deviceId: 'dev-1',
+    });
+
+    service.cancelConnect();
+
+    expect(cancelConnectSpy).toHaveBeenCalledWith('dev-1');
+    expect(service.getSnapshot()).toEqual({ state: 'idle' });
+  });
+
+  it('cancelConnect() while not connecting is a no-op', () => {
+    const cancelConnectSpy = jest.spyOn(
+      managerInstance,
+      'cancelDeviceConnection',
+    );
+
+    expect(service.getSnapshot()).toEqual({ state: 'idle' });
+    service.cancelConnect();
+
+    expect(cancelConnectSpy).not.toHaveBeenCalled();
+    expect(service.getSnapshot()).toEqual({ state: 'idle' });
+  });
+
+  it('connect that resolves, rejects, or times out after cancelConnect() does not re-apply a snapshot change', async () => {
+    let resolveConnect!: (dev: any) => void;
+    jest.spyOn(managerInstance, 'connectToDevice').mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveConnect = resolve;
+        }),
+    );
+
+    const connectPromise = service.connect('dev-1');
+    expect(service.getSnapshot()).toEqual({
+      state: 'connecting',
+      deviceId: 'dev-1',
+    });
+
+    service.cancelConnect();
+    expect(service.getSnapshot()).toEqual({ state: 'idle' });
+
+    // Resolve the underlying connectToDevice promise after cancellation
+    resolveConnect({
+      id: 'dev-1',
+      name: null,
+      discoverAllServicesAndCharacteristics: jest.fn().mockResolvedValue({}),
+    });
+    await connectPromise;
+
+    // Snapshot should remain idle
+    expect(service.getSnapshot()).toEqual({ state: 'idle' });
+  });
+
   it('handles connect rejection when connectToDevice fails', async () => {
     const error = new Error('GATT connection failed');
     managerInstance.__connectOutcome({ error });

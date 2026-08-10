@@ -22,11 +22,13 @@ export interface UseDevicePairingResult {
   devices: DiscoveredDevice[];
   pairedDevice: PairedDevice | null;
   isScanning: boolean;
+  isAutoReconnecting: boolean;
   scan: () => void;
   stopScan: () => void;
   connectToDevice: (deviceId: string) => void;
   disconnect: () => void;
   unpair: () => void;
+  cancelReconnect: () => void;
 }
 
 export function useDevicePairing(): UseDevicePairingResult {
@@ -40,6 +42,7 @@ export function useDevicePairing(): UseDevicePairingResult {
 
   const [devices, setDevices] = useState<DiscoveredDevice[]>([]);
   const [pairedDevice, setPairedDevice] = useState<PairedDevice | null>(null);
+  const [isAutoReconnecting, setIsAutoReconnecting] = useState(false);
 
   const pendingConnectDeviceIdRef = useRef<string | null>(null);
   const autoReconnectAttemptedRef = useRef(false);
@@ -60,9 +63,17 @@ export function useDevicePairing(): UseDevicePairingResult {
     const stored = getLastPairedDevice();
     if (stored && bleService.getSnapshot().state === 'idle') {
       pendingConnectDeviceIdRef.current = stored.id;
+      setIsAutoReconnecting(true);
       bleService.connect(stored.id);
     }
   }, []);
+
+  // Reset isAutoReconnecting when connection moves off 'connecting'
+  useEffect(() => {
+    if (isAutoReconnecting && connection.state !== 'connecting') {
+      setIsAutoReconnecting(false);
+    }
+  }, [connection, isAutoReconnecting]);
 
   // Persist on connect
   useEffect(() => {
@@ -119,6 +130,10 @@ export function useDevicePairing(): UseDevicePairingResult {
     setPairedDevice(null);
   }, []);
 
+  const cancelReconnect = useCallback(() => {
+    bleService.cancelConnect();
+  }, []);
+
   const isScanning = connection.state === 'scanning';
 
   return {
@@ -126,10 +141,12 @@ export function useDevicePairing(): UseDevicePairingResult {
     devices,
     pairedDevice,
     isScanning,
+    isAutoReconnecting,
     scan,
     stopScan,
     connectToDevice,
     disconnect,
     unpair,
+    cancelReconnect,
   };
 }
