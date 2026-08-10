@@ -9,7 +9,7 @@ import { HEART_RATE_SERVICE_UUID } from '@/services/ble/gattProfiles';
 let mockSnapshot: BleConnectionSnapshot = { state: 'idle' };
 const mockListeners = new Set<(s: BleConnectionSnapshot) => void>();
 
-function emitSnapshot(snapshot: BleConnectionSnapshot) {
+function mockEmitSnapshot(snapshot: BleConnectionSnapshot) {
   mockSnapshot = snapshot;
   for (const listener of Array.from(mockListeners)) {
     listener(snapshot);
@@ -27,7 +27,10 @@ jest.mock('@/services/ble/bleService', () => ({
     }),
     startScan: jest.fn(),
     stopScan: jest.fn(),
-    connect: jest.fn(),
+    connect: jest.fn((deviceId: string) => {
+      mockEmitSnapshot({ state: 'connecting', deviceId });
+    }),
+    cancelConnect: jest.fn(),
     disconnect: jest.fn(),
     destroy: jest.fn(),
   },
@@ -58,17 +61,20 @@ function TestProbe() {
     devices,
     pairedDevice,
     isScanning,
+    isAutoReconnecting,
     scan,
     stopScan,
     connectToDevice,
     disconnect,
     unpair,
+    cancelReconnect,
   } = useDevicePairing();
 
   return (
     <>
       <Text testID="state">{connection.state}</Text>
       <Text testID="isScanning">{String(isScanning)}</Text>
+      <Text testID="isAutoReconnecting">{String(isAutoReconnecting)}</Text>
       <Text testID="deviceCount">{devices.length}</Text>
       <Text testID="pairedDevice">
         {pairedDevice ? pairedDevice.id : 'none'}
@@ -83,6 +89,7 @@ function TestProbe() {
       <Button title="connect-dev-1" onPress={() => connectToDevice('dev-1')} />
       <Button title="disconnect" onPress={disconnect} />
       <Button title="unpair" onPress={unpair} />
+      <Button title="cancelReconnect" onPress={cancelReconnect} />
     </>
   );
 }
@@ -202,7 +209,7 @@ describe('useDevicePairing', () => {
 
     // Simulate successful connection
     await act(async () => {
-      emitSnapshot({
+      mockEmitSnapshot({
         state: 'connected',
         device: { id: 'dev-1', name: 'HR Monitor' },
       });
@@ -228,7 +235,7 @@ describe('useDevicePairing', () => {
 
     // Simulate connected state
     await act(async () => {
-      emitSnapshot({
+      mockEmitSnapshot({
         state: 'connected',
         device: { id: 'dev-1', name: 'HR Monitor' },
       });
@@ -243,7 +250,7 @@ describe('useDevicePairing', () => {
 
     // Simulate disconnected
     await act(async () => {
-      emitSnapshot({
+      mockEmitSnapshot({
         state: 'disconnected',
         device: { id: 'dev-1', name: 'HR Monitor' },
         reason: 'userInitiated',
@@ -284,6 +291,55 @@ describe('useDevicePairing', () => {
 
     expect(bleService.connect).toHaveBeenCalledWith('stored-1');
     expect(bleService.connect).toHaveBeenCalledTimes(1);
+  });
+
+  it('mount with a stored device sets isAutoReconnecting true immediately and false once snapshot moves off connecting', async () => {
+    mockStoredDevice = { id: 'stored-1', name: 'Saved Monitor' };
+    mockSnapshot = { state: 'idle' };
+
+    const screen = await render(<TestProbe />);
+
+    await act(async () => {
+      mockEmitSnapshot({ state: 'connecting', deviceId: 'stored-1' });
+    });
+
+    expect(screen.getByTestId('isAutoReconnecting')).toHaveTextContent('true');
+
+    await act(async () => {
+      mockEmitSnapshot({
+        state: 'connected',
+        device: { id: 'stored-1', name: 'Saved Monitor' },
+      });
+    });
+
+    expect(screen.getByTestId('isAutoReconnecting')).toHaveTextContent('false');
+  });
+
+  it('cancelReconnect() calls bleService.cancelConnect', async () => {
+    const screen = await render(<TestProbe />);
+
+    await act(async () => {
+      fireEvent.press(screen.getByText('cancelReconnect'));
+    });
+
+    expect(bleService.cancelConnect).toHaveBeenCalled();
+  });
+
+  it('a manual connectToDevice() call never sets isAutoReconnecting', async () => {
+    mockStoredDevice = null;
+    mockSnapshot = { state: 'idle' };
+
+    const screen = await render(<TestProbe />);
+
+    await act(async () => {
+      fireEvent.press(screen.getByText('connect-dev-1'));
+    });
+
+    await act(async () => {
+      mockEmitSnapshot({ state: 'connecting', deviceId: 'dev-1' });
+    });
+
+    expect(screen.getByTestId('isAutoReconnecting')).toHaveTextContent('false');
   });
 
   it('does not auto-reconnect when no stored device exists', async () => {

@@ -31,11 +31,13 @@ function PairingContent() {
     devices,
     pairedDevice,
     isScanning,
+    isAutoReconnecting,
     scan,
     stopScan,
     connectToDevice,
     disconnect,
     unpair,
+    cancelReconnect,
   } = useDevicePairing();
 
   const isConnecting = connection.state === 'connecting';
@@ -48,7 +50,9 @@ function PairingContent() {
       case 'scanning':
         return t('pairing.scanning');
       case 'connecting':
-        return t('pairing.connecting');
+        return isAutoReconnecting
+          ? t('pairing.reconnecting')
+          : t('pairing.connecting');
       case 'connected':
         return t('pairing.connected');
       case 'disconnected':
@@ -84,6 +88,22 @@ function PairingContent() {
     <View style={styles.container}>
       {/* Status label */}
       <Text style={styles.statusText}>{getStatusText()}</Text>
+
+      {/* Cancel button during auto-reconnect */}
+      {isAutoReconnecting && (
+        <Pressable
+          style={({ pressed }) => [
+            styles.button,
+            styles.buttonSecondary,
+            styles.cancelReconnectButton,
+            pressed && styles.buttonPressed,
+          ]}
+          onPress={cancelReconnect}
+          accessibilityRole="button"
+        >
+          <Text style={styles.buttonSecondaryText}>{t('pairing.cancel')}</Text>
+        </Pressable>
+      )}
 
       {/* Paired device card */}
       {pairedDevice && (
@@ -279,6 +299,10 @@ const styles = StyleSheet.create({
   scanButton: {
     alignSelf: 'center',
     minWidth: 140,
+    marginBottom: space.stackGap,
+  },
+  cancelReconnectButton: {
+    alignSelf: 'center',
     marginBottom: space.stackGap,
   },
   list: {

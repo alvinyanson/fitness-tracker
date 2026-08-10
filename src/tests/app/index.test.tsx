@@ -10,7 +10,7 @@ import type { BleConnectionSnapshot, DiscoveredDevice } from '@/interfaces/ble';
 let mockSnapshot: BleConnectionSnapshot = { state: 'idle' };
 const mockListeners = new Set<(s: BleConnectionSnapshot) => void>();
 
-function emitSnapshot(snapshot: BleConnectionSnapshot) {
+function mockEmitSnapshot(snapshot: BleConnectionSnapshot) {
   mockSnapshot = snapshot;
   for (const listener of Array.from(mockListeners)) {
     listener(snapshot);
@@ -28,7 +28,10 @@ jest.mock('@/services/ble/bleService', () => ({
     }),
     startScan: jest.fn(),
     stopScan: jest.fn(),
-    connect: jest.fn(),
+    connect: jest.fn((deviceId: string) => {
+      mockEmitSnapshot({ state: 'connecting', deviceId });
+    }),
+    cancelConnect: jest.fn(),
     disconnect: jest.fn(),
     destroy: jest.fn(),
   },
@@ -174,7 +177,7 @@ describe('PairingScreen', () => {
 
     // Simulate scanning state
     await act(async () => {
-      emitSnapshot({ state: 'scanning' });
+      mockEmitSnapshot({ state: 'scanning' });
     });
 
     expect(getByText('Scanning…')).toBeTruthy();
@@ -203,7 +206,7 @@ describe('PairingScreen', () => {
       .calls[0][0] as (device: DiscoveredDevice) => void;
 
     await act(async () => {
-      emitSnapshot({ state: 'scanning' });
+      mockEmitSnapshot({ state: 'scanning' });
     });
 
     await act(async () => {
@@ -222,7 +225,7 @@ describe('PairingScreen', () => {
 
     // Simulate connected state
     await act(async () => {
-      emitSnapshot({
+      mockEmitSnapshot({
         state: 'connected',
         device: { id: 'dev-1', name: 'HR Monitor' },
       });
@@ -261,7 +264,7 @@ describe('PairingScreen', () => {
 
     // Simulate connecting/connected states
     await act(async () => {
-      emitSnapshot({
+      mockEmitSnapshot({
         state: 'connected',
         device: { id: 'stored-1', name: 'Saved Monitor' },
       });
@@ -269,6 +272,103 @@ describe('PairingScreen', () => {
 
     expect(getByText('Connected')).toBeTruthy();
     expect(getByText('Paired Device')).toBeTruthy();
+  });
+
+  it('mount with stored device renders Reconnecting… and visible Cancel button', async () => {
+    mockStoredDevice = { id: 'stored-1', name: 'Saved Monitor' };
+
+    jest
+      .spyOn(blePermissionGateModule, 'evaluateBlePermissionGate')
+      .mockResolvedValue('ready');
+
+    const { getByText, queryByText } = await render(<PairingScreen />);
+
+    await waitFor(() => {
+      expect(bleService.connect).toHaveBeenCalledWith('stored-1');
+    });
+
+    await act(async () => {
+      mockEmitSnapshot({ state: 'connecting', deviceId: 'stored-1' });
+    });
+
+    expect(getByText('Reconnecting…')).toBeTruthy();
+    expect(queryByText('Connecting…')).toBeNull();
+    expect(getByText('Cancel')).toBeTruthy();
+  });
+
+  it('tapping Cancel during auto-reconnect calls bleService.cancelConnect and returns to idle UI', async () => {
+    mockStoredDevice = { id: 'stored-1', name: 'Saved Monitor' };
+
+    jest
+      .spyOn(blePermissionGateModule, 'evaluateBlePermissionGate')
+      .mockResolvedValue('ready');
+
+    const { getByText, queryByText } = await render(<PairingScreen />);
+
+    await waitFor(() => {
+      expect(bleService.connect).toHaveBeenCalledWith('stored-1');
+    });
+
+    await act(async () => {
+      mockEmitSnapshot({ state: 'connecting', deviceId: 'stored-1' });
+    });
+
+    expect(getByText('Cancel')).toBeTruthy();
+
+    await act(async () => {
+      fireEvent.press(getByText('Cancel'));
+    });
+
+    expect(bleService.cancelConnect).toHaveBeenCalled();
+
+    await act(async () => {
+      mockEmitSnapshot({ state: 'idle' });
+    });
+
+    expect(getByText('Pairing')).toBeTruthy();
+    expect(queryByText('Reconnecting…')).toBeNull();
+    expect(queryByText('Cancel')).toBeNull();
+    expect(getByText('Scan')).toBeTruthy();
+    expect(getByText('Saved Monitor')).toBeTruthy();
+  });
+
+  it('manual device tap renders Connecting… with no Cancel button', async () => {
+    jest
+      .spyOn(blePermissionGateModule, 'evaluateBlePermissionGate')
+      .mockResolvedValue('ready');
+
+    const { getByText, queryByText } = await render(<PairingScreen />);
+
+    await waitFor(() => {
+      expect(getByText('Scan')).toBeTruthy();
+    });
+
+    await act(async () => {
+      fireEvent.press(getByText('Scan'));
+    });
+
+    const onDeviceFound = (bleService.startScan as jest.Mock).mock
+      .calls[0][0] as (device: DiscoveredDevice) => void;
+
+    await act(async () => {
+      mockEmitSnapshot({ state: 'scanning' });
+    });
+
+    await act(async () => {
+      onDeviceFound({ id: 'dev-1', name: 'HR Monitor', rssi: -60 });
+    });
+
+    await act(async () => {
+      fireEvent.press(getByText('HR Monitor'));
+    });
+
+    await act(async () => {
+      mockEmitSnapshot({ state: 'connecting', deviceId: 'dev-1' });
+    });
+
+    expect(getByText('Connecting…')).toBeTruthy();
+    expect(queryByText('Reconnecting…')).toBeNull();
+    expect(queryByText('Cancel')).toBeNull();
   });
 
   it('renders error state distinctly from idle', async () => {
@@ -283,7 +383,7 @@ describe('PairingScreen', () => {
     });
 
     await act(async () => {
-      emitSnapshot({
+      mockEmitSnapshot({
         state: 'error',
         cause: 'connectTimeout',
         message: 'Connection attempt timed out',
@@ -307,7 +407,7 @@ describe('PairingScreen', () => {
     });
 
     await act(async () => {
-      emitSnapshot({
+      mockEmitSnapshot({
         state: 'disconnected',
         device: { id: 'dev-1', name: 'HR Monitor' },
         reason: 'unexpected',

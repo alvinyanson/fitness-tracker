@@ -172,6 +172,15 @@ export class BleService {
     }
   }
 
+  cancelConnect(): void {
+    if (this.snapshot.state !== 'connecting') return;
+
+    const deviceId = this.snapshot.deviceId;
+    this.clearConnectTimer();
+    safeCancelDeviceConnection(this.manager, deviceId);
+    this.dispatch({ type: 'connectCancelled' });
+  }
+
   async disconnect(): Promise<void> {
     if (this.snapshot.state !== 'connected') return;
 

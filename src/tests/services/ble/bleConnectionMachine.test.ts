@@ -205,7 +205,26 @@ describe('reduceBleConnectionState', () => {
     expect(next).toEqual({ state: 'idle' });
   });
 
+  it('connecting + connectCancelled -> idle', () => {
+    const current: BleConnectionSnapshot = {
+      state: 'connecting',
+      deviceId: 'dev-123',
+    };
+    const next = reduceBleConnectionState(current, {
+      type: 'connectCancelled',
+    });
+    expect(next).toEqual({ state: 'idle' });
+  });
+
   describe('no-op / unchanged state pairs', () => {
+    it('idle + connectCancelled -> unchanged', () => {
+      const current: BleConnectionSnapshot = { state: 'idle' };
+      const next = reduceBleConnectionState(current, {
+        type: 'connectCancelled',
+      });
+      expect(next).toBe(current);
+    });
+
     it('idle + connectSucceeded -> unchanged', () => {
       const current: BleConnectionSnapshot = { state: 'idle' };
       const next = reduceBleConnectionState(current, {
