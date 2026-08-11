@@ -1,0 +1,38 @@
+import { StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from '@/hooks/useTranslation';
+import { colors, radii, space, type as typeStyles } from '@/theme';
+
+export interface ReconnectingBannerProps {
+  visible: boolean;
+}
+
+export function ReconnectingBanner({ visible }: ReconnectingBannerProps) {
+  const { t } = useTranslation();
+
+  if (!visible) {
+    return null;
+  }
+
+  return (
+    <View style={styles.banner} pointerEvents="none">
+      <Text style={styles.text}>{t('workout.reconnecting')}</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  banner: {
+    backgroundColor: colors.surfaceContainerHighest,
+    paddingHorizontal: space.unit * 3,
+    paddingVertical: space.unit * 2,
+    borderRadius: radii.base,
+    alignSelf: 'center',
+    marginBottom: space.stackGap,
+  },
+  text: {
+    color: colors.onSurfaceVariant,
+    fontSize: typeStyles.labelSm.fontSize,
+    fontWeight: typeStyles.labelSm.fontWeight,
+    lineHeight: typeStyles.labelSm.lineHeight,
+  },
+});

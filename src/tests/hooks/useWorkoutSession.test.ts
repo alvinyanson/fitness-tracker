@@ -190,6 +190,92 @@ describe('useWorkoutSession', () => {
     });
   });
 
+  describe('currentBpm and rollingAverageBpm derivation', () => {
+    it('returns null for currentBpm and rollingAverageBpm when no samples exist', async () => {
+      const { result, unmount } = await renderHook(() => useWorkoutSession());
+
+      expect(result.current.currentBpm).toBeNull();
+      expect(result.current.rollingAverageBpm).toBeNull();
+
+      await act(async () => {
+        await unmount();
+      });
+    });
+
+    it('derives currentBpm and rollingAverageBpm from ingested samples', async () => {
+      managerInstance.__connectOutcome('success');
+      await act(async () => {
+        await bleService.connect('dev-1');
+      });
+
+      const { result, unmount } = await renderHook(() => useWorkoutSession());
+
+      await act(async () => {
+        result.current.start();
+      });
+
+      // Emit sample 1 (80 bpm -> 'AFA=')
+      await act(async () => {
+        managerInstance.__emitNotification(
+          HEART_RATE_MEASUREMENT_CHARACTERISTIC_UUID,
+          'AFA=',
+        );
+      });
+
+      expect(result.current.currentBpm).toBe(80);
+      expect(result.current.rollingAverageBpm).toBe(80);
+
+      // Emit sample 2 (84 bpm -> 'AFQ=')
+      await act(async () => {
+        managerInstance.__emitNotification(
+          HEART_RATE_MEASUREMENT_CHARACTERISTIC_UUID,
+          'AFQ=',
+        );
+      });
+
+      expect(result.current.currentBpm).toBe(84);
+      expect(result.current.rollingAverageBpm).toBe(82); // Math.round((80 + 84) / 2)
+
+      await act(async () => {
+        await unmount();
+      });
+    });
+
+    it('retains last known currentBpm when paused or reconnecting', async () => {
+      managerInstance.__connectOutcome('success');
+      await act(async () => {
+        await bleService.connect('dev-1');
+      });
+
+      const { result, unmount } = await renderHook(() => useWorkoutSession());
+
+      await act(async () => {
+        result.current.start();
+      });
+
+      await act(async () => {
+        managerInstance.__emitNotification(
+          HEART_RATE_MEASUREMENT_CHARACTERISTIC_UUID,
+          'AFA=', // 80 bpm
+        );
+      });
+
+      expect(result.current.currentBpm).toBe(80);
+
+      // Disconnect -> reconnecting
+      await act(async () => {
+        await bleService.disconnect();
+      });
+
+      expect(result.current.reconnecting).toBe(true);
+      expect(result.current.currentBpm).toBe(80);
+
+      await act(async () => {
+        await unmount();
+      });
+    });
+  });
+
   describe('timer ticking', () => {
     it('advances elapsedMs on interval ticks while active, freezes while paused', async () => {
       jest.useFakeTimers();

@@ -79,23 +79,10 @@ issues that first need them.
 
 ## UI & theming
 
-`docs/ui-reference/design.md` is the visual source of truth. Its frontmatter holds the
-authoritative "Kinetic Precision" tokens (Material-3-style color roles, the Hanken
-Grotesk / Inter / JetBrains Mono type scale, radii, 4px spacing baseline); the prose
-below explains how to apply them. Tokens live in `src/theme/` — import from `@/theme`,
-never from individual token files. Never hardcode a hex, font size, or radius in a
-component.
+- **`docs/ui-reference/design.md`** is the visual source of truth for design tokens (colors, typography, radii, spacing). Tokens live in `src/theme/` — import from `@/theme`, never from individual token files. Never hardcode a hex, font size, or radius in a component.
+- **Mockup Images (`docs/ui-reference/*.png`)**: ALWAYS inspect the corresponding screenshot (e.g. `live_workout.png`, `device_pairing.png`, `session_summary.png`) using `view_file` before building or modifying any screen or component. Match the visual hierarchy, component layout, and overall look and feel of the mockup while adhering to the functional scope in `docs/specs/`.
 
-**Fonts are pending.** The three custom fonts (Hanken Grotesk, Inter, JetBrains Mono)
-need `expo-font` and their font files loaded in a separate issue. Until then, fall back
-to the system face rather than substituting a different family into the tokens. The
-`fontFamily` values exist as string constants in `src/theme/typography.ts` but must not
-be applied to `Text` styles until the fonts are loaded.
-
-The `.png` mockups alongside it are **reference ONLY** — intended look and feel, not a
-spec. Not pixel-perfect targets, no asset or measurement extraction, and don't build a
-screen, control, or metric just because it appears in one. `docs/specs.md` owns scope and
-behaviour and wins on conflict; flag the conflict rather than following the mockup.
+**Fonts are pending.** The three custom fonts (Hanken Grotesk, Inter, JetBrains Mono) need `expo-font` and their font files loaded in a separate issue. Until then, fall back to the system face rather than substituting a different family into the tokens. The `fontFamily` values exist as string constants in `src/theme/typography.ts` but must not be applied to `Text` styles until the fonts are loaded.
 
 ## Testing
 

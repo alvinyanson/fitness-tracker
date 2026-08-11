@@ -29,7 +29,18 @@
   },
   "workout": {
     "title": "Workout",
-    "backToPairing": "Back to Pairing"
+    "backToPairing": "Back to Pairing",
+    "noData": "--",
+    "rollingAvgLabel": "30s Avg",
+    "reconnecting": "Reconnecting…",
+    "start": "Start",
+    "pause": "Pause",
+    "resume": "Resume",
+    "stop": "Stop",
+    "discardTitle": "End Workout?",
+    "discardMessage": "Your live workout session is in progress. Ending now will complete the session.",
+    "discardCancel": "Keep Working Out",
+    "discardConfirm": "End Session"
   },
   "summary": {
     "title": "Summary",

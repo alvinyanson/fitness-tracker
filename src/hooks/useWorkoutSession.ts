@@ -4,6 +4,7 @@ import type { BleConnectionSnapshot } from '@/interfaces/ble';
 import type { WorkoutSessionStatus } from '@/interfaces/session';
 import { bleService } from '@/services/ble/bleService';
 import { subscribeToHeartRate } from '@/services/ble/heartRateMonitor';
+import { getRollingAverageBpm } from '@/services/session/rollingAverageBpm';
 import { useWorkoutSessionStore } from '@/store/workoutSessionStore';
 
 export interface UseWorkoutSessionResult {
@@ -11,6 +12,8 @@ export interface UseWorkoutSessionResult {
   reconnecting: boolean;
   elapsedMs: number;
   sampleCount: number;
+  currentBpm: number | null;
+  rollingAverageBpm: number | null;
   start(): void;
   pause(): void;
   resume(): void;
@@ -21,6 +24,7 @@ export function useWorkoutSession(): UseWorkoutSessionResult {
   const status = useWorkoutSessionStore((state) => state.status);
   const reconnecting = useWorkoutSessionStore((state) => state.reconnecting);
   const sampleCount = useWorkoutSessionStore((state) => state.samples.length);
+  const samples = useWorkoutSessionStore((state) => state.samples);
   const start = useWorkoutSessionStore((state) => state.start);
   const pause = useWorkoutSessionStore((state) => state.pause);
   const resume = useWorkoutSessionStore((state) => state.resume);
@@ -98,12 +102,17 @@ export function useWorkoutSession(): UseWorkoutSessionResult {
   }, [status, isConnected, addSample]);
 
   const elapsedMs = getElapsedMs();
+  const currentBpm =
+    samples.length > 0 ? samples[samples.length - 1].bpm : null;
+  const rollingAverageBpm = getRollingAverageBpm(samples, Date.now());
 
   return {
     status,
     reconnecting,
     elapsedMs,
     sampleCount,
+    currentBpm,
+    rollingAverageBpm,
     start,
     pause,
     resume,
