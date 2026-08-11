@@ -1,9 +1,14 @@
 import { act, renderHook } from '@testing-library/react-native';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import type { BleManager } from 'react-native-ble-plx';
+import { createMMKV } from 'react-native-mmkv';
 import { useWorkoutSession } from '@/hooks/useWorkoutSession';
 import { bleService } from '@/services/ble/bleService';
 import { HEART_RATE_MEASUREMENT_CHARACTERISTIC_UUID } from '@/services/ble/gattProfiles';
+import {
+  getSession,
+  getSessionIndex,
+} from '@/services/storage/sessionHistoryStorage';
 import { useWorkoutSessionStore } from '@/store/workoutSessionStore';
 
 jest.mock('expo-keep-awake', () => ({
@@ -15,6 +20,7 @@ describe('useWorkoutSession', () => {
   let managerInstance: BleManager;
 
   const resetStore = () => {
+    createMMKV().clearAll();
     useWorkoutSessionStore.setState({
       status: 'idle',
       reconnecting: false,
@@ -318,6 +324,57 @@ describe('useWorkoutSession', () => {
 
       dateSpy.mockRestore();
       jest.useRealTimers();
+    });
+  });
+
+  describe('persistence behavior on stop', () => {
+    it('persists session and sets lastCompletedSessionId when stopping active/paused session', async () => {
+      const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(150000);
+      const { result, unmount } = await renderHook(() => useWorkoutSession());
+
+      expect(result.current.lastCompletedSessionId).toBeNull();
+
+      await act(async () => {
+        result.current.start();
+      });
+
+      expect(result.current.status).toBe('active');
+
+      await act(async () => {
+        result.current.stop();
+      });
+
+      expect(result.current.status).toBe('stopped');
+      expect(result.current.lastCompletedSessionId).toBe('150000');
+
+      const stored = getSession('150000');
+      expect(stored).not.toBeNull();
+      expect(stored?.id).toBe('150000');
+
+      await act(async () => {
+        await unmount();
+      });
+
+      nowSpy.mockRestore();
+    });
+
+    it('does not persist session or change lastCompletedSessionId when stopping an idle session', async () => {
+      const { result, unmount } = await renderHook(() => useWorkoutSession());
+
+      expect(result.current.status).toBe('idle');
+      expect(result.current.lastCompletedSessionId).toBeNull();
+
+      await act(async () => {
+        result.current.stop();
+      });
+
+      expect(result.current.status).toBe('idle');
+      expect(result.current.lastCompletedSessionId).toBeNull();
+      expect(getSessionIndex()).toEqual([]);
+
+      await act(async () => {
+        await unmount();
+      });
     });
   });
 });

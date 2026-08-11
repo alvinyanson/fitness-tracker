@@ -35,3 +35,26 @@ export interface SessionStats {
   /** Buffer length before filtering. */
   rawSampleCount: number;
 }
+
+/** Schema version of the persisted shape; bump only on a breaking change. */
+export const SESSION_SCHEMA_VERSION = 1;
+
+/** One completed, persisted workout — the full record, including raw samples. */
+export interface PersistedSession {
+  schemaVersion: typeof SESSION_SCHEMA_VERSION;
+  /** `String(startedAt)`; unique because only one session runs at a time. */
+  id: string;
+  startedAt: number;
+  endedAt: number;
+  stats: SessionStats;
+  samples: HeartRateSample[];
+}
+
+/** Lightweight per-session summary for a future history list — no sample series. */
+export interface SessionIndexEntry {
+  id: string;
+  startedAt: number;
+  endedAt: number;
+  durationMs: number;
+  avgHr: number | null;
+}
