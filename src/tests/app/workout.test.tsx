@@ -132,7 +132,7 @@ describe('WorkoutScreen', () => {
   it('renders initial idle UI with Start button and Back to Pairing link', async () => {
     const { getByText, queryByText } = await render(<WorkoutScreen />);
 
-    expect(getByText('Workout')).toBeTruthy();
+    expect(getByText('LIVE WORKOUT')).toBeTruthy();
     expect(getByText('00:00')).toBeTruthy();
     expect(getByText('--')).toBeTruthy();
     expect(getByText('30s Avg: --')).toBeTruthy();
