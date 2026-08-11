@@ -5,6 +5,7 @@ import type { WorkoutSessionStatus } from '@/interfaces/session';
 import { bleService } from '@/services/ble/bleService';
 import { subscribeToHeartRate } from '@/services/ble/heartRateMonitor';
 import { getRollingAverageBpm } from '@/services/session/rollingAverageBpm';
+import { persistCompletedSession } from '@/services/session/persistSession';
 import { useWorkoutSessionStore } from '@/store/workoutSessionStore';
 
 export interface UseWorkoutSessionResult {
@@ -14,6 +15,8 @@ export interface UseWorkoutSessionResult {
   sampleCount: number;
   currentBpm: number | null;
   rollingAverageBpm: number | null;
+  /** The id just written by the most recent stop() call; null until the first stop. */
+  lastCompletedSessionId: string | null;
   start(): void;
   pause(): void;
   resume(): void;
@@ -28,12 +31,28 @@ export function useWorkoutSession(): UseWorkoutSessionResult {
   const start = useWorkoutSessionStore((state) => state.start);
   const pause = useWorkoutSessionStore((state) => state.pause);
   const resume = useWorkoutSessionStore((state) => state.resume);
-  const stop = useWorkoutSessionStore((state) => state.stop);
   const addSample = useWorkoutSessionStore((state) => state.addSample);
   const setReconnecting = useWorkoutSessionStore(
     (state) => state.setReconnecting,
   );
   const getElapsedMs = useWorkoutSessionStore((state) => state.getElapsedMs);
+
+  const [lastCompletedSessionId, setLastCompletedSessionId] = useState<
+    string | null
+  >(null);
+
+  const stop = useCallback(() => {
+    const currentStatus = useWorkoutSessionStore.getState().status;
+    if (currentStatus !== 'active' && currentStatus !== 'paused') {
+      useWorkoutSessionStore.getState().stop();
+      return;
+    }
+
+    useWorkoutSessionStore.getState().stop();
+    const stoppedSnapshot = useWorkoutSessionStore.getState();
+    const record = persistCompletedSession(stoppedSnapshot);
+    setLastCompletedSessionId(record.id);
+  }, []);
 
   const [, setTick] = useState(0);
 
@@ -113,6 +132,7 @@ export function useWorkoutSession(): UseWorkoutSessionResult {
     sampleCount,
     currentBpm,
     rollingAverageBpm,
+    lastCompletedSessionId,
     start,
     pause,
     resume,

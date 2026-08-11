@@ -42,8 +42,20 @@
     "discardConfirm": "セッションを終了"
   },
   "summary": {
-    "title": "概要",
-    "backToHistory": "履歴に戻る"
+    "title": "セッション概要",
+    "notFoundTitle": "セッションが見つかりません",
+    "notFoundMessage": "要求されたワークアウトセッションが見つからないか、削除されました。",
+    "backToHistory": "履歴に戻る",
+    "avgHr": "平均心拍数",
+    "maxHr": "最大心拍数",
+    "minHr": "最小心拍数",
+    "samples": "サンプル数",
+    "noHeartRate": "このセッション中、心拍数データは記録されませんでした。",
+    "deleteAction": "セッションを削除",
+    "deleteTitle": "セッションを削除しますか？",
+    "deleteMessage": "このワークアウトセッションは永久に削除されます。この操作は取り消せません。",
+    "deleteCancel": "キャンセル",
+    "deleteConfirm": "削除"
   },
   "settings": {
     "title": "設定",

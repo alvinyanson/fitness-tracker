@@ -42,8 +42,20 @@
     "discardConfirm": "End Session"
   },
   "summary": {
-    "title": "Summary",
-    "backToHistory": "Back to History"
+    "title": "Session Summary",
+    "notFoundTitle": "Session Not Found",
+    "notFoundMessage": "The requested workout session could not be found or has been deleted.",
+    "backToHistory": "Back to History",
+    "avgHr": "AVG HR",
+    "maxHr": "MAX HR",
+    "minHr": "MIN HR",
+    "samples": "SAMPLES",
+    "noHeartRate": "No heart rate data was recorded during this session.",
+    "deleteAction": "Delete Session",
+    "deleteTitle": "Delete Session?",
+    "deleteMessage": "This will permanently delete this workout session. This action cannot be undone.",
+    "deleteCancel": "Cancel",
+    "deleteConfirm": "Delete"
   },
   "settings": {
     "title": "Settings",

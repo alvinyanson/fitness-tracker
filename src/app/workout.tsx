@@ -32,6 +32,7 @@ export default function WorkoutScreen() {
     elapsedMs,
     currentBpm,
     rollingAverageBpm,
+    lastCompletedSessionId,
     start,
     pause,
     resume,
@@ -73,10 +74,10 @@ export default function WorkoutScreen() {
 
   // Stop -> summary navigation effect
   useEffect(() => {
-    if (status === 'stopped') {
-      router.replace('/summary/current');
+    if (status === 'stopped' && lastCompletedSessionId) {
+      router.replace(`/summary/${lastCompletedSessionId}`);
     }
-  }, [status]);
+  }, [status, lastCompletedSessionId]);
 
   const elapsedSeconds = Math.floor(elapsedMs / 1000);
   const formattedDuration = formatDuration(elapsedSeconds);

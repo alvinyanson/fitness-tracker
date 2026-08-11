@@ -23,10 +23,14 @@ jest.mock('expo-router', () => {
 });
 
 jest.mock('@/hooks/useWorkoutSession', () => {
+  const ReactModule = require('react');
   const { useWorkoutSessionStore } = require('@/store/workoutSessionStore');
   const {
     getRollingAverageBpm,
   } = require('@/services/session/rollingAverageBpm');
+  const {
+    persistCompletedSession,
+  } = require('@/services/session/persistSession');
 
   return {
     useWorkoutSession: () => {
@@ -38,10 +42,25 @@ jest.mock('@/hooks/useWorkoutSession', () => {
       const start = useWorkoutSessionStore((state: any) => state.start);
       const pause = useWorkoutSessionStore((state: any) => state.pause);
       const resume = useWorkoutSessionStore((state: any) => state.resume);
-      const stop = useWorkoutSessionStore((state: any) => state.stop);
       const getElapsedMs = useWorkoutSessionStore(
         (state: any) => state.getElapsedMs,
       );
+
+      const [lastCompletedSessionId, setLastCompletedSessionId] =
+        ReactModule.useState(null);
+
+      const stop = ReactModule.useCallback(() => {
+        const currentStatus = useWorkoutSessionStore.getState().status;
+        if (currentStatus !== 'active' && currentStatus !== 'paused') {
+          useWorkoutSessionStore.getState().stop();
+          return;
+        }
+
+        useWorkoutSessionStore.getState().stop();
+        const stoppedSnapshot = useWorkoutSessionStore.getState();
+        const record = persistCompletedSession(stoppedSnapshot);
+        setLastCompletedSessionId(record.id);
+      }, []);
 
       const elapsedMs = getElapsedMs();
       const currentBpm =
@@ -55,6 +74,7 @@ jest.mock('@/hooks/useWorkoutSession', () => {
         sampleCount: samples.length,
         currentBpm,
         rollingAverageBpm,
+        lastCompletedSessionId,
         start,
         pause,
         resume,
@@ -79,6 +99,7 @@ jest.mock('react-native-reanimated', () => {
 });
 
 import WorkoutScreen from '@/app/workout';
+import { createMMKV } from 'react-native-mmkv';
 import { useWorkoutSessionStore } from '@/store/workoutSessionStore';
 
 describe('WorkoutScreen', () => {
@@ -86,6 +107,7 @@ describe('WorkoutScreen', () => {
   let alertSpy: jest.SpyInstance;
 
   const resetStore = () => {
+    createMMKV().clearAll();
     useSettingsStore.setState({ language: 'en', units: 'metric' });
     setLocale('en');
     useWorkoutSessionStore.setState({
@@ -149,6 +171,8 @@ describe('WorkoutScreen', () => {
       fireEvent.press(getByText('Start'));
     });
 
+    const expectedId = String(useWorkoutSessionStore.getState().startedAt);
+
     expect(useWorkoutSessionStore.getState().status).toBe('active');
     expect(getByText('Pause')).toBeTruthy();
     expect(getByText('Stop')).toBeTruthy();
@@ -179,7 +203,7 @@ describe('WorkoutScreen', () => {
     });
 
     expect(useWorkoutSessionStore.getState().status).toBe('stopped');
-    expect(mockReplace).toHaveBeenCalledWith('/summary/current');
+    expect(mockReplace).toHaveBeenCalledWith(`/summary/${expectedId}`);
   });
 
   it('displays reconnecting banner without pausing timer or disabling Stop button', async () => {
@@ -189,6 +213,7 @@ describe('WorkoutScreen', () => {
       useWorkoutSessionStore.getState().start();
     });
 
+    const expectedId = String(useWorkoutSessionStore.getState().startedAt);
     const initialElapsed = useWorkoutSessionStore.getState().getElapsedMs();
     expect(queryByText('Reconnecting…')).toBeNull();
 
@@ -215,7 +240,7 @@ describe('WorkoutScreen', () => {
     });
 
     expect(useWorkoutSessionStore.getState().status).toBe('stopped');
-    expect(mockReplace).toHaveBeenCalledWith('/summary/current');
+    expect(mockReplace).toHaveBeenCalledWith(`/summary/${expectedId}`);
   });
 
   it('hardware back press is not intercepted when idle', async () => {
@@ -271,6 +296,8 @@ describe('WorkoutScreen', () => {
       useWorkoutSessionStore.getState().start();
     });
 
+    const expectedId = String(useWorkoutSessionStore.getState().startedAt);
+
     expect(backHandlerListeners.length).toBeGreaterThan(0);
     const activeListener =
       backHandlerListeners[backHandlerListeners.length - 1];
@@ -291,7 +318,7 @@ describe('WorkoutScreen', () => {
     });
 
     expect(useWorkoutSessionStore.getState().status).toBe('stopped');
-    expect(mockReplace).toHaveBeenCalledWith('/summary/current');
+    expect(mockReplace).toHaveBeenCalledWith(`/summary/${expectedId}`);
   });
 
   it('hardware back press while paused shows confirm alert and confirming alert stops session and navigates', async () => {
@@ -301,6 +328,8 @@ describe('WorkoutScreen', () => {
       useWorkoutSessionStore.getState().start();
       useWorkoutSessionStore.getState().pause();
     });
+
+    const expectedId = String(useWorkoutSessionStore.getState().startedAt);
 
     expect(useWorkoutSessionStore.getState().status).toBe('paused');
     expect(backHandlerListeners.length).toBeGreaterThan(0);
@@ -338,6 +367,6 @@ describe('WorkoutScreen', () => {
     });
 
     expect(useWorkoutSessionStore.getState().status).toBe('stopped');
-    expect(mockReplace).toHaveBeenCalledWith('/summary/current');
+    expect(mockReplace).toHaveBeenCalledWith(`/summary/${expectedId}`);
   });
 });
