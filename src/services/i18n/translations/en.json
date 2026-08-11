@@ -24,7 +24,12 @@
   },
   "history": {
     "title": "History",
-    "viewDemoSummary": "View Demo Summary"
+    "sessionTitle": "Heart Rate Session",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "emptyTitle": "No Sessions Yet",
+    "emptyMessage": "Complete a workout to see it appear here.",
+    "avgHrUnit": "BPM"
   },
   "workout": {
     "title": "Workout",
