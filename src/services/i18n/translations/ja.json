@@ -29,7 +29,18 @@
   },
   "workout": {
     "title": "ワークアウト",
-    "backToPairing": "ペアリングに戻る"
+    "backToPairing": "ペアリングに戻る",
+    "noData": "--",
+    "rollingAvgLabel": "30秒平均",
+    "reconnecting": "再接続中…",
+    "start": "開始",
+    "pause": "一時停止",
+    "resume": "再開",
+    "stop": "停止",
+    "discardTitle": "ワークアウトを終了しますか？",
+    "discardMessage": "ワークアウトセッションが進行中です。今終了するとセッションが完了します。",
+    "discardCancel": "ワークアウトを続ける",
+    "discardConfirm": "セッションを終了"
   },
   "summary": {
     "title": "概要",
