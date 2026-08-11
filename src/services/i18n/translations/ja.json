@@ -20,8 +20,7 @@
     "rssiUnavailable": "—",
     "errorPrefix": "エラー",
     "reconnecting": "再接続中…",
-    "cancel": "キャンセル",
-    "garminTip": "ヒント：Garminデバイスの場合、ウォッチ設定で「心拍数のブロードキャスト」を有効にしてください。"
+    "cancel": "キャンセル"
   },
   "history": {
     "title": "履歴",

@@ -20,8 +20,7 @@
     "rssiUnavailable": "—",
     "errorPrefix": "Error",
     "reconnecting": "Reconnecting…",
-    "cancel": "Cancel",
-    "garminTip": "Tip: For Garmin devices, enable \"Broadcast Heart Rate\" in your watch settings."
+    "cancel": "Cancel"
   },
   "history": {
     "title": "History",

@@ -1,13 +1,14 @@
 import { useEffect, useRef } from 'react';
-import { StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
+import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from '@/hooks/useTranslation';
-import { colors, type as typeStyles } from '@/theme';
+import { colors, space, type as typeStyles } from '@/theme';
 
 export interface BpmReadoutProps {
   bpm: number | null;
@@ -23,32 +24,63 @@ export function BpmReadout({ bpm }: BpmReadoutProps) {
       prevBpmRef.current = bpm;
       if (bpm !== null) {
         scale.value = withSequence(
-          withTiming(1.08, { duration: 100 }),
-          withTiming(1, { duration: 150 }),
+          withTiming(1.15, { duration: 120 }),
+          withTiming(1, { duration: 160 }),
         );
       }
     }
   }, [bpm, scale]);
 
-  const animatedStyle = useAnimatedStyle(() => ({
+  const animatedHeartStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
 
   const displayValue = bpm !== null ? `${bpm}` : t('workout.noData');
 
   return (
-    <Animated.View style={animatedStyle}>
-      <Text style={styles.readoutText}>{displayValue}</Text>
-    </Animated.View>
+    <View style={styles.container}>
+      <View style={styles.readoutRow}>
+        <Animated.View style={[styles.heartContainer, animatedHeartStyle]}>
+          <Ionicons
+            name="heart-outline"
+            size={36}
+            color={bpm !== null ? colors.primaryContainer : colors.outline}
+          />
+        </Animated.View>
+        <Text style={styles.readoutText}>{displayValue}</Text>
+      </View>
+      <Text style={styles.bpmUnit}>BPM</Text>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: space.unit * 2,
+  },
+  readoutRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.unit * 3,
+  },
+  heartContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   readoutText: {
     color: colors.onSurface,
-    fontSize: typeStyles.displayMetrics.fontSize,
-    fontWeight: typeStyles.displayMetrics.fontWeight,
-    lineHeight: typeStyles.displayMetrics.lineHeight,
-    letterSpacing: typeStyles.displayMetrics.letterSpacing,
+    fontSize: 64,
+    fontWeight: '700',
+    lineHeight: 72,
+    letterSpacing: -1,
+  },
+  bpmUnit: {
+    color: colors.onSurfaceVariant,
+    fontSize: typeStyles.labelCaps.fontSize,
+    fontWeight: typeStyles.labelCaps.fontWeight,
+    letterSpacing: typeStyles.labelCaps.letterSpacing,
+    marginTop: space.unit,
   },
 });
