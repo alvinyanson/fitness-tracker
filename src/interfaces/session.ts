@@ -19,3 +19,19 @@ export interface WorkoutSessionSnapshot {
   /** Appended only while `active`. */
   samples: HeartRateSample[];
 }
+
+/** Pure reduction of a session's timing + HR samples. */
+export interface SessionStats {
+  /** Elapsed active ms, excluding paused spans. */
+  durationMs: number;
+  /** Rounded mean bpm; null if no valid samples. */
+  avgHr: number | null;
+  /** Highest valid bpm; null if none. */
+  maxHr: number | null;
+  /** Lowest valid bpm; null if none. */
+  minHr: number | null;
+  /** Samples that passed the plausibility filter. */
+  sampleCount: number;
+  /** Buffer length before filtering. */
+  rawSampleCount: number;
+}
