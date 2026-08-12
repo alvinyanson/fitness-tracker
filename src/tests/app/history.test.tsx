@@ -119,8 +119,8 @@ describe('HistoryScreen', () => {
     expect(getByText('130 BPM')).toBeTruthy();
 
     const index = getSessionIndex();
-    expect(index[0].id).toBe('1800000000000');
-    expect(index[1].id).toBe('1700000000000');
+    expect(index[0]?.id).toBe('1800000000000');
+    expect(index[1]?.id).toBe('1700000000000');
   });
 
   it('renders "—" dash fallback for a session with null avgHr', async () => {
@@ -166,7 +166,7 @@ describe('HistoryScreen', () => {
       ]),
     );
 
-    const alertButtons = alertSpy.mock.calls[0][2];
+    const alertButtons = alertSpy.mock.calls[0]?.[2];
     const cancelButton = alertButtons.find(
       (btn: { style?: string }) => btn.style === 'cancel',
     );
@@ -190,7 +190,7 @@ describe('HistoryScreen', () => {
       fireEvent(getByText('150 BPM'), 'longPress');
     });
 
-    const alertButtons = alertSpy.mock.calls[0][2];
+    const alertButtons = alertSpy.mock.calls[0]?.[2];
     const confirmButton = alertButtons.find(
       (btn: { style?: string }) => btn.style === 'destructive',
     );
@@ -204,6 +204,6 @@ describe('HistoryScreen', () => {
 
     const remaining = getSessionIndex();
     expect(remaining.length).toBe(1);
-    expect(remaining[0].id).toBe('1700000000000');
+    expect(remaining[0]?.id).toBe('1700000000000');
   });
 });

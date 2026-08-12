@@ -16,8 +16,7 @@ export function getRollingAverageBpm(
   let sum = 0;
   let count = 0;
 
-  for (let i = 0; i < samples.length; i += 1) {
-    const sample = samples[i];
+  for (const sample of samples) {
     if (sample.timestamp >= windowStart) {
       sum += sample.bpm;
       count += 1;

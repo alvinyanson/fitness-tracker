@@ -122,7 +122,7 @@ export function useWorkoutSession(): UseWorkoutSessionResult {
 
   const elapsedMs = getElapsedMs();
   const currentBpm =
-    samples.length > 0 ? samples[samples.length - 1].bpm : null;
+    samples.length > 0 ? (samples[samples.length - 1]?.bpm ?? null) : null;
   const rollingAverageBpm = getRollingAverageBpm(samples, Date.now());
 
   return {

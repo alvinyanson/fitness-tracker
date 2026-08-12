@@ -93,7 +93,7 @@ describe('sessionHistoryStorage', () => {
     expect(getSession('1000')).toEqual(updatedSession1);
     const index = getSessionIndex();
     expect(index).toHaveLength(1);
-    expect(index[0].avgHr).toBe(145);
+    expect(index[0]?.avgHr).toBe(145);
   });
 
   it('deletes a session and removes it from index', () => {
@@ -107,7 +107,7 @@ describe('sessionHistoryStorage', () => {
 
     const index = getSessionIndex();
     expect(index).toHaveLength(1);
-    expect(index[0].id).toBe('2000');
+    expect(index[0]?.id).toBe('2000');
   });
 
   it('does not throw when deleting a non-existent session', () => {

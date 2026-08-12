@@ -249,7 +249,8 @@ describe('WorkoutScreen', () => {
     expect(backHandlerListeners.length).toBeGreaterThan(0);
     const activeListener =
       backHandlerListeners[backHandlerListeners.length - 1];
-    const result = activeListener();
+    expect(activeListener).toBeDefined();
+    const result = activeListener!();
 
     expect(result).toBe(false);
     expect(alertSpy).not.toHaveBeenCalled();
@@ -265,10 +266,11 @@ describe('WorkoutScreen', () => {
     expect(backHandlerListeners.length).toBeGreaterThan(0);
     const activeListener =
       backHandlerListeners[backHandlerListeners.length - 1];
+    expect(activeListener).toBeDefined();
 
     let isHandled = false;
     await act(async () => {
-      isHandled = activeListener();
+      isHandled = activeListener!();
     });
 
     expect(isHandled).toBe(true);
@@ -301,20 +303,21 @@ describe('WorkoutScreen', () => {
     expect(backHandlerListeners.length).toBeGreaterThan(0);
     const activeListener =
       backHandlerListeners[backHandlerListeners.length - 1];
+    expect(activeListener).toBeDefined();
 
     await act(async () => {
-      activeListener();
+      activeListener!();
     });
 
-    const alertButtons = alertSpy.mock.calls[0][2];
-    const confirmButton = alertButtons.find(
+    const alertButtons = alertSpy.mock.calls[0]?.[2];
+    const confirmButton = alertButtons?.find(
       (btn: { style?: string }) => btn.style === 'destructive',
     );
 
     expect(confirmButton).toBeDefined();
 
     await act(async () => {
-      confirmButton.onPress();
+      confirmButton?.onPress();
     });
 
     expect(useWorkoutSessionStore.getState().status).toBe('stopped');
@@ -336,10 +339,11 @@ describe('WorkoutScreen', () => {
 
     const activeListener =
       backHandlerListeners[backHandlerListeners.length - 1];
+    expect(activeListener).toBeDefined();
 
     let isHandled = false;
     await act(async () => {
-      isHandled = activeListener();
+      isHandled = activeListener!();
     });
 
     expect(isHandled).toBe(true);

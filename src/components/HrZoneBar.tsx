@@ -32,7 +32,9 @@ export function HrZoneBar({ bpm }: HrZoneBarProps): ReactNode {
   const activeZoneIndex = getZoneIndex(bpm);
 
   const zoneLabel =
-    activeZoneIndex >= 0 ? ZONES[activeZoneIndex].name : 'ZONE --: NO DATA';
+    activeZoneIndex >= 0
+      ? (ZONES[activeZoneIndex]?.name ?? 'ZONE --: NO DATA')
+      : 'ZONE --: NO DATA';
 
   return (
     <View style={styles.container}>
