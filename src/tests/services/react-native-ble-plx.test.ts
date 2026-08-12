@@ -18,12 +18,12 @@ describe('react-native-ble-plx mock', () => {
     });
 
     expect(scannedDevices).toHaveLength(2);
-    expect(scannedDevices[0].id).toBe('dev-1');
-    expect(scannedDevices[0].name).toBe('Heart Rate Monitor');
-    expect(scannedDevices[0].rssi).toBe(-55);
-    expect(scannedDevices[1].id).toBe('dev-2');
-    expect(scannedDevices[1].name).toBe('Smart Band');
-    expect(scannedDevices[1].rssi).toBe(-70);
+    expect(scannedDevices[0]?.id).toBe('dev-1');
+    expect(scannedDevices[0]?.name).toBe('Heart Rate Monitor');
+    expect(scannedDevices[0]?.rssi).toBe(-55);
+    expect(scannedDevices[1]?.id).toBe('dev-2');
+    expect(scannedDevices[1]?.name).toBe('Smart Band');
+    expect(scannedDevices[1]?.rssi).toBe(-70);
   });
 
   it('rejects connectToDevice when scripted with a connect failure', async () => {

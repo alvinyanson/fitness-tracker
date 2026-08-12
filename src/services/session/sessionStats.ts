@@ -22,8 +22,8 @@ export function computeSessionStats(
   let maxHr: number | null = null;
   let minHr: number | null = null;
 
-  for (let i = 0; i < session.samples.length; i += 1) {
-    const { bpm } = session.samples[i];
+  for (const sample of session.samples) {
+    const { bpm } = sample;
     if (bpm >= MIN_PLAUSIBLE_BPM && bpm <= MAX_PLAUSIBLE_BPM) {
       sum += bpm;
       sampleCount += 1;

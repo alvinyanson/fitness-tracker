@@ -9,64 +9,72 @@ function base64ToBytes(base64: string): Uint8Array | null {
 
   if (base64.length % 4 !== 0) return null;
 
-  const lookup = new Int32Array(128).fill(-1);
-  const chars =
+  const base64LookupTable = new Int32Array(128).fill(-1);
+  const BASE64_ALPHABET =
     'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-  for (let i = 0; i < chars.length; i++) {
-    lookup[chars.charCodeAt(i)] = i;
+  for (let i = 0; i < BASE64_ALPHABET.length; i++) {
+    base64LookupTable[BASE64_ALPHABET.charCodeAt(i)] = i;
   }
 
   const len = base64.length;
-  let padding = 0;
+  let paddingCount = 0;
 
   if (len > 0) {
-    if (base64[len - 1] === '=') padding++;
-    if (base64[len - 2] === '=') padding++;
+    if (base64[len - 1] === '=') paddingCount++;
+    if (base64[len - 2] === '=') paddingCount++;
   }
 
-  if (padding > 2) return null;
+  if (paddingCount > 2) return null;
 
-  for (let i = 0; i < len - padding; i++) {
+  for (let i = 0; i < len - paddingCount; i++) {
     const code = base64.charCodeAt(i);
-    if (code >= 128 || lookup[code] === -1) return null;
+    if (code >= 128 || base64LookupTable[code] === -1) return null;
   }
-  for (let i = len - padding; i < len; i++) {
+  for (let i = len - paddingCount; i < len; i++) {
     if (base64[i] !== '=') return null;
   }
 
-  const byteLen = (len * 3) / 4 - padding;
+  const byteLen = (len * 3) / 4 - paddingCount;
   if (byteLen <= 0) return null;
 
   const bytes = new Uint8Array(byteLen);
-  let byteIdx = 0;
+  let outputByteIndex = 0;
 
   for (let i = 0; i < len; i += 4) {
-    const c0 = lookup[base64.charCodeAt(i)];
-    const c1 = lookup[base64.charCodeAt(i + 1)];
-    const isPad2 = base64[i + 2] === '=';
-    const isPad3 = base64[i + 3] === '=';
+    const b64Val0 = base64LookupTable[base64.charCodeAt(i)];
+    const b64Val1 = base64LookupTable[base64.charCodeAt(i + 1)];
+    const isChar2Padding = base64[i + 2] === '=';
+    const isChar3Padding = base64[i + 3] === '=';
 
-    const c2 = isPad2 ? 0 : lookup[base64.charCodeAt(i + 2)];
-    const c3 = isPad3 ? 0 : lookup[base64.charCodeAt(i + 3)];
+    const b64Val2 = isChar2Padding
+      ? 0
+      : base64LookupTable[base64.charCodeAt(i + 2)];
+    const b64Val3 = isChar3Padding
+      ? 0
+      : base64LookupTable[base64.charCodeAt(i + 3)];
 
     if (
-      c0 === -1 ||
-      c1 === -1 ||
-      (!isPad2 && c2 === -1) ||
-      (!isPad3 && c3 === -1)
+      b64Val0 === undefined ||
+      b64Val1 === undefined ||
+      b64Val2 === undefined ||
+      b64Val3 === undefined ||
+      b64Val0 === -1 ||
+      b64Val1 === -1 ||
+      (!isChar2Padding && b64Val2 === -1) ||
+      (!isChar3Padding && b64Val3 === -1)
     ) {
       return null;
     }
 
-    if (isPad2 && !isPad3) return null;
-    if ((isPad2 || isPad3) && i + 4 !== len) return null;
+    if (isChar2Padding && !isChar3Padding) return null;
+    if ((isChar2Padding || isChar3Padding) && i + 4 !== len) return null;
 
-    bytes[byteIdx++] = (c0 << 2) | (c1 >> 4);
-    if (!isPad2) {
-      bytes[byteIdx++] = ((c1 & 15) << 4) | (c2 >> 2);
+    bytes[outputByteIndex++] = (b64Val0 << 2) | (b64Val1 >> 4);
+    if (!isChar2Padding) {
+      bytes[outputByteIndex++] = ((b64Val1 & 15) << 4) | (b64Val2 >> 2);
     }
-    if (!isPad3) {
-      bytes[byteIdx++] = ((c2 & 3) << 6) | c3;
+    if (!isChar3Padding) {
+      bytes[outputByteIndex++] = ((b64Val2 & 3) << 6) | b64Val3;
     }
   }
 
@@ -83,6 +91,9 @@ export function parseHeartRateMeasurement(
   }
 
   const flags = bytes[0];
+  if (flags === undefined) {
+    return null;
+  }
   const is16BitBpm = (flags & 0x01) !== 0;
   const isContactSupported = (flags & 0x02) !== 0;
   const isContactDetected = (flags & 0x04) !== 0;
@@ -107,11 +118,19 @@ export function parseHeartRateMeasurement(
   let offset = 1;
 
   let bpm: number;
+  const bpmLowByte = bytes[offset];
+  if (bpmLowByte === undefined) {
+    return null;
+  }
   if (is16BitBpm) {
-    bpm = bytes[offset] | (bytes[offset + 1] << 8);
+    const bpmHighByte = bytes[offset + 1];
+    if (bpmHighByte === undefined) {
+      return null;
+    }
+    bpm = bpmLowByte | (bpmHighByte << 8);
     offset += 2;
   } else {
-    bpm = bytes[offset];
+    bpm = bpmLowByte;
     offset += 1;
   }
 
@@ -126,7 +145,11 @@ export function parseHeartRateMeasurement(
 
   let energyExpended: number | undefined;
   if (isEnergyPresent) {
-    energyExpended = bytes[offset] | (bytes[offset + 1] << 8);
+    const energyLowByte = bytes[offset];
+    const energyHighByte = bytes[offset + 1];
+    if (energyLowByte !== undefined && energyHighByte !== undefined) {
+      energyExpended = energyLowByte | (energyHighByte << 8);
+    }
     offset += 2;
   }
 
@@ -134,9 +157,13 @@ export function parseHeartRateMeasurement(
   if (isRrPresent) {
     rrIntervals = [];
     while (offset < bytes.length) {
-      const rawValue = bytes[offset] | (bytes[offset + 1] << 8);
-      const ms = (rawValue * 1000) / 1024;
-      rrIntervals.push(ms);
+      const rrLowByte = bytes[offset];
+      const rrHighByte = bytes[offset + 1];
+      if (rrLowByte !== undefined && rrHighByte !== undefined) {
+        const rawRrUnits = rrLowByte | (rrHighByte << 8);
+        const rrIntervalMs = (rawRrUnits * 1000) / 1024;
+        rrIntervals.push(rrIntervalMs);
+      }
       offset += 2;
     }
   }
