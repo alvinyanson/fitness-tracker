@@ -13,6 +13,7 @@ import { BottomNavBar } from '@/components/BottomNavBar';
 import { HeaderBar } from '@/components/HeaderBar';
 import { StatCard } from '@/components/StatCard';
 import { useTranslation } from '@/hooks/useTranslation';
+import type { SummaryRouteParams } from '@/interfaces/navigation';
 import { formatDuration } from '@/services/formatDuration';
 import {
   deleteSession,
@@ -23,7 +24,13 @@ import { colors, radii, space, type as typeStyles } from '@/theme';
 import { formatDate } from '@/utils/formatDate';
 
 export default function SummaryScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id: rawId } = useLocalSearchParams<SummaryRouteParams>();
+  const id =
+    typeof rawId === 'string'
+      ? rawId
+      : Array.isArray(rawId)
+        ? rawId[0]
+        : undefined;
   const { t } = useTranslation();
   const language = useSettingsStore((state) => state.language);
 

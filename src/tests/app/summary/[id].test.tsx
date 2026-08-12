@@ -123,6 +123,16 @@ describe('SummaryScreen', () => {
     expect(getByText('Back to History')).toBeTruthy();
   });
 
+  it('correctly normalizes array-typed route params', async () => {
+    saveSession(mockSession);
+    (mockParams as any) = { id: ['1700000000000', 'extra'] };
+
+    const { getByText } = await render(<SummaryScreen />);
+
+    expect(getByText('Session Summary')).toBeTruthy();
+    expect(getByText('1:00:00')).toBeTruthy();
+  });
+
   it('handles delete flow cancellation without deleting or navigating', async () => {
     saveSession(mockSession);
     mockParams = { id: '1700000000000' };
