@@ -67,5 +67,9 @@
     "languageLabel": "Language",
     "languageEnglish": "English",
     "languageJapanese": "Japanese"
-  }
+  },
+  "errorBoundaryTitle": "Something Went Wrong",
+  "errorBoundarySubtitle": "An unexpected error occurred in the application.",
+  "errorBoundaryMessage": "The error has been logged. Please try reloading.",
+  "retryText": "Retry"
 }

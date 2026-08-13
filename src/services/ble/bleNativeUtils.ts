@@ -1,9 +1,12 @@
 import type { BleManager, Subscription } from 'react-native-ble-plx';
+import { reportError } from '@/services/crashService';
 
 export function safeStopScan(manager: BleManager): void {
   try {
     manager.stopDeviceScan();
-  } catch {}
+  } catch (error) {
+    reportError(error, { scope: 'safeStopScan' });
+  }
 }
 
 export function safeCancelDeviceConnection(
@@ -11,8 +14,12 @@ export function safeCancelDeviceConnection(
   deviceId: string,
 ): void {
   try {
-    manager.cancelDeviceConnection(deviceId).catch(() => {});
-  } catch {}
+    manager.cancelDeviceConnection(deviceId).catch((error) => {
+      reportError(error, { scope: 'cancelDeviceConnectionAsync', deviceId });
+    });
+  } catch (error) {
+    reportError(error, { scope: 'safeCancelDeviceConnection', deviceId });
+  }
 }
 
 export function safeRemoveSubscription(
@@ -21,5 +28,7 @@ export function safeRemoveSubscription(
   if (!subscription) return;
   try {
     subscription.remove();
-  } catch {}
+  } catch (error) {
+    reportError(error, { scope: 'safeRemoveSubscription' });
+  }
 }
