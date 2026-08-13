@@ -4,6 +4,7 @@ import type {
   DiscoveredDevice,
   PairedDevice,
 } from '@/interfaces/ble';
+import { reportError, logBreadcrumb } from '@/services/crashService';
 import {
   type BleConnectionEvent,
   reduceBleConnectionState,
@@ -76,6 +77,7 @@ export class BleService {
 
     if (this.snapshot.state !== 'idle') return;
 
+    logBreadcrumb('BLE: startScan initiated');
     this.clearScanTimer();
     this.dispatch({ type: 'scanStarted' });
     if (this.getSnapshot().state !== 'scanning') return;
@@ -103,6 +105,7 @@ export class BleService {
 
   stopScan(): void {
     if (this.snapshot.state !== 'scanning') return;
+    logBreadcrumb('BLE: stopScan initiated');
     this.clearScanTimer();
     safeStopScan(this.manager);
     this.dispatch({ type: 'scanStopped' });
@@ -113,6 +116,7 @@ export class BleService {
       this.stopScan();
     }
 
+    logBreadcrumb(`BLE: connect requested for device ${deviceId}`);
     this.dispatch({ type: 'connectRequested', deviceId });
     if (this.snapshot.state !== 'connecting') return;
 
@@ -146,6 +150,7 @@ export class BleService {
 
       const disconnectSub = device.onDisconnected((_err, dev) => {
         if (this.isUserInitiatedDisconnect) return;
+        logBreadcrumb('BLE: device disconnected unexpectedly');
         this.subscriptions.cleanupAll();
         this.dispatch({
           type: 'disconnected',
@@ -158,6 +163,7 @@ export class BleService {
       this.dispatch({ type: 'connectSucceeded', device: pairedDevice });
     } catch (err: any) {
       this.clearConnectTimer();
+      reportError(err, { scope: 'bleService.connect', deviceId });
       if (timedOut || err?.message === 'CONNECT_TIMEOUT') {
         safeCancelDeviceConnection(this.manager, deviceId);
         if (this.snapshot.state === 'connecting') {
@@ -263,7 +269,7 @@ export class BleService {
       try {
         listener(this.snapshot);
       } catch (err) {
-        console.error('Error in bleService subscriber:', err);
+        reportError(err, { scope: 'bleService.listener' });
       }
     }
   }

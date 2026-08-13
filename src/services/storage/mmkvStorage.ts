@@ -1,4 +1,5 @@
 import { createMMKV } from 'react-native-mmkv';
+import { reportError } from '@/services/crashService';
 
 const storage = createMMKV();
 
@@ -9,7 +10,8 @@ export function getItem<T>(key: string): T | null {
       return null;
     }
     return JSON.parse(raw) as T;
-  } catch {
+  } catch (error) {
+    reportError(error, { scope: 'mmkvStorage.getItem', key });
     return null;
   }
 }

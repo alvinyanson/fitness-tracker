@@ -67,5 +67,9 @@
     "languageLabel": "言語",
     "languageEnglish": "英語",
     "languageJapanese": "日本語"
-  }
+  },
+  "errorBoundaryTitle": "問題が発生しました",
+  "errorBoundarySubtitle": "アプリケーションで予期しないエラーが発生しました。",
+  "errorBoundaryMessage": "エラーが記録されました。再読み込みを試してください。",
+  "retryText": "再試行"
 }

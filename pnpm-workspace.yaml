@@ -1,5 +1,11 @@
 allowBuilds:
+  '@firebase/util': true
+  protobufjs: true
   unrs-resolver: true
+
+onlyBuiltDependencies:
+  - '@firebase/util'
+  - 'protobufjs'
 
 # React Native / Expo native builds expect a flat node_modules layout.
 # pnpm's default isolated (symlinked) layout breaks the Android CMake/prefab
