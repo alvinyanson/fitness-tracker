@@ -42,7 +42,9 @@
           "modes": [],
           "bluetoothAlwaysPermission": false
         }
-      ]
+      ],
+      "expo-localization",
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true
