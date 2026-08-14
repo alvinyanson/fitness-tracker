@@ -11,49 +11,54 @@ it. Anything described below as "not yet implemented" is scoped for a later mile
 
 ## Screenshots
 
-_To be added._
+|                                                  Device Pairing                                                   |                                                  Active Workout                                                   |                                                   Session Summary                                                    |                                               History                                               |
+| :---------------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------: |
+| &nbsp;&nbsp;<img src="docs/screenshots/device_pairing.jpg" width="200" alt="Device Pairing Screen" />&nbsp;&nbsp; | &nbsp;&nbsp;<img src="docs/screenshots/active_workout.jpg" width="200" alt="Active Workout Screen" />&nbsp;&nbsp; | &nbsp;&nbsp;<img src="docs/screenshots/workout_complete.jpg" width="200" alt="Session Summary Screen" />&nbsp;&nbsp; | &nbsp;&nbsp;<img src="docs/screenshots/history.jpg" width="200" alt="History Screen" />&nbsp;&nbsp; |
 
 ## Features
 
 Scope is tracked in [`docs/specs.md`](./docs/specs.md), milestone by milestone.
 
-### Milestone 1 - Core BLE + local tracking (in progress)
+### Milestone 1 - Core BLE + local tracking ✅ Done
 
 - **BLE permission handling**: Android 12+ runtime permission flow
   (`BLUETOOTH_SCAN` / `BLUETOOTH_CONNECT` / `ACCESS_FINE_LOCATION`) gates entry to the
-  app, with retry and "open settings" recovery paths. ✅ Implemented.
-- **Device pairing screen**: scan for nearby devices advertising the Heart Rate Service
-  (`0x180D`), list them by signal strength, and connect by tapping one. _Not yet
-  implemented - currently a placeholder screen._
+  app, with retry and "open settings" recovery paths.
+- **Device pairing screen**: scans for nearby devices advertising the Heart Rate Service
+  (`0x180D`), lists them by signal strength, and connects by tapping one.
 - **Explicit connection state machine** (`idle | scanning | connecting | connected |
-disconnected | error`) that stays stable across drops and failed scans. _Not yet
-  implemented._
-- **Auto-reconnect**: persist the last-paired device ID locally and attempt to
-  reconnect to it on next launch. _Not yet implemented._
+disconnected | error`) that stays stable across drops and failed scans.
+- **Auto-reconnect**: the last-paired device ID is persisted locally and reconnected to
+  automatically on next launch.
 - **Live workout screen**: live BPM readout from Heart Rate Measurement notifications,
-  elapsed session timer with Start / Pause / Resume / Stop, and rolling average BPM.
-  Disconnects mid-session show a reconnecting indicator rather than ending the session.
-  _Not yet implemented - currently a placeholder screen._
-- **Session summary screen**: total duration, avg/max/min HR shown immediately after
-  Stop; the session is saved to local storage before anything else happens. _Not yet
-  implemented - currently a placeholder screen._
+  an elapsed session timer with Start / Pause / Resume / Stop, and a rolling average
+  BPM. Disconnects mid-session show a reconnecting indicator rather than ending the
+  session.
+- **Session summary screen**: total duration and avg/max/min HR shown immediately after
+  Stop; the session is saved to local storage before anything else happens.
 - **History screen**: past sessions listed newest-first (date, duration, avg HR), tap
-  through to reopen a session's summary. _Not yet implemented - currently a placeholder
-  screen._
+  through to reopen a session's summary.
 - **Local persistence**: namespaced MMKV key-value storage for the last-paired device
-  and session history. HR is optional per session - every stat and the future calorie
-  formula must work with zero HR samples. ✅ Storage layer implemented; session history
-  writes land alongside the workout/summary screens above.
+  and session history. HR is optional per session - every stat works with zero HR
+  samples.
 
-### Milestone 2 - Platform integration, sync, polish (not started)
+### Milestone 2 - Platform integration, sync, polish (in progress)
 
-- Units toggle (metric/imperial).
-- i18n.
+- **i18n**: English and Japanese translations, with a language switcher on the Settings
+  screen and locale coverage tests. ✅ Implemented.
+- **Accessibility**: roles, labels, hints, and selected-state across screens and
+  components. ✅ Implemented.
+- **Crash reporting**: Firebase Crashlytics wired in behind a thin service. ✅
+  Implemented.
+- Units toggle (metric/imperial). _Not yet implemented._
 - Health Connect write-back for completed sessions (Android's platform health store;
-  Google Fit is deliberately not used, it's deprecated).
-- Offline/online indicator for anything needing a network call.
-- Google login (Firebase Auth) + Firestore cloud sync for units/language settings.
-- Graceful web/tablet degradation where live BLE pairing isn't available.
+  Google Fit is deliberately not used, it's deprecated). _Not yet implemented._
+- Offline/online indicator for anything needing a network call. _Not yet implemented._
+- Google login (Firebase Auth) + Firestore cloud sync for units/language settings. _Not
+  yet implemented - `@react-native-firebase/app` is installed and configured, `auth` and
+  `firestore` are not yet added._
+- Graceful web/tablet degradation where live BLE pairing isn't available. _Not yet
+  implemented._
 
 ### Milestone 3 / stretch - not started
 
@@ -76,16 +81,20 @@ packages below are specified but not yet installed - noted inline.
 - **BLE**: [`react-native-ble-plx`](https://github.com/Polidea/react-native-ble-plx) for
   scanning, connecting, and subscribing to Heart Rate Measurement notifications.
 - **State Management**: [Zustand](https://zustand-demo.pmnd.rs/) for the session state
-  machine and settings. _Specified, not yet installed._
+  machine and settings.
 - **Storage**: [MMKV](https://github.com/mrousavy/react-native-mmkv)
   (`react-native-mmkv`) for namespaced key-value data (last-paired device, units,
-  language, weight, session index).
+  language, session history).
 - **Keep Awake**: `expo-keep-awake`, so the live workout screen doesn't sleep
-  mid-session. _Specified, not yet installed._
+  mid-session.
 - **Animation & Gestures**: [React Native Reanimated](https://docs.swmansion.com/react-native-reanimated/),
   [Gesture Handler](https://docs.swmansion.com/react-native-gesture-handler/),
   React Native Screens, React Native Safe Area Context - Expo Router dependencies, also
   used for the animated BPM readout.
+- **i18n**: [`i18n-js`](https://github.com/fnando/i18n-js) + `expo-localization` for
+  English/Japanese translations and device-locale detection.
+- **Crash Reporting**: `@react-native-firebase/app` + `@react-native-firebase/crashlytics`
+  (optional, already wired in).
 - **Testing**: [`jest-expo`](https://docs.expo.dev/develop/unit-testing/) with
   [`@testing-library/react-native`](https://callstack.github.io/react-native-testing-library/)
   for unit and component tests. Maestro for E2E flows it can drive (manual-entry and
@@ -93,18 +102,16 @@ packages below are specified but not yet installed - noted inline.
 - **Linting & Code Quality**: [Oxlint](https://oxc.rs/docs/guide/usage/linter.html),
   Prettier, Husky, lint-staged.
 
-Deferred to Milestone 2:
+Deferred, rest of Milestone 2:
 
 - [`react-native-health-connect`](https://github.com/matinzd/react-native-health-connect)
   for Health Connect read/write.
 - `expo-build-properties` for the Health Connect `minSdkVersion` / `compileSdkVersion`.
-- `@react-native-firebase/app` + `auth` + `firestore` for Google login and cloud
-  settings sync.
+- `@react-native-firebase/auth` + `@react-native-firebase/firestore` for Google login and
+  cloud settings sync (`@react-native-firebase/app` is already installed and configured).
 - `@react-native-google-signin/google-signin` for Google Sign-In.
 - `@react-native-community/netinfo` for connectivity status.
-- `i18n-js` + `expo-localization` for translations.
 - `react-native-svg` for the HR chart.
-- `@react-native-firebase/crashlytics` (optional) for error tracking.
 
 Deferred to Milestone 3 / stretch:
 
