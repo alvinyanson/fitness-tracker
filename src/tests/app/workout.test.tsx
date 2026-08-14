@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, fireEvent, render } from '@testing-library/react-native';
+import { act, cleanup, fireEvent, render } from '@testing-library/react-native';
 import { Alert, BackHandler } from 'react-native';
 import { setLocale } from '@/services/i18n/i18n';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -161,6 +161,7 @@ describe('WorkoutScreen', () => {
   });
 
   afterEach(() => {
+    cleanup();
     resetStore();
     jest.restoreAllMocks();
   });
