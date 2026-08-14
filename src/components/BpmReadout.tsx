@@ -49,7 +49,7 @@ export function BpmReadout({ bpm }: BpmReadoutProps) {
         </Animated.View>
         <Text style={styles.readoutText}>{displayValue}</Text>
       </View>
-      <Text style={styles.bpmUnit}>BPM</Text>
+      <Text style={styles.bpmUnit}>{t('common.bpm')}</Text>
     </View>
   );
 }

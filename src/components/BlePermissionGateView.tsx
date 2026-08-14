@@ -3,6 +3,8 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { BleGateStatus } from '@/interfaces/ble';
 import { colors, radii, space, type as typeStyles } from '@/theme';
 
+import { useTranslation } from '@/hooks/useTranslation';
+
 export interface BlePermissionGateViewProps {
   status: Exclude<BleGateStatus, 'ready'>;
   onRetry: () => void;
@@ -14,40 +16,39 @@ export function BlePermissionGateView({
   onRetry,
   onOpenSettings,
 }: BlePermissionGateViewProps): ReactNode {
+  const { t } = useTranslation();
+
   const getContent = () => {
     switch (status) {
       case 'checking':
         return {
-          title: 'Checking Permissions',
-          description: 'Checking Bluetooth permissions and adapter status...',
-          buttonText: 'Checking...',
+          title: t('permissions.checkingTitle'),
+          description: t('permissions.checkingDescription'),
+          buttonText: t('permissions.checkingButton'),
           action: onRetry,
           disabled: true,
         };
       case 'permissionDenied':
         return {
-          title: 'Bluetooth Permission Required',
-          description:
-            'Fitness Tracker needs Bluetooth permissions to scan for and connect to heart rate monitors.',
-          buttonText: 'Retry',
+          title: t('permissions.deniedTitle'),
+          description: t('permissions.deniedDescription'),
+          buttonText: t('permissions.retry'),
           action: onRetry,
           disabled: false,
         };
       case 'permissionBlocked':
         return {
-          title: 'Permission Permanently Denied',
-          description:
-            'Bluetooth permissions are blocked in system settings. Please enable Bluetooth permissions for Fitness Tracker in your device settings.',
-          buttonText: 'Open Settings',
+          title: t('permissions.blockedTitle'),
+          description: t('permissions.blockedDescription'),
+          buttonText: t('permissions.openSettings'),
           action: onOpenSettings,
           disabled: false,
         };
       case 'bluetoothOff':
         return {
-          title: 'Bluetooth is Turned Off',
-          description:
-            'Bluetooth is currently turned off on your device. Please turn on Bluetooth to connect your heart rate monitor.',
-          buttonText: 'Retry',
+          title: t('permissions.bluetoothOffTitle'),
+          description: t('permissions.bluetoothOffDescription'),
+          buttonText: t('permissions.retry'),
           action: onRetry,
           disabled: false,
         };

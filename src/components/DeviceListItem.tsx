@@ -20,12 +20,14 @@ export function DeviceListItem({
 
   const displayName = device.name ?? t('pairing.unknownDevice');
   const displayRssi =
-    device.rssi !== null ? `${device.rssi} dBm` : t('pairing.rssiUnavailable');
+    device.rssi !== null
+      ? `${device.rssi} ${t('common.dbm')}`
+      : t('pairing.rssiUnavailable');
 
   // Determine icon based on device name
   const nameLower = (displayName || '').toLowerCase();
   let iconName: 'heart-pulse' | 'watch' | 'dumbbell' = 'heart-pulse';
-  let subtitle = 'BLE Tracker';
+  let subtitle = t('pairing.deviceTypeTracker');
 
   if (
     nameLower.includes('watch') ||
@@ -33,17 +35,17 @@ export function DeviceListItem({
     nameLower.includes('forerunner')
   ) {
     iconName = 'watch';
-    subtitle = 'Sports Watch';
+    subtitle = t('pairing.deviceTypeWatch');
   } else if (
     nameLower.includes('treadmill') ||
     nameLower.includes('trainer') ||
     nameLower.includes('bike')
   ) {
     iconName = 'dumbbell';
-    subtitle = 'Smart Fitness Device';
+    subtitle = t('pairing.deviceTypeFitness');
   } else if (nameLower.includes('strap') || nameLower.includes('sensor')) {
     iconName = 'heart-pulse';
-    subtitle = 'Heart Rate Sensor';
+    subtitle = t('pairing.deviceTypeSensor');
   }
 
   return (

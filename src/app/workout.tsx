@@ -123,16 +123,19 @@ export default function WorkoutScreen() {
   const deviceBadge = pairedDevice
     ? {
         connected: connection.state === 'connected',
-        name: pairedDevice.name ?? 'TRACKER',
+        name: pairedDevice.name ?? t('workout.defaultTracker'),
       }
     : connection.state === 'connected'
-      ? { connected: true, name: 'HR DEVICE' }
+      ? { connected: true, name: t('workout.defaultHrDevice') }
       : null;
 
   return (
     <View style={styles.container}>
       {/* Top Header Bar */}
-      <HeaderBar title="LIVE WORKOUT" deviceStatusBadge={deviceBadge} />
+      <HeaderBar
+        title={t('workout.headerTitle')}
+        deviceStatusBadge={deviceBadge}
+      />
 
       <ScrollView
         style={styles.scrollView}
@@ -143,7 +146,7 @@ export default function WorkoutScreen() {
 
         {/* Duration Clock Section */}
         <View style={styles.durationSection}>
-          <Text style={styles.durationCaps}>DURATION</Text>
+          <Text style={styles.durationCaps}>{t('workout.duration')}</Text>
           <Text style={styles.timerText}>{formattedDuration}</Text>
         </View>
 
@@ -157,20 +160,24 @@ export default function WorkoutScreen() {
         <View style={styles.statsGrid}>
           <View style={styles.statsRow}>
             <StatCard
-              label="AVG BPM"
+              label={t('workout.avgBpm')}
               value={avgBpmDisplay}
               unit={avgBpmDisplay !== '—' ? 'bpm' : undefined}
             />
             <StatCard
-              label="MAX BPM"
+              label={t('workout.maxBpm')}
               value={maxBpmDisplay}
               unit={maxBpmDisplay !== '—' ? 'bpm' : undefined}
             />
           </View>
           <View style={styles.statsRow}>
-            <StatCard label="CALORIES" value={caloriesDisplay} unit="kcal" />
             <StatCard
-              label="EFFORT"
+              label={t('workout.calories')}
+              value={caloriesDisplay}
+              unit={t('workout.caloriesUnit')}
+            />
+            <StatCard
+              label={t('workout.effort')}
               value={
                 rollingAvgText === t('workout.noData') ? '—' : rollingAvgText
               }

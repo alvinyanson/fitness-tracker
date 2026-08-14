@@ -7,17 +7,14 @@ import { useSettingsStore } from '@/store/settingsStore';
 const mockReplace = jest.fn();
 
 jest.mock('expo-router', () => {
-  const ReactModule = require('react');
   return {
     __esModule: true,
     router: {
       replace: (...args: unknown[]) => mockReplace(...args),
+      push: jest.fn(),
     },
-    useFocusEffect: (effect: () => void | (() => void)) => {
-      ReactModule.useEffect(() => {
-        return effect();
-      }, [effect]);
-    },
+    useFocusEffect: (cb: any) => cb(),
+    usePathname: () => '/workout',
     Link: ({ children }: any) => children,
   };
 });
@@ -84,6 +81,22 @@ jest.mock('@/hooks/useWorkoutSession', () => {
   };
 });
 
+jest.mock('@/hooks/useDevicePairing', () => ({
+  useDevicePairing: () => ({
+    connection: { state: 'idle' },
+    devices: [],
+    pairedDevice: null,
+    isScanning: false,
+    isAutoReconnecting: false,
+    scan: jest.fn(),
+    stopScan: jest.fn(),
+    connectToDevice: jest.fn(),
+    disconnect: jest.fn(),
+    unpair: jest.fn(),
+    cancelReconnect: jest.fn(),
+  }),
+}));
+
 jest.mock('react-native-reanimated', () => {
   const { View } = require('react-native');
   return {
@@ -91,6 +104,7 @@ jest.mock('react-native-reanimated', () => {
     default: {
       View,
     },
+    View,
     useSharedValue: (init: unknown) => ({ value: init }),
     useAnimatedStyle: (fn: () => unknown) => fn(),
     withTiming: (val: unknown) => val,
@@ -154,7 +168,7 @@ describe('WorkoutScreen', () => {
   it('renders initial idle UI with Start button and Back to Pairing link', async () => {
     const { getByText, queryByText } = await render(<WorkoutScreen />);
 
-    expect(getByText('LIVE WORKOUT')).toBeTruthy();
+    expect(getByText('Live Workout')).toBeTruthy();
     expect(getByText('00:00')).toBeTruthy();
     expect(getByText('--')).toBeTruthy();
     expect(getByText('30s Avg: --')).toBeTruthy();
