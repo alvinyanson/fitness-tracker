@@ -85,7 +85,9 @@ export default function HistoryScreen() {
             color={colors.onSurfaceVariant}
             style={styles.emptyIcon}
           />
-          <Text style={styles.emptyTitle}>{t('history.emptyTitle')}</Text>
+          <Text style={styles.emptyTitle} accessibilityRole="header">
+            {t('history.emptyTitle')}
+          </Text>
           <Text style={styles.emptyMessage}>{t('history.emptyMessage')}</Text>
         </View>
       ) : (

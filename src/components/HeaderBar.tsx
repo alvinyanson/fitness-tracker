@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { useTranslation } from '@/hooks/useTranslation';
 import { colors, space, type as typeStyles } from '@/theme';
@@ -32,6 +33,18 @@ export function HeaderBar({
   const insets = useSafeInsets();
   const { t } = useTranslation();
 
+  const handleProfilePress = () => {
+    if (onProfilePress) {
+      onProfilePress();
+    } else {
+      try {
+        router.push('/settings' as any);
+      } catch {
+        // fallback
+      }
+    }
+  };
+
   return (
     <View
       style={[
@@ -54,12 +67,23 @@ export function HeaderBar({
               style={styles.signalIcon}
             />
           )}
-          <Text style={styles.titleText}>{title}</Text>
+          <Text style={styles.titleText} accessibilityRole="header">
+            {title}
+          </Text>
         </View>
 
         {/* Center section: Device status badge pill if provided */}
         {deviceStatusBadge && (
-          <View style={styles.statusBadge}>
+          <View
+            style={styles.statusBadge}
+            accessible={true}
+            accessibilityRole="text"
+            accessibilityLabel={`${deviceStatusBadge.name}, ${
+              deviceStatusBadge.connected
+                ? t('pairing.connected')
+                : t('pairing.disconnected')
+            }`}
+          >
             <View
               style={[
                 styles.statusDot,
@@ -80,9 +104,10 @@ export function HeaderBar({
             styles.profileButton,
             pressed && styles.profileButtonPressed,
           ]}
-          onPress={onProfilePress}
+          onPress={handleProfilePress}
           accessibilityRole="button"
           accessibilityLabel={t('common.profile')}
+          accessibilityHint={t('common.profileHint')}
         >
           <Ionicons
             name="person-circle-outline"

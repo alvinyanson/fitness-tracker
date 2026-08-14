@@ -10,7 +10,12 @@ export interface StatCardProps {
 
 export function StatCard({ label, value, unit }: StatCardProps): ReactNode {
   return (
-    <View style={styles.card}>
+    <View
+      style={styles.card}
+      accessible={true}
+      accessibilityRole="text"
+      accessibilityLabel={`${label}: ${value}${unit ? ` ${unit}` : ''}`}
+    >
       <Text style={styles.label}>{label}</Text>
       <View style={styles.valueRow}>
         <Text style={styles.value}>{value}</Text>

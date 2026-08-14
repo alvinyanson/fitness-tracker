@@ -14,7 +14,14 @@ export function ReconnectingBanner({ visible }: ReconnectingBannerProps) {
   }
 
   return (
-    <View style={styles.banner} pointerEvents="none">
+    <View
+      style={styles.banner}
+      pointerEvents="none"
+      accessible={true}
+      accessibilityRole="alert"
+      accessibilityLiveRegion="assertive"
+      accessibilityLabel={t('workout.reconnecting')}
+    >
       <Text style={styles.text}>{t('workout.reconnecting')}</Text>
     </View>
   );

@@ -39,4 +39,12 @@ describe('BpmReadout', () => {
     await rerender(<BpmReadout bpm={135} />);
     expect(getByText('135')).toBeTruthy();
   });
+
+  it('sets accessible label and live region properly', async () => {
+    const { getByLabelText } = await render(<BpmReadout bpm={142} />);
+    const textNode = getByLabelText('142 BPM');
+    expect(textNode.props.accessible).toBe(true);
+    expect(textNode.props.accessibilityRole).toBe('text');
+    expect(textNode.props.accessibilityLiveRegion).toBe('polite');
+  });
 });

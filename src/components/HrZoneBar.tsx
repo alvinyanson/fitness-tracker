@@ -36,7 +36,12 @@ export function HrZoneBar({ bpm }: HrZoneBarProps): ReactNode {
   const zoneLabel = zoneKey ? t(zoneKey) : t('workout.zones.noData');
 
   return (
-    <View style={styles.container}>
+    <View
+      style={styles.container}
+      accessible={true}
+      accessibilityRole="text"
+      accessibilityLabel={zoneLabel}
+    >
       {/* 5 Segment Bar */}
       <View style={styles.segmentsRow}>
         {ZONE_KEYS.map((_, index) => {

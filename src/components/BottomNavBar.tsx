@@ -59,6 +59,8 @@ export function BottomNavBar({ currentRoute }: BottomNavBarProps): ReactNode {
         onPress={() => navigateTo('/')}
         accessibilityRole="tab"
         accessibilityLabel={t('pairing.title')}
+        accessibilityHint={t('pairing.tabHint')}
+        accessibilityState={{ selected: activeRoute === 'pairing' }}
       >
         <View
           style={[
@@ -92,6 +94,8 @@ export function BottomNavBar({ currentRoute }: BottomNavBarProps): ReactNode {
         onPress={() => navigateTo('/workout')}
         accessibilityRole="tab"
         accessibilityLabel={t('workout.title')}
+        accessibilityHint={t('workout.tabHint')}
+        accessibilityState={{ selected: activeRoute === 'workout' }}
       >
         <View
           style={[
@@ -125,6 +129,8 @@ export function BottomNavBar({ currentRoute }: BottomNavBarProps): ReactNode {
         onPress={() => navigateTo('/history')}
         accessibilityRole="tab"
         accessibilityLabel={t('history.title')}
+        accessibilityHint={t('history.tabHint')}
+        accessibilityState={{ selected: activeRoute === 'history' }}
       >
         <View
           style={[

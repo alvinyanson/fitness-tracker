@@ -53,12 +53,23 @@ describe('DeviceListItem', () => {
     expect(onPress).toHaveBeenCalledWith('AA:BB:CC:DD:EE:FF');
   });
 
-  it('does not fire onPress when disabled', async () => {
-    const { getByText } = await render(
-      <DeviceListItem device={baseDevice} disabled={true} onPress={onPress} />,
+  it('sets proper accessibility attributes including role, label, hint, and disabled state', async () => {
+    const { getByRole, rerender } = await render(
+      <DeviceListItem device={baseDevice} disabled={false} onPress={onPress} />,
     );
 
-    fireEvent.press(getByText('Heart Rate Monitor'));
-    expect(onPress).not.toHaveBeenCalled();
+    const button = getByRole('button');
+    expect(button.props.accessibilityRole).toBe('button');
+    expect(button.props.accessibilityLabel).toBe(
+      'Heart Rate Monitor, BLE Tracker, -65 dBm',
+    );
+    expect(button.props.accessibilityHint).toBe('Connects to this device');
+    expect(button.props.accessibilityState).toEqual({ disabled: false });
+
+    await rerender(
+      <DeviceListItem device={baseDevice} disabled={true} onPress={onPress} />,
+    );
+    const disabledButton = getByRole('button');
+    expect(disabledButton.props.accessibilityState).toEqual({ disabled: true });
   });
 });

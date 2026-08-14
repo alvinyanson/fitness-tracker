@@ -60,7 +60,9 @@ export function BlePermissionGateView({
   return (
     <View style={styles.container}>
       <View style={styles.card}>
-        <Text style={styles.title}>{content.title}</Text>
+        <Text style={styles.title} accessibilityRole="header">
+          {content.title}
+        </Text>
         <Text style={styles.description}>{content.description}</Text>
         <Pressable
           style={({ pressed }) => [
@@ -71,6 +73,13 @@ export function BlePermissionGateView({
           onPress={content.action}
           disabled={content.disabled}
           accessibilityRole="button"
+          accessibilityLabel={content.buttonText}
+          accessibilityHint={
+            status === 'permissionBlocked'
+              ? t('permissions.openSettingsHint')
+              : t('permissions.retryHint')
+          }
+          accessibilityState={{ disabled: content.disabled }}
         >
           <Text style={styles.buttonText}>{content.buttonText}</Text>
         </Pressable>
