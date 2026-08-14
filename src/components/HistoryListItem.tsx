@@ -29,7 +29,10 @@ export function HistoryListItem({
       onPress={() => onPress(id)}
       onLongPress={() => onLongPress(id)}
       accessibilityRole="button"
-      accessibilityLabel={`${dateLabel} ${t('history.sessionTitle')}`}
+      accessibilityLabel={`${dateLabel}, ${t('history.sessionTitle')}, ${t(
+        'workout.duration',
+      )}: ${durationLabel}, ${t('history.avgHrUnit')}: ${avgHrLabel}`}
+      accessibilityHint={t('history.sessionItemHint')}
     >
       <View style={styles.iconAvatar}>
         <MaterialCommunityIcons

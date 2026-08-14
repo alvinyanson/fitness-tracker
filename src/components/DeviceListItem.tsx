@@ -58,7 +58,11 @@ export function DeviceListItem({
       onPress={() => onPress(device.id)}
       disabled={disabled}
       accessibilityRole="button"
-      accessibilityLabel={displayName}
+      accessibilityLabel={`${displayName}, ${subtitle}${
+        device.rssi !== null ? `, ${device.rssi} ${t('common.dbm')}` : ''
+      }`}
+      accessibilityHint={t('pairing.connectHint')}
+      accessibilityState={{ disabled }}
     >
       {/* Device Icon Avatar */}
       <View style={styles.iconAvatar}>

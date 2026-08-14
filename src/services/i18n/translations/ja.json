@@ -8,9 +8,11 @@
     "blockedTitle": "権限が無効になっています",
     "blockedDescription": "Bluetooth権限がシステム設定でブロックされています。設定から許可してください。",
     "openSettings": "設定を開く",
+    "openSettingsHint": "端末の設定を開いて権限を許可します",
     "bluetoothOffTitle": "Bluetoothがオフです",
     "bluetoothOffDescription": "端末のBluetoothがオフになっています。心拍数モニターを接続するにはBluetoothをオンにしてください。",
-    "retry": "再試行"
+    "retry": "再試行",
+    "retryHint": "Bluetooth権限の確認を再試行します"
   },
   "pairing": {
     "title": "ペアリング",
@@ -45,7 +47,14 @@
     "deviceTypeTracker": "BLEトラッカー",
     "deviceTypeWatch": "スポーツウォッチ",
     "deviceTypeFitness": "スマートフィットネス機器",
-    "deviceTypeSensor": "心拍数センサー"
+    "deviceTypeSensor": "心拍数センサー",
+    "tabHint": "デバイスペアリング画面へ移動します",
+    "scanHint": "近くのBluetooth心拍計を検索します",
+    "stopScanHint": "近くのデバイスのスキャンを停止します",
+    "connectHint": "このデバイスに接続します",
+    "disconnectHint": "このデバイスから切断します",
+    "unpairHint": "このデバイスのペアリングを解除します",
+    "cancelReconnectHint": "デバイスへの再接続をキャンセルします"
   },
   "history": {
     "title": "履歴",
@@ -54,20 +63,27 @@
     "yesterday": "昨日",
     "emptyTitle": "セッションはまだありません",
     "emptyMessage": "ワークアウトを完了すると、ここに表示されます。",
-    "avgHrUnit": "BPM"
+    "avgHrUnit": "BPM",
+    "tabHint": "ワークアウト履歴画面へ移動します",
+    "sessionItemHint": "ワークアウトセッションの概要を表示します"
   },
   "workout": {
     "title": "ワークアウト",
     "headerTitle": "ライブワークアウト",
     "duration": "経過時間",
     "backToPairing": "ペアリングに戻る",
+    "backToPairingHint": "ペアリング画面に戻ります",
     "noData": "--",
     "rollingAvgLabel": "30秒平均",
     "reconnecting": "再接続中…",
     "start": "開始",
+    "startHint": "ワークアウトセッションを開始します",
     "pause": "一時停止",
+    "pauseHint": "ワークアウトセッションを一時停止します",
     "resume": "再開",
+    "resumeHint": "ワークアウトセッションを再開します",
     "stop": "停止",
+    "stopHint": "ワークアウトセッションを終了して保存します",
     "discardTitle": "ワークアウトを終了しますか？",
     "discardMessage": "ワークアウトセッションが進行中です。今終了するとセッションが完了します。",
     "discardCancel": "ワークアウトを続ける",
@@ -79,6 +95,7 @@
     "caloriesUnit": "kcal",
     "defaultTracker": "トラッカー",
     "defaultHrDevice": "心拍デバイス",
+    "tabHint": "ライブワークアウト画面へ移動します",
     "zones": {
       "zone1": "ゾーン 1: ウォームアップ",
       "zone2": "ゾーン 2: イージー",
@@ -95,12 +112,14 @@
     "notFoundTitle": "セッションが見つかりません",
     "notFoundMessage": "要求されたワークアウトセッションが見つからないか、削除されました。",
     "backToHistory": "履歴に戻る",
+    "backToHistoryHint": "履歴一覧に戻ります",
     "avgHr": "平均心拍数",
     "maxHr": "最大心拍数",
     "minHr": "最小心拍数",
     "samples": "サンプル数",
     "noHeartRate": "このセッション中、心拍数データは記録されませんでした。",
     "deleteAction": "セッションを削除",
+    "deleteHint": "このワークアウトセッションを完全に削除します",
     "deleteTitle": "セッションを削除しますか？",
     "deleteMessage": "このワークアウトセッションは永久に削除されます。この操作は取り消せません。",
     "deleteCancel": "キャンセル",
@@ -110,10 +129,12 @@
     "title": "設定",
     "languageLabel": "言語",
     "languageEnglish": "英語",
-    "languageJapanese": "日本語"
+    "languageJapanese": "日本語",
+    "languageOptionHint": "この言語を選択します"
   },
   "common": {
     "profile": "プロフィール",
+    "profileHint": "設定画面を開きます",
     "bpm": "BPM",
     "dbm": "dBm"
   },

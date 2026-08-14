@@ -8,9 +8,11 @@
     "blockedTitle": "Permission Permanently Denied",
     "blockedDescription": "Bluetooth permissions are blocked in system settings. Please enable Bluetooth permissions for Fitness Tracker in your device settings.",
     "openSettings": "Open Settings",
+    "openSettingsHint": "Opens device settings to grant permissions",
     "bluetoothOffTitle": "Bluetooth is Turned Off",
     "bluetoothOffDescription": "Bluetooth is currently turned off on your device. Please turn on Bluetooth to connect your heart rate monitor.",
-    "retry": "Retry"
+    "retry": "Retry",
+    "retryHint": "Retries Bluetooth permission check"
   },
   "pairing": {
     "title": "Pairing",
@@ -45,7 +47,14 @@
     "deviceTypeTracker": "BLE Tracker",
     "deviceTypeWatch": "Sports Watch",
     "deviceTypeFitness": "Smart Fitness Device",
-    "deviceTypeSensor": "Heart Rate Sensor"
+    "deviceTypeSensor": "Heart Rate Sensor",
+    "tabHint": "Navigates to device pairing screen",
+    "scanHint": "Scans for nearby Bluetooth heart rate monitors",
+    "stopScanHint": "Stops scanning for nearby devices",
+    "connectHint": "Connects to this device",
+    "disconnectHint": "Disconnects from this device",
+    "unpairHint": "Unpairs this device",
+    "cancelReconnectHint": "Cancels auto-reconnecting to device"
   },
   "history": {
     "title": "History",
@@ -54,20 +63,27 @@
     "yesterday": "Yesterday",
     "emptyTitle": "No Sessions Yet",
     "emptyMessage": "Complete a workout to see it appear here.",
-    "avgHrUnit": "BPM"
+    "avgHrUnit": "BPM",
+    "tabHint": "Navigates to workout history screen",
+    "sessionItemHint": "Opens workout session summary"
   },
   "workout": {
     "title": "Workout",
     "headerTitle": "Live Workout",
     "duration": "Duration",
     "backToPairing": "Back to Pairing",
+    "backToPairingHint": "Navigates back to pairing screen",
     "noData": "--",
     "rollingAvgLabel": "30s Avg",
     "reconnecting": "Reconnecting…",
     "start": "Start",
+    "startHint": "Starts the live workout session",
     "pause": "Pause",
+    "pauseHint": "Pauses the workout session",
     "resume": "Resume",
+    "resumeHint": "Resumes the workout session",
     "stop": "Stop",
+    "stopHint": "Stops and saves the workout session",
     "discardTitle": "End Workout?",
     "discardMessage": "Your live workout session is in progress. Ending now will complete the session.",
     "discardCancel": "Keep Working Out",
@@ -79,6 +95,7 @@
     "caloriesUnit": "kcal",
     "defaultTracker": "TRACKER",
     "defaultHrDevice": "HR DEVICE",
+    "tabHint": "Navigates to live workout screen",
     "zones": {
       "zone1": "ZONE 1: WARMUP",
       "zone2": "ZONE 2: EASY",
@@ -95,12 +112,14 @@
     "notFoundTitle": "Session Not Found",
     "notFoundMessage": "The requested workout session could not be found or has been deleted.",
     "backToHistory": "Back to History",
+    "backToHistoryHint": "Navigates back to history list",
     "avgHr": "AVG HR",
     "maxHr": "MAX HR",
     "minHr": "MIN HR",
     "samples": "SAMPLES",
     "noHeartRate": "No heart rate data was recorded during this session.",
     "deleteAction": "Delete Session",
+    "deleteHint": "Permanently deletes this workout session",
     "deleteTitle": "Delete Session?",
     "deleteMessage": "This will permanently delete this workout session. This action cannot be undone.",
     "deleteCancel": "Cancel",
@@ -110,10 +129,12 @@
     "title": "Settings",
     "languageLabel": "Language",
     "languageEnglish": "English",
-    "languageJapanese": "Japanese"
+    "languageJapanese": "Japanese",
+    "languageOptionHint": "Selects this language"
   },
   "common": {
     "profile": "Profile",
+    "profileHint": "Opens settings screen",
     "bpm": "BPM",
     "dbm": "dBm"
   },

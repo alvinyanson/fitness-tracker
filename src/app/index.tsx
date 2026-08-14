@@ -123,7 +123,13 @@ function PairingContent() {
         ListHeaderComponent={
           <View style={styles.heroSection}>
             {/* Status indicator badge / state text */}
-            <Text style={styles.statusText}>{getStatusText()}</Text>
+            <Text
+              style={styles.statusText}
+              accessibilityRole="header"
+              accessibilityLiveRegion="polite"
+            >
+              {getStatusText()}
+            </Text>
 
             {/* Glowing Central Pairing Avatar Circle */}
             <View style={styles.circleOuterGlow}>
@@ -159,6 +165,8 @@ function PairingContent() {
                 ]}
                 onPress={cancelReconnect}
                 accessibilityRole="button"
+                accessibilityLabel={t('pairing.cancel')}
+                accessibilityHint={t('pairing.cancelReconnectHint')}
               >
                 <Text style={styles.buttonSecondaryText}>
                   {t('pairing.cancel')}
@@ -228,6 +236,10 @@ function PairingContent() {
                       ]}
                       onPress={disconnect}
                       accessibilityRole="button"
+                      accessibilityLabel={`${t('pairing.disconnect')} ${
+                        pairedDevice.name ?? t('pairing.unknownDevice')
+                      }`}
+                      accessibilityHint={t('pairing.disconnectHint')}
                     >
                       <Text style={styles.buttonSecondaryText}>
                         {t('pairing.disconnect')}
@@ -247,6 +259,13 @@ function PairingContent() {
                       onPress={() => connectToDevice(pairedDevice.id)}
                       disabled={isConnecting || isConnected}
                       accessibilityRole="button"
+                      accessibilityLabel={`${t('pairing.connect')} ${
+                        pairedDevice.name ?? t('pairing.unknownDevice')
+                      }`}
+                      accessibilityHint={t('pairing.connectHint')}
+                      accessibilityState={{
+                        disabled: isConnecting || isConnected,
+                      }}
                     >
                       <Text style={styles.buttonPrimaryText}>
                         {t('pairing.connect')}
@@ -263,6 +282,10 @@ function PairingContent() {
                     ]}
                     onPress={unpair}
                     accessibilityRole="button"
+                    accessibilityLabel={`${t('pairing.unpair')} ${
+                      pairedDevice.name ?? t('pairing.unknownDevice')
+                    }`}
+                    accessibilityHint={t('pairing.unpairHint')}
                   >
                     <Text style={styles.buttonGhostDangerText}>
                       {t('pairing.unpair')}
@@ -274,7 +297,7 @@ function PairingContent() {
 
             {/* Section Title */}
             {devices.length > 0 && (
-              <Text style={styles.sectionTitle}>
+              <Text style={styles.sectionTitle} accessibilityRole="header">
                 {t('pairing.availableDevices')}
               </Text>
             )}
@@ -295,6 +318,13 @@ function PairingContent() {
               onPress={isScanning ? stopScan : scan}
               disabled={isConnecting || isConnected}
               accessibilityRole="button"
+              accessibilityLabel={
+                isScanning ? t('pairing.stopScan') : t('pairing.scan')
+              }
+              accessibilityHint={
+                isScanning ? t('pairing.stopScanHint') : t('pairing.scanHint')
+              }
+              accessibilityState={{ disabled: isConnecting || isConnected }}
             >
               <Text style={styles.scanPillButtonText}>
                 {isScanning ? t('pairing.stopScan') : t('pairing.scan')}

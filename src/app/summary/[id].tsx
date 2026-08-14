@@ -69,11 +69,19 @@ export default function SummaryScreen() {
             color={colors.onSurfaceVariant}
             style={styles.notFoundIcon}
           />
-          <Text style={styles.notFoundTitle}>{t('summary.notFoundTitle')}</Text>
+          <Text style={styles.notFoundTitle} accessibilityRole="header">
+            {t('summary.notFoundTitle')}
+          </Text>
           <Text style={styles.notFoundMessage}>
             {t('summary.notFoundMessage')}
           </Text>
-          <Link href="/history" style={styles.link}>
+          <Link
+            href="/history"
+            style={styles.link}
+            accessibilityRole="link"
+            accessibilityLabel={t('summary.backToHistory')}
+            accessibilityHint={t('summary.backToHistoryHint')}
+          >
             <Text style={styles.linkText}>{t('summary.backToHistory')}</Text>
           </Link>
         </View>
@@ -115,12 +123,19 @@ export default function SummaryScreen() {
               color={colors.primaryContainer}
             />
           </View>
-          <Text style={styles.heroTitle}>{t('summary.workoutComplete')}</Text>
+          <Text style={styles.heroTitle} accessibilityRole="header">
+            {t('summary.workoutComplete')}
+          </Text>
           <Text style={styles.dateText}>{formattedDate}</Text>
         </View>
 
         {/* Duration Clock Section */}
-        <View style={styles.durationSection}>
+        <View
+          style={styles.durationSection}
+          accessible={true}
+          accessibilityRole="timer"
+          accessibilityLabel={`${t('summary.totalDuration')}: ${formattedDuration}`}
+        >
           <Text style={styles.timerText}>{formattedDuration}</Text>
           <Text style={styles.durationCaps}>{t('summary.totalDuration')}</Text>
         </View>
@@ -174,6 +189,8 @@ export default function SummaryScreen() {
             ]}
             onPress={handleDelete}
             accessibilityRole="button"
+            accessibilityLabel={t('summary.deleteAction')}
+            accessibilityHint={t('summary.deleteHint')}
           >
             <Ionicons
               name="trash-outline"
@@ -188,7 +205,13 @@ export default function SummaryScreen() {
         </View>
 
         {/* Back to History Link */}
-        <Link href="/history" style={styles.link}>
+        <Link
+          href="/history"
+          style={styles.link}
+          accessibilityRole="link"
+          accessibilityLabel={t('summary.backToHistory')}
+          accessibilityHint={t('summary.backToHistoryHint')}
+        >
           <Text style={styles.linkText}>{t('summary.backToHistory')}</Text>
         </Link>
       </ScrollView>

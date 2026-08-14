@@ -38,7 +38,13 @@ export function BpmReadout({ bpm }: BpmReadoutProps) {
   const displayValue = bpm !== null ? `${bpm}` : t('workout.noData');
 
   return (
-    <View style={styles.container}>
+    <View
+      style={styles.container}
+      accessible={true}
+      accessibilityRole="text"
+      accessibilityLabel={`${displayValue} ${t('common.bpm')}`}
+      accessibilityLiveRegion="polite"
+    >
       <View style={styles.readoutRow}>
         <Animated.View style={[styles.heartContainer, animatedHeartStyle]}>
           <Ionicons

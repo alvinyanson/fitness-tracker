@@ -31,6 +31,7 @@ export function ErrorBoundaryView({
       }}
     >
       <Text
+        accessibilityRole="header"
         style={{
           color: colors.onSurface,
           fontSize: typeStyles.headlineMd.fontSize,

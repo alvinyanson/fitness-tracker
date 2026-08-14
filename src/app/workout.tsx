@@ -145,7 +145,12 @@ export default function WorkoutScreen() {
         <ReconnectingBanner visible={reconnecting} />
 
         {/* Duration Clock Section */}
-        <View style={styles.durationSection}>
+        <View
+          style={styles.durationSection}
+          accessible={true}
+          accessibilityRole="timer"
+          accessibilityLabel={`${t('workout.duration')}: ${formattedDuration}`}
+        >
           <Text style={styles.durationCaps}>{t('workout.duration')}</Text>
           <Text style={styles.timerText}>{formattedDuration}</Text>
         </View>
@@ -201,6 +206,8 @@ export default function WorkoutScreen() {
               ]}
               onPress={start}
               accessibilityRole="button"
+              accessibilityLabel={t('workout.start')}
+              accessibilityHint={t('workout.startHint')}
             >
               <Ionicons
                 name="play"
@@ -223,6 +230,8 @@ export default function WorkoutScreen() {
                 ]}
                 onPress={pause}
                 accessibilityRole="button"
+                accessibilityLabel={t('workout.pause')}
+                accessibilityHint={t('workout.pauseHint')}
               >
                 <Ionicons
                   name="pause"
@@ -242,6 +251,8 @@ export default function WorkoutScreen() {
                 ]}
                 onPress={stop}
                 accessibilityRole="button"
+                accessibilityLabel={t('workout.stop')}
+                accessibilityHint={t('workout.stopHint')}
               >
                 <Ionicons
                   name="square"
@@ -265,6 +276,8 @@ export default function WorkoutScreen() {
                 ]}
                 onPress={resume}
                 accessibilityRole="button"
+                accessibilityLabel={t('workout.resume')}
+                accessibilityHint={t('workout.resumeHint')}
               >
                 <Ionicons
                   name="play"
@@ -284,6 +297,8 @@ export default function WorkoutScreen() {
                 ]}
                 onPress={stop}
                 accessibilityRole="button"
+                accessibilityLabel={t('workout.stop')}
+                accessibilityHint={t('workout.stopHint')}
               >
                 <Ionicons
                   name="square"
@@ -301,7 +316,13 @@ export default function WorkoutScreen() {
 
         {/* Back to pairing link when idle */}
         {status === 'idle' && (
-          <Link href="/" style={styles.link}>
+          <Link
+            href="/"
+            style={styles.link}
+            accessibilityRole="link"
+            accessibilityLabel={t('workout.backToPairing')}
+            accessibilityHint={t('workout.backToPairingHint')}
+          >
             <Text style={styles.linkText}>{t('workout.backToPairing')}</Text>
           </Link>
         )}

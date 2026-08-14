@@ -13,19 +13,24 @@ export default function SettingsScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{t('settings.title')}</Text>
+      <Text style={styles.title} accessibilityRole="header">
+        {t('settings.title')}
+      </Text>
 
       <View style={styles.section}>
         <Text style={styles.label}>{t('settings.languageLabel')}</Text>
         <View style={styles.optionsList}>
           {SUPPORTED_LOCALES.map((locale) => {
             const isActive = language === locale;
+            const optionLabel = t(LANGUAGE_KEY_MAP[locale]);
             return (
               <Pressable
                 key={locale}
                 style={[styles.optionRow, isActive && styles.optionRowActive]}
                 onPress={() => setLanguage(locale)}
                 accessibilityRole="button"
+                accessibilityLabel={optionLabel}
+                accessibilityHint={t('settings.languageOptionHint')}
                 accessibilityState={{ selected: isActive }}
               >
                 <Text
@@ -34,7 +39,7 @@ export default function SettingsScreen() {
                     isActive && styles.optionTextActive,
                   ]}
                 >
-                  {t(LANGUAGE_KEY_MAP[locale])}
+                  {optionLabel}
                 </Text>
               </Pressable>
             );

@@ -42,4 +42,17 @@ describe('HistoryListItem', () => {
     expect(defaultProps.onLongPress).toHaveBeenCalledTimes(1);
     expect(defaultProps.onLongPress).toHaveBeenCalledWith('1700000000000');
   });
+
+  it('provides comprehensive accessibility attributes', async () => {
+    const { getByRole } = await render(<HistoryListItem {...defaultProps} />);
+
+    const button = getByRole('button');
+    expect(button.props.accessibilityRole).toBe('button');
+    expect(button.props.accessibilityLabel).toBe(
+      'TODAY, Heart Rate Session, Duration: 52:14, BPM: 142 BPM',
+    );
+    expect(button.props.accessibilityHint).toBe(
+      'Opens workout session summary',
+    );
+  });
 });
