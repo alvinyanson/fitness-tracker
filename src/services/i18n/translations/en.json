@@ -1,6 +1,20 @@
 {
+  "permissions": {
+    "checkingTitle": "Checking Permissions",
+    "checkingDescription": "Checking Bluetooth permissions and adapter status...",
+    "checkingButton": "Checking...",
+    "deniedTitle": "Bluetooth Permission Required",
+    "deniedDescription": "Fitness Tracker needs Bluetooth permissions to scan for and connect to heart rate monitors.",
+    "blockedTitle": "Permission Permanently Denied",
+    "blockedDescription": "Bluetooth permissions are blocked in system settings. Please enable Bluetooth permissions for Fitness Tracker in your device settings.",
+    "openSettings": "Open Settings",
+    "bluetoothOffTitle": "Bluetooth is Turned Off",
+    "bluetoothOffDescription": "Bluetooth is currently turned off on your device. Please turn on Bluetooth to connect your heart rate monitor.",
+    "retry": "Retry"
+  },
   "pairing": {
     "title": "Pairing",
+    "headerTitle": "Device Pairing",
     "goToWorkout": "Go to Workout",
     "goToHistory": "Go to History",
     "goToSettings": "Go to Settings",
@@ -20,7 +34,18 @@
     "rssiUnavailable": "—",
     "errorPrefix": "Error",
     "reconnecting": "Reconnecting…",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "heroScanning": "Scanning for devices",
+    "heroReconnecting": "Reconnecting to device",
+    "heroConnecting": "Connecting to device",
+    "heroConnected": "Device connected",
+    "heroDiscoverability": "Pairing discoverability",
+    "heroDescription": "Make sure your BLE tracker is in pairing mode",
+    "availableDevices": "Available Devices",
+    "deviceTypeTracker": "BLE Tracker",
+    "deviceTypeWatch": "Sports Watch",
+    "deviceTypeFitness": "Smart Fitness Device",
+    "deviceTypeSensor": "Heart Rate Sensor"
   },
   "history": {
     "title": "History",
@@ -33,6 +58,8 @@
   },
   "workout": {
     "title": "Workout",
+    "headerTitle": "Live Workout",
+    "duration": "Duration",
     "backToPairing": "Back to Pairing",
     "noData": "--",
     "rollingAvgLabel": "30s Avg",
@@ -44,10 +71,27 @@
     "discardTitle": "End Workout?",
     "discardMessage": "Your live workout session is in progress. Ending now will complete the session.",
     "discardCancel": "Keep Working Out",
-    "discardConfirm": "End Session"
+    "discardConfirm": "End Session",
+    "avgBpm": "AVG BPM",
+    "maxBpm": "MAX BPM",
+    "calories": "CALORIES",
+    "effort": "EFFORT",
+    "caloriesUnit": "kcal",
+    "defaultTracker": "TRACKER",
+    "defaultHrDevice": "HR DEVICE",
+    "zones": {
+      "zone1": "ZONE 1: WARMUP",
+      "zone2": "ZONE 2: EASY",
+      "zone3": "ZONE 3: AEROBIC",
+      "zone4": "ZONE 4: ANAEROBIC",
+      "zone5": "ZONE 5: REDLINE",
+      "noData": "ZONE --: NO DATA"
+    }
   },
   "summary": {
     "title": "Session Summary",
+    "workoutComplete": "Workout Complete",
+    "totalDuration": "TOTAL DURATION",
     "notFoundTitle": "Session Not Found",
     "notFoundMessage": "The requested workout session could not be found or has been deleted.",
     "backToHistory": "Back to History",
@@ -67,6 +111,11 @@
     "languageLabel": "Language",
     "languageEnglish": "English",
     "languageJapanese": "Japanese"
+  },
+  "common": {
+    "profile": "Profile",
+    "bpm": "BPM",
+    "dbm": "dBm"
   },
   "errorBoundaryTitle": "Something Went Wrong",
   "errorBoundarySubtitle": "An unexpected error occurred in the application.",

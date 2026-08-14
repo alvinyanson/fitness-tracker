@@ -65,11 +65,11 @@ function PairingContent() {
   };
 
   const getHeroStatusLabel = (): string => {
-    if (isScanning) return 'SCANNING FOR DEVICES';
-    if (isAutoReconnecting) return 'RECONNECTING TO DEVICE';
-    if (isConnecting) return 'CONNECTING TO DEVICE';
-    if (isConnected) return 'DEVICE CONNECTED';
-    return 'PAIRING DISCOVERABILITY';
+    if (isScanning) return t('pairing.heroScanning');
+    if (isAutoReconnecting) return t('pairing.heroReconnecting');
+    if (isConnecting) return t('pairing.heroConnecting');
+    if (isConnected) return t('pairing.heroConnected');
+    return t('pairing.heroDiscoverability');
   };
 
   const renderDeviceItem = ({ item }: { item: DiscoveredDevice }) => (
@@ -114,7 +114,7 @@ function PairingContent() {
   return (
     <View style={styles.container}>
       {/* Top Header Bar */}
-      <HeaderBar title="DEVICE PAIRING" showSignalIcon={true} />
+      <HeaderBar title={t('pairing.headerTitle')} showSignalIcon={true} />
 
       <FlatList
         data={devices}
@@ -145,7 +145,7 @@ function PairingContent() {
             {/* Hero Subtitle */}
             <Text style={styles.heroStatusCaps}>{getHeroStatusLabel()}</Text>
             <Text style={styles.heroDescription}>
-              Make sure your BLE tracker is in pairing mode
+              {t('pairing.heroDescription')}
             </Text>
 
             {/* Cancel button during auto-reconnect */}
@@ -274,7 +274,9 @@ function PairingContent() {
 
             {/* Section Title */}
             {devices.length > 0 && (
-              <Text style={styles.sectionTitle}>AVAILABLE DEVICES</Text>
+              <Text style={styles.sectionTitle}>
+                {t('pairing.availableDevices')}
+              </Text>
             )}
           </View>
         }

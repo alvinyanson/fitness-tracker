@@ -1,6 +1,20 @@
 {
+  "permissions": {
+    "checkingTitle": "権限を確認中",
+    "checkingDescription": "Bluetooth権限とアダプターの状態を確認しています…",
+    "checkingButton": "確認中…",
+    "deniedTitle": "Bluetooth権限が必要です",
+    "deniedDescription": "心拍数モニターの検索と接続にはBluetooth権限が必要です。",
+    "blockedTitle": "権限が無効になっています",
+    "blockedDescription": "Bluetooth権限がシステム設定でブロックされています。設定から許可してください。",
+    "openSettings": "設定を開く",
+    "bluetoothOffTitle": "Bluetoothがオフです",
+    "bluetoothOffDescription": "端末のBluetoothがオフになっています。心拍数モニターを接続するにはBluetoothをオンにしてください。",
+    "retry": "再試行"
+  },
   "pairing": {
     "title": "ペアリング",
+    "headerTitle": "デバイスペアリング",
     "goToWorkout": "ワークアウトへ移動",
     "goToHistory": "履歴へ移動",
     "goToSettings": "設定へ移動",
@@ -20,7 +34,18 @@
     "rssiUnavailable": "—",
     "errorPrefix": "エラー",
     "reconnecting": "再接続中…",
-    "cancel": "キャンセル"
+    "cancel": "キャンセル",
+    "heroScanning": "デバイスをスキャン中",
+    "heroReconnecting": "デバイスに再接続中",
+    "heroConnecting": "デバイスに接続中",
+    "heroConnected": "デバイス接続済み",
+    "heroDiscoverability": "ペアリング待機中",
+    "heroDescription": "BLEトラッカーがペアリングモードになっていることを確認してください",
+    "availableDevices": "利用可能なデバイス",
+    "deviceTypeTracker": "BLEトラッカー",
+    "deviceTypeWatch": "スポーツウォッチ",
+    "deviceTypeFitness": "スマートフィットネス機器",
+    "deviceTypeSensor": "心拍数センサー"
   },
   "history": {
     "title": "履歴",
@@ -33,6 +58,8 @@
   },
   "workout": {
     "title": "ワークアウト",
+    "headerTitle": "ライブワークアウト",
+    "duration": "経過時間",
     "backToPairing": "ペアリングに戻る",
     "noData": "--",
     "rollingAvgLabel": "30秒平均",
@@ -44,10 +71,27 @@
     "discardTitle": "ワークアウトを終了しますか？",
     "discardMessage": "ワークアウトセッションが進行中です。今終了するとセッションが完了します。",
     "discardCancel": "ワークアウトを続ける",
-    "discardConfirm": "セッションを終了"
+    "discardConfirm": "セッションを終了",
+    "avgBpm": "平均心拍数",
+    "maxBpm": "最大心拍数",
+    "calories": "消費カロリー",
+    "effort": "運動強度",
+    "caloriesUnit": "kcal",
+    "defaultTracker": "トラッカー",
+    "defaultHrDevice": "心拍デバイス",
+    "zones": {
+      "zone1": "ゾーン 1: ウォームアップ",
+      "zone2": "ゾーン 2: イージー",
+      "zone3": "ゾーン 3: 有酸素",
+      "zone4": "ゾーン 4: 無酸素",
+      "zone5": "ゾーン 5: レッドライン",
+      "noData": "ゾーン --: データなし"
+    }
   },
   "summary": {
     "title": "セッション概要",
+    "workoutComplete": "ワークアウト完了",
+    "totalDuration": "合計時間",
     "notFoundTitle": "セッションが見つかりません",
     "notFoundMessage": "要求されたワークアウトセッションが見つからないか、削除されました。",
     "backToHistory": "履歴に戻る",
@@ -67,6 +111,11 @@
     "languageLabel": "言語",
     "languageEnglish": "英語",
     "languageJapanese": "日本語"
+  },
+  "common": {
+    "profile": "プロフィール",
+    "bpm": "BPM",
+    "dbm": "dBm"
   },
   "errorBoundaryTitle": "問題が発生しました",
   "errorBoundarySubtitle": "アプリケーションで予期しないエラーが発生しました。",

@@ -140,7 +140,7 @@ describe('PairingScreen', () => {
 
     await waitFor(() => {
       expect(getByText('Scan')).toBeTruthy();
-      expect(getByText('DEVICE PAIRING')).toBeTruthy();
+      expect(getByText('Device Pairing')).toBeTruthy();
     });
   });
 

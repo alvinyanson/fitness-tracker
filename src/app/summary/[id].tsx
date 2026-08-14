@@ -115,14 +115,14 @@ export default function SummaryScreen() {
               color={colors.primaryContainer}
             />
           </View>
-          <Text style={styles.heroTitle}>Workout Complete</Text>
+          <Text style={styles.heroTitle}>{t('summary.workoutComplete')}</Text>
           <Text style={styles.dateText}>{formattedDate}</Text>
         </View>
 
         {/* Duration Clock Section */}
         <View style={styles.durationSection}>
           <Text style={styles.timerText}>{formattedDuration}</Text>
-          <Text style={styles.durationCaps}>TOTAL DURATION</Text>
+          <Text style={styles.durationCaps}>{t('summary.totalDuration')}</Text>
         </View>
 
         {/* 2x2 Stats Grid */}

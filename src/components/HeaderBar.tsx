@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather, Ionicons } from '@expo/vector-icons';
+import { useTranslation } from '@/hooks/useTranslation';
 import { colors, space, type as typeStyles } from '@/theme';
 
 export interface HeaderBarProps {
@@ -29,6 +30,7 @@ export function HeaderBar({
   onProfilePress,
 }: HeaderBarProps): ReactNode {
   const insets = useSafeInsets();
+  const { t } = useTranslation();
 
   return (
     <View
@@ -80,7 +82,7 @@ export function HeaderBar({
           ]}
           onPress={onProfilePress}
           accessibilityRole="button"
-          accessibilityLabel="Profile"
+          accessibilityLabel={t('common.profile')}
         >
           <Ionicons
             name="person-circle-outline"

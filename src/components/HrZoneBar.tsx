@@ -1,23 +1,19 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from '@/hooks/useTranslation';
 import { colors, radii, space, type as typeStyles } from '@/theme';
 
 export interface HrZoneBarProps {
   bpm: number | null;
 }
 
-interface ZoneInfo {
-  name: string;
-  minBpm: number;
-}
-
-const ZONES: ZoneInfo[] = [
-  { name: 'ZONE 1: WARMUP', minBpm: 0 },
-  { name: 'ZONE 2: EASY', minBpm: 120 },
-  { name: 'ZONE 3: AEROBIC', minBpm: 140 },
-  { name: 'ZONE 4: ANAEROBIC', minBpm: 160 },
-  { name: 'ZONE 5: REDLINE', minBpm: 180 },
-];
+const ZONE_KEYS = [
+  'workout.zones.zone1',
+  'workout.zones.zone2',
+  'workout.zones.zone3',
+  'workout.zones.zone4',
+  'workout.zones.zone5',
+] as const;
 
 export function getZoneIndex(bpm: number | null): number {
   if (bpm === null || bpm <= 0) return -1;
@@ -29,18 +25,21 @@ export function getZoneIndex(bpm: number | null): number {
 }
 
 export function HrZoneBar({ bpm }: HrZoneBarProps): ReactNode {
+  const { t } = useTranslation();
   const activeZoneIndex = getZoneIndex(bpm);
 
-  const zoneLabel =
-    activeZoneIndex >= 0
-      ? (ZONES[activeZoneIndex]?.name ?? 'ZONE --: NO DATA')
-      : 'ZONE --: NO DATA';
+  const zoneKey =
+    activeZoneIndex >= 0 && activeZoneIndex < ZONE_KEYS.length
+      ? ZONE_KEYS[activeZoneIndex]
+      : null;
+
+  const zoneLabel = zoneKey ? t(zoneKey) : t('workout.zones.noData');
 
   return (
     <View style={styles.container}>
       {/* 5 Segment Bar */}
       <View style={styles.segmentsRow}>
-        {ZONES.map((_, index) => {
+        {ZONE_KEYS.map((_, index) => {
           const isActive = index === activeZoneIndex;
           return (
             <View
