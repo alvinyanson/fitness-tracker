@@ -155,8 +155,8 @@ connected | disconnected | error`. Every new async flow follows this shape.
 
 ## Cross-cutting requirements
 
-Every change to a screen, component, hook, or util — new or modified — covers all
-three by default, without being asked per-task:
+Every change — new or modified, anywhere in the codebase — covers whichever of these
+three apply, by default, without being asked per-task:
 
 - **Accessibility**: `accessibilityRole`, `accessibilityLabel`, `accessibilityHint`, and
   `accessibilityState` on interactive and meaningful elements, matching the pattern
