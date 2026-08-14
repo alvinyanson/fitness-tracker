@@ -153,6 +153,22 @@ connected | disconnected | error`. Every new async flow follows this shape.
 - **Altitude comes from GPS** (M3), not the barometer: Android barometer availability is
   inconsistent across devices, and GPS altitude already arrives with the route coordinates.
 
+## Cross-cutting requirements
+
+Every change to a screen, component, hook, or util — new or modified — covers all
+three by default, without being asked per-task:
+
+- **Accessibility**: `accessibilityRole`, `accessibilityLabel`, `accessibilityHint`, and
+  `accessibilityState` on interactive and meaningful elements, matching the pattern
+  already applied across `src/app/` and `src/components/`.
+- **i18n**: no hardcoded user-facing strings. Route them through `useTranslation`'s
+  `t(...)`, and add the new key to every file in `src/services/i18n/translations/`
+  (`en.json`, `ja.json`), not just one.
+- **Crash logging**: any call that can throw or reject — BLE operations, storage reads/
+  writes, and (once added) Health Connect and Firebase calls — is wrapped so failures
+  report through `src/services/crashService.ts` rather than failing silently or only
+  hitting `console.*`.
+
 ## Native config
 
 `app.json` permissions must stay in sync with any new native module. `react-native-ble-plx`
