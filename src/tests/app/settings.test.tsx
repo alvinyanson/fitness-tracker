@@ -55,4 +55,9 @@ describe('SettingsScreen', () => {
     expect(useSettingsStore.getState().language).toBe('ja');
     expect(await findByText('設定')).toBeTruthy();
   });
+
+  it('renders health connect status section', async () => {
+    const { getByText } = await render(<SettingsScreen />);
+    expect(getByText('Health Connect')).toBeTruthy();
+  });
 });
