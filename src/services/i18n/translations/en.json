@@ -132,6 +132,23 @@
     "languageJapanese": "Japanese",
     "languageOptionHint": "Selects this language"
   },
+  "healthConnect": {
+    "title": "Health Connect",
+    "statusAvailable": "Available",
+    "statusNeedsInstall": "Health Connect Not Installed",
+    "statusNeedsUpdate": "Update Required",
+    "statusUnsupported": "Not Supported",
+    "statusChecking": "Checking...",
+    "availableDescription": "Health Connect is installed and ready to sync workout data.",
+    "needsInstallDescription": "Install Health Connect from the Google Play Store to sync workout data.",
+    "needsUpdateDescription": "Health Connect needs to be updated to the latest version to sync workout data.",
+    "unsupportedDescription": "Health Connect is not supported on this device or Android version.",
+    "checkingDescription": "Checking Health Connect status...",
+    "openPlayStore": "Open Play Store",
+    "openPlayStoreHint": "Opens Google Play Store to install or update Health Connect",
+    "retry": "Retry",
+    "retryHint": "Retries Health Connect availability check"
+  },
   "common": {
     "profile": "Profile",
     "profileHint": "Opens settings screen",

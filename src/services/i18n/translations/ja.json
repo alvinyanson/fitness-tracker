@@ -132,6 +132,23 @@
     "languageJapanese": "日本語",
     "languageOptionHint": "この言語を選択します"
   },
+  "healthConnect": {
+    "title": "Health Connect",
+    "statusAvailable": "利用可能",
+    "statusNeedsInstall": "Health Connectが未インストール",
+    "statusNeedsUpdate": "アップデートが必要",
+    "statusUnsupported": "非対応",
+    "statusChecking": "確認中…",
+    "availableDescription": "Health Connectがインストールされており、ワークアウトデータを同期できます。",
+    "needsInstallDescription": "ワークアウトデータを同期するには、Google Play ストアからHealth Connectをインストールしてください。",
+    "needsUpdateDescription": "ワークアウトデータを同期するには、Health Connectを最新バージョンに更新する必要があります。",
+    "unsupportedDescription": "Health Connectはこの端末またはAndroidバージョンに対応していません。",
+    "checkingDescription": "Health Connectの状態を確認しています…",
+    "openPlayStore": "Play ストアを開く",
+    "openPlayStoreHint": "Google Play ストアを開いてHealth Connectをインストールまたは更新します",
+    "retry": "再試行",
+    "retryHint": "Health Connectの利用可能性の確認を再試行します"
+  },
   "common": {
     "profile": "プロフィール",
     "profileHint": "設定画面を開きます",

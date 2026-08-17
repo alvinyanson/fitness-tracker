@@ -1,6 +1,8 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SUPPORTED_LOCALES, LocaleCode } from '@/interfaces/i18n';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useHealthConnectAvailability } from '@/hooks/useHealthConnectAvailability';
+import { HealthConnectStatusCard } from '@/components/HealthConnectStatusCard';
 import { colors, type as typeStyles, space, radii } from '@/theme';
 
 const LANGUAGE_KEY_MAP: Record<LocaleCode, string> = {
@@ -10,6 +12,8 @@ const LANGUAGE_KEY_MAP: Record<LocaleCode, string> = {
 
 export default function SettingsScreen() {
   const { t, language, setLanguage } = useTranslation();
+  const { availability, retry, openPlayStoreListing } =
+    useHealthConnectAvailability();
 
   return (
     <View style={styles.container}>
@@ -46,6 +50,12 @@ export default function SettingsScreen() {
           })}
         </View>
       </View>
+
+      <HealthConnectStatusCard
+        availability={availability}
+        onRetry={retry}
+        onOpenPlayStore={openPlayStoreListing}
+      />
     </View>
   );
 }
