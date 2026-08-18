@@ -147,7 +147,19 @@
     "openPlayStore": "Open Play Store",
     "openPlayStoreHint": "Opens Google Play Store to install or update Health Connect",
     "retry": "Retry",
-    "retryHint": "Retries Health Connect availability check"
+    "retryHint": "Retries Health Connect availability check",
+    "syncTitle": "Health Connect",
+    "syncStatusUnsynced": "Not synced",
+    "syncStatusSyncing": "Syncing to Health Connect…",
+    "syncStatusSynced": "Synced to Health Connect",
+    "syncStatusFailed": "Sync failed",
+    "syncSyncedAt": "Synced at %{time}",
+    "syncReasonUnavailable": "Health Connect is not available on this device.",
+    "syncReasonPermissionDenied": "Health Connect write permission was denied.",
+    "syncReasonWriteFailed": "Failed to write workout to Health Connect.",
+    "syncRetry": "Retry",
+    "syncRetryHint": "Retries syncing this workout session to Health Connect",
+    "syncSessionTitle": "Heart rate workout"
   },
   "common": {
     "profile": "Profile",

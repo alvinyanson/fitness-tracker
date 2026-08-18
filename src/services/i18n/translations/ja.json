@@ -147,7 +147,19 @@
     "openPlayStore": "Play ストアを開く",
     "openPlayStoreHint": "Google Play ストアを開いてHealth Connectをインストールまたは更新します",
     "retry": "再試行",
-    "retryHint": "Health Connectの利用可能性の確認を再試行します"
+    "retryHint": "Health Connectの利用可能性の確認を再試行します",
+    "syncTitle": "Health Connect",
+    "syncStatusUnsynced": "未同期",
+    "syncStatusSyncing": "Health Connect に同期中…",
+    "syncStatusSynced": "Health Connect に同期済み",
+    "syncStatusFailed": "同期に失敗しました",
+    "syncSyncedAt": "%{time} に同期",
+    "syncReasonUnavailable": "この端末では Health Connect を利用できません。",
+    "syncReasonPermissionDenied": "Health Connect への書き込み権限が拒否されました。",
+    "syncReasonWriteFailed": "Health Connect へのワークアウト書き込みに失敗しました。",
+    "syncRetry": "再試行",
+    "syncRetryHint": "このワークアウトセッションの Health Connect への同期を再試行します",
+    "syncSessionTitle": "心拍数ワークアウト"
   },
   "common": {
     "profile": "プロフィール",

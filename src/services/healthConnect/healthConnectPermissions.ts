@@ -1,9 +1,39 @@
 import {
   type Permission,
+  getGrantedPermissions,
   requestPermission,
 } from 'react-native-health-connect';
 import type { HealthConnectPermissionStatus } from '@/interfaces/healthConnect';
 import { reportError } from '@/services/crashService';
+
+export const SESSION_WRITE_PERMISSIONS: Permission[] = [
+  { accessType: 'write', recordType: 'ExerciseSession' },
+  { accessType: 'write', recordType: 'HeartRate' },
+];
+
+export async function hasHealthConnectPermissions(
+  permissions: Permission[],
+): Promise<boolean> {
+  if (permissions.length === 0) {
+    return true;
+  }
+
+  try {
+    const granted = await getGrantedPermissions();
+    return permissions.every((requested) =>
+      granted.some(
+        (g) =>
+          'accessType' in g &&
+          'recordType' in g &&
+          g.accessType === requested.accessType &&
+          g.recordType === requested.recordType,
+      ),
+    );
+  } catch (error) {
+    reportError(error, { scope: 'healthConnectPermissions' });
+    return false;
+  }
+}
 
 export async function requestHealthConnectPermissions(
   permissions: Permission[],

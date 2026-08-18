@@ -4,8 +4,10 @@ import {
   getSession,
   getSessionIndex,
   deleteSession,
+  updateSessionHealthConnect,
 } from '@/services/storage/sessionHistoryStorage';
 import { PersistedSession, SESSION_SCHEMA_VERSION } from '@/interfaces/session';
+import type { SessionHealthConnectSync } from '@/interfaces/healthConnect';
 
 describe('sessionHistoryStorage', () => {
   beforeEach(() => {
@@ -112,5 +114,46 @@ describe('sessionHistoryStorage', () => {
 
   it('does not throw when deleting a non-existent session', () => {
     expect(() => deleteSession('9999')).not.toThrow();
+  });
+
+  describe('updateSessionHealthConnect', () => {
+    it('returns null when attempting to update a missing session', () => {
+      const sync: SessionHealthConnectSync = {
+        state: 'synced',
+        attemptedAt: 5000,
+        syncedAt: 5000,
+        exerciseRecordId: 'rec-123',
+      };
+
+      const result = updateSessionHealthConnect('missing-id', sync);
+      expect(result).toBeNull();
+    });
+
+    it('updates healthConnect field on stored session and leaves index untouched', () => {
+      saveSession(mockSession1);
+      const indexBefore = getSessionIndex();
+
+      const sync: SessionHealthConnectSync = {
+        state: 'synced',
+        attemptedAt: 65000,
+        syncedAt: 65000,
+        exerciseRecordId: 'rec-1000',
+      };
+
+      const result = updateSessionHealthConnect('1000', sync);
+
+      expect(result).toEqual({
+        ...mockSession1,
+        healthConnect: sync,
+      });
+
+      expect(getSession('1000')).toEqual({
+        ...mockSession1,
+        healthConnect: sync,
+      });
+
+      const indexAfter = getSessionIndex();
+      expect(indexAfter).toEqual(indexBefore);
+    });
   });
 });

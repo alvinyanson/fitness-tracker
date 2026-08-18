@@ -1,3 +1,4 @@
+import type { SessionHealthConnectSync } from '@/interfaces/healthConnect';
 import type { PersistedSession, SessionIndexEntry } from '@/interfaces/session';
 import { getItem, setItem, removeItem } from '@/services/storage/mmkvStorage';
 
@@ -37,4 +38,22 @@ export function deleteSession(id: string): void {
   const currentIndex = getSessionIndex();
   const updatedIndex = currentIndex.filter((entry) => entry.id !== id);
   setItem(SESSION_INDEX_KEY, updatedIndex);
+}
+
+export function updateSessionHealthConnect(
+  id: string,
+  sync: SessionHealthConnectSync,
+): PersistedSession | null {
+  const session = getSession(id);
+  if (!session) {
+    return null;
+  }
+
+  const updatedSession: PersistedSession = {
+    ...session,
+    healthConnect: sync,
+  };
+
+  setItem(`${SESSION_KEY_PREFIX}${id}`, updatedSession);
+  return updatedSession;
 }
