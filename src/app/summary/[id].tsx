@@ -11,7 +11,9 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { BottomNavBar } from '@/components/BottomNavBar';
 import { HeaderBar } from '@/components/HeaderBar';
+import { HealthConnectSyncBadge } from '@/components/HealthConnectSyncBadge';
 import { StatCard } from '@/components/StatCard';
+import { useHealthConnectSessionSync } from '@/hooks/useHealthConnectSessionSync';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { SummaryRouteParams } from '@/interfaces/navigation';
 import { formatDuration } from '@/services/formatDuration';
@@ -40,6 +42,15 @@ export default function SummaryScreen() {
     }
     return getSession(id);
   }, [id]);
+
+  const {
+    state: syncState,
+    reason: syncReason,
+    syncedAt,
+    retry: handleRetrySync,
+  } = useHealthConnectSessionSync(session, {
+    title: t('healthConnect.syncSessionTitle'),
+  });
 
   const handleDelete = () => {
     if (!id) {
@@ -179,6 +190,14 @@ export default function SummaryScreen() {
             <Text style={styles.noHrText}>{t('summary.noHeartRate')}</Text>
           </View>
         )}
+
+        {/* Health Connect Sync State */}
+        <HealthConnectSyncBadge
+          state={syncState}
+          reason={syncReason}
+          syncedAt={syncedAt}
+          onRetry={handleRetrySync}
+        />
 
         {/* Delete Session Button */}
         <View style={styles.actionContainer}>

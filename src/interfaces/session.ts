@@ -1,3 +1,4 @@
+import type { SessionHealthConnectSync } from './healthConnect';
 import type { HeartRateSample } from './heartRate';
 
 /** Explicit union per CLAUDE.md's domain convention. */
@@ -48,6 +49,8 @@ export interface PersistedSession {
   endedAt: number;
   stats: SessionStats;
   samples: HeartRateSample[];
+  /** Absent until a Health Connect write has been attempted. */
+  healthConnect?: SessionHealthConnectSync;
 }
 
 /** Lightweight per-session summary for a future history list — no sample series. */

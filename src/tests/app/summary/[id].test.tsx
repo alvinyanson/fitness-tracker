@@ -3,6 +3,7 @@ import { act, fireEvent, render } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 import { createMMKV } from 'react-native-mmkv';
 import SummaryScreen from '@/app/summary/[id]';
+import { useHealthConnectSessionSync } from '@/hooks/useHealthConnectSessionSync';
 import { PersistedSession, SESSION_SCHEMA_VERSION } from '@/interfaces/session';
 import { setLocale } from '@/services/i18n/i18n';
 import {
@@ -10,6 +11,10 @@ import {
   saveSession,
 } from '@/services/storage/sessionHistoryStorage';
 import { useSettingsStore } from '@/store/settingsStore';
+import type {
+  HealthConnectSyncState,
+  HealthConnectWriteFailureReason,
+} from '@/interfaces/healthConnect';
 
 const mockReplace = jest.fn();
 let mockParams: { id?: string } = { id: '1700000000000' };
@@ -26,6 +31,22 @@ jest.mock('expo-router', () => {
     Link: ({ children }: any) => children,
   };
 });
+
+let mockSyncResult: {
+  state: HealthConnectSyncState;
+  reason: HealthConnectWriteFailureReason | null;
+  syncedAt: number | null;
+  retry: jest.Mock;
+} = {
+  state: 'synced',
+  reason: null,
+  syncedAt: null,
+  retry: jest.fn(),
+};
+
+jest.mock('@/hooks/useHealthConnectSessionSync', () => ({
+  useHealthConnectSessionSync: jest.fn(() => mockSyncResult),
+}));
 
 describe('SummaryScreen', () => {
   let alertSpy: jest.SpyInstance;
@@ -71,6 +92,12 @@ describe('SummaryScreen', () => {
     useSettingsStore.setState({ language: 'en', units: 'metric' });
     setLocale('en');
     alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+    mockSyncResult = {
+      state: 'synced',
+      reason: null,
+      syncedAt: null,
+      retry: jest.fn(),
+    };
   });
 
   afterEach(() => {
@@ -186,5 +213,66 @@ describe('SummaryScreen', () => {
 
     expect(getSession('1700000000000')).toBeNull();
     expect(mockReplace).toHaveBeenCalledWith('/history');
+  });
+
+  describe('Health Connect sync row rendering', () => {
+    it('renders synced state with timestamp', async () => {
+      saveSession(mockSession);
+      mockParams = { id: '1700000000000' };
+      mockSyncResult = {
+        state: 'synced',
+        reason: null,
+        syncedAt: new Date('2026-08-17T10:30:00Z').getTime(),
+        retry: jest.fn(),
+      };
+
+      const { getByText } = await render(<SummaryScreen />);
+
+      expect(getByText('Synced to Health Connect')).toBeTruthy();
+      expect(getByText(/Synced at/)).toBeTruthy();
+      expect(useHealthConnectSessionSync).toHaveBeenCalledWith(
+        mockSession,
+        expect.objectContaining({ title: 'Heart rate workout' }),
+      );
+    });
+
+    it('renders unsynced state', async () => {
+      saveSession(mockSession);
+      mockParams = { id: '1700000000000' };
+      mockSyncResult = {
+        state: 'unsynced',
+        reason: null,
+        syncedAt: null,
+        retry: jest.fn(),
+      };
+
+      const { getByText } = await render(<SummaryScreen />);
+
+      expect(getByText('Not synced')).toBeTruthy();
+    });
+
+    it('renders failed state with reason and retry action', async () => {
+      saveSession(mockSession);
+      mockParams = { id: '1700000000000' };
+      const retryMock = jest.fn();
+      mockSyncResult = {
+        state: 'failed',
+        reason: 'permission-denied',
+        syncedAt: null,
+        retry: retryMock,
+      };
+
+      const { getByText } = await render(<SummaryScreen />);
+
+      expect(getByText('Sync failed')).toBeTruthy();
+      expect(
+        getByText('Health Connect write permission was denied.'),
+      ).toBeTruthy();
+
+      const retryBtn = getByText('Retry');
+      expect(retryBtn).toBeTruthy();
+      fireEvent.press(retryBtn);
+      expect(retryMock).toHaveBeenCalledTimes(1);
+    });
   });
 });
