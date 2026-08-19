@@ -159,7 +159,20 @@
     "syncReasonWriteFailed": "Failed to write workout to Health Connect.",
     "syncRetry": "Retry",
     "syncRetryHint": "Retries syncing this workout session to Health Connect",
-    "syncSessionTitle": "Heart rate workout"
+    "syncSessionTitle": "Heart rate workout",
+    "syncStatusAbandoned": "Sync abandoned",
+    "syncReasonAbandoned": "Sync failed repeatedly. Tap Retry to attempt again.",
+    "queueTitle": "Sync Queue",
+    "queuePendingCount": "%{count} workout(s) pending sync",
+    "queueNothingPending": "All workouts are synced",
+    "queueAbandonedCount": "%{count} workout(s) abandoned after repeated failures",
+    "queueSyncNow": "Sync Now",
+    "queueSyncNowHint": "Attempts to sync all pending and abandoned workouts to Health Connect",
+    "queueSyncing": "Syncing workouts…",
+    "queueLastResultSynced": "Successfully synced %{count} workout(s)",
+    "queueLastResultFailed": "Failed to sync %{count} workout(s)",
+    "queueSkippedUnavailable": "Health Connect is unavailable",
+    "queueSkippedPermissionDenied": "Health Connect permissions required to sync"
   },
   "common": {
     "profile": "Profile",

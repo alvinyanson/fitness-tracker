@@ -257,6 +257,7 @@ describe('writeSessionToHealthConnect', () => {
       sync: {
         state: 'failed',
         attemptedAt: mockNow,
+        failedAttempts: 1,
         reason: 'write-failed',
       },
     });
@@ -269,7 +270,174 @@ describe('writeSessionToHealthConnect', () => {
     expect(updateStorageSpy).toHaveBeenCalledWith(mockSession.id, {
       state: 'failed',
       attemptedAt: mockNow,
+      failedAttempts: 1,
       reason: 'write-failed',
     });
+  });
+
+  it('increments failedAttempts on write-failed from existing count', async () => {
+    const sessionWithFailures: PersistedSession = {
+      ...mockSession,
+      healthConnect: {
+        state: 'failed',
+        attemptedAt: 1700004000000,
+        failedAttempts: 2,
+        reason: 'write-failed',
+      },
+    };
+    __setInsertResult(new Error('Write error'));
+
+    const result = await writeSessionToHealthConnect(sessionWithFailures, {
+      now: nowFn,
+    });
+
+    expect(result).toEqual({
+      status: 'failed',
+      sync: {
+        state: 'failed',
+        attemptedAt: mockNow,
+        failedAttempts: 3,
+        reason: 'write-failed',
+      },
+    });
+  });
+
+  it('persists state: abandoned when failedAttempts reaches MAX_SYNC_ATTEMPTS (5)', async () => {
+    const sessionNearAbandon: PersistedSession = {
+      ...mockSession,
+      healthConnect: {
+        state: 'failed',
+        attemptedAt: 1700004000000,
+        failedAttempts: 4,
+        reason: 'write-failed',
+      },
+    };
+    __setInsertResult(new Error('Persistent write error'));
+
+    const result = await writeSessionToHealthConnect(sessionNearAbandon, {
+      now: nowFn,
+    });
+
+    expect(result).toEqual({
+      status: 'failed',
+      sync: {
+        state: 'abandoned',
+        attemptedAt: mockNow,
+        failedAttempts: 5,
+        reason: 'write-failed',
+      },
+    });
+    expect(updateStorageSpy).toHaveBeenCalledWith(mockSession.id, {
+      state: 'abandoned',
+      attemptedAt: mockNow,
+      failedAttempts: 5,
+      reason: 'write-failed',
+    });
+  });
+
+  it('preserves existing failedAttempts on unavailable without incrementing', async () => {
+    __setSdkStatus(SdkAvailabilityStatus.SDK_UNAVAILABLE);
+    const sessionWithFailures: PersistedSession = {
+      ...mockSession,
+      healthConnect: {
+        state: 'failed',
+        attemptedAt: 1700004000000,
+        failedAttempts: 3,
+        reason: 'write-failed',
+      },
+    };
+
+    const result = await writeSessionToHealthConnect(sessionWithFailures, {
+      now: nowFn,
+    });
+
+    expect(result).toEqual({
+      status: 'failed',
+      sync: {
+        state: 'failed',
+        attemptedAt: mockNow,
+        failedAttempts: 3,
+        reason: 'unavailable',
+      },
+    });
+  });
+
+  it('preserves existing failedAttempts on permission-denied without incrementing', async () => {
+    __setGrantedPermissionsList([]);
+    __setGrantedPermissions([]);
+    const sessionWithFailures: PersistedSession = {
+      ...mockSession,
+      healthConnect: {
+        state: 'failed',
+        attemptedAt: 1700004000000,
+        failedAttempts: 2,
+        reason: 'write-failed',
+      },
+    };
+
+    const result = await writeSessionToHealthConnect(sessionWithFailures, {
+      now: nowFn,
+    });
+
+    expect(result).toEqual({
+      status: 'failed',
+      sync: {
+        state: 'failed',
+        attemptedAt: mockNow,
+        failedAttempts: 2,
+        reason: 'permission-denied',
+      },
+    });
+  });
+
+  it('resets failedAttempts and allows retry on manual: true for an abandoned session', async () => {
+    const abandonedSession: PersistedSession = {
+      ...mockSession,
+      healthConnect: {
+        state: 'abandoned',
+        attemptedAt: 1700004000000,
+        failedAttempts: 5,
+        reason: 'write-failed',
+      },
+    };
+    __setInsertResult(new Error('Another failure'));
+
+    const result = await writeSessionToHealthConnect(abandonedSession, {
+      manual: true,
+      now: nowFn,
+    });
+
+    // Should reset to 0 before attempt, so next failure is 1 and state is 'failed' (not abandoned)
+    expect(result).toEqual({
+      status: 'failed',
+      sync: {
+        state: 'failed',
+        attemptedAt: mockNow,
+        failedAttempts: 1,
+        reason: 'write-failed',
+      },
+    });
+  });
+
+  it('skips permission request and returns permission-denied when promptForPermissions: false', async () => {
+    __setGrantedPermissionsList([]);
+    const { requestPermission } = jest.requireMock(
+      'react-native-health-connect',
+    );
+
+    const result = await writeSessionToHealthConnect(mockSession, {
+      promptForPermissions: false,
+      now: nowFn,
+    });
+
+    expect(result).toEqual({
+      status: 'failed',
+      sync: {
+        state: 'failed',
+        attemptedAt: mockNow,
+        reason: 'permission-denied',
+      },
+    });
+    expect(requestPermission).not.toHaveBeenCalled();
   });
 });

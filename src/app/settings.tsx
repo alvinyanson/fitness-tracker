@@ -1,9 +1,11 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { SUPPORTED_LOCALES, LocaleCode } from '@/interfaces/i18n';
-import { useTranslation } from '@/hooks/useTranslation';
-import { useHealthConnectAvailability } from '@/hooks/useHealthConnectAvailability';
 import { HealthConnectStatusCard } from '@/components/HealthConnectStatusCard';
-import { colors, type as typeStyles, space, radii } from '@/theme';
+import { HealthConnectSyncQueueCard } from '@/components/HealthConnectSyncQueueCard';
+import { useHealthConnectAvailability } from '@/hooks/useHealthConnectAvailability';
+import { useHealthConnectSyncQueue } from '@/hooks/useHealthConnectSyncQueue';
+import { useTranslation } from '@/hooks/useTranslation';
+import { type LocaleCode, SUPPORTED_LOCALES } from '@/interfaces/i18n';
+import { colors, radii, space, type as typeStyles } from '@/theme';
 
 const LANGUAGE_KEY_MAP: Record<LocaleCode, string> = {
   en: 'settings.languageEnglish',
@@ -14,6 +16,9 @@ export default function SettingsScreen() {
   const { t, language, setLanguage } = useTranslation();
   const { availability, retry, openPlayStoreListing } =
     useHealthConnectAvailability();
+  const { status, summary, lastResult, syncNow } = useHealthConnectSyncQueue({
+    title: t('healthConnect.syncSessionTitle'),
+  });
 
   return (
     <View style={styles.container}>
@@ -55,6 +60,13 @@ export default function SettingsScreen() {
         availability={availability}
         onRetry={retry}
         onOpenPlayStore={openPlayStoreListing}
+      />
+
+      <HealthConnectSyncQueueCard
+        summary={summary}
+        status={status}
+        lastResult={lastResult}
+        onSyncNow={syncNow}
       />
     </View>
   );

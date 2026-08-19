@@ -89,6 +89,27 @@ describe('useHealthConnectSessionSync', () => {
     expect(writeSpy).not.toHaveBeenCalled();
   });
 
+  it('derives initial abandoned state from persisted session and does not auto-attempt on mount', async () => {
+    const abandonedSession: PersistedSession = {
+      ...mockSession,
+      healthConnect: {
+        state: 'abandoned',
+        attemptedAt: 1700004000000,
+        failedAttempts: 5,
+        reason: 'write-failed',
+      },
+    };
+
+    const { result } = await renderHook(() =>
+      useHealthConnectSessionSync(abandonedSession),
+    );
+
+    expect(result.current.state).toBe('abandoned');
+    expect(result.current.reason).toBe('write-failed');
+    expect(result.current.syncedAt).toBeNull();
+    expect(writeSpy).not.toHaveBeenCalled();
+  });
+
   it('auto-attempts once on mount for never-synced session and updates to synced', async () => {
     const { result } = await renderHook(() =>
       useHealthConnectSessionSync(mockSession, { title: 'Test Workout' }),
@@ -96,6 +117,7 @@ describe('useHealthConnectSessionSync', () => {
 
     expect(writeSpy).toHaveBeenCalledWith(mockSession, {
       title: 'Test Workout',
+      manual: undefined,
     });
 
     await act(async () => {});
@@ -126,7 +148,29 @@ describe('useHealthConnectSessionSync', () => {
     expect(result.current.syncedAt).toBeNull();
   });
 
-  it('allows retry on failed state and updates state', async () => {
+  it('auto-attempts on mount and updates to abandoned when writer marks abandoned', async () => {
+    writeSpy.mockResolvedValueOnce({
+      status: 'failed',
+      sync: {
+        state: 'abandoned',
+        attemptedAt: 1700004000000,
+        failedAttempts: 5,
+        reason: 'write-failed',
+      },
+    });
+
+    const { result } = await renderHook(() =>
+      useHealthConnectSessionSync(mockSession),
+    );
+
+    await act(async () => {});
+
+    expect(result.current.state).toBe('abandoned');
+    expect(result.current.reason).toBe('write-failed');
+    expect(result.current.syncedAt).toBeNull();
+  });
+
+  it('allows retry on failed state and passes manual: true', async () => {
     const failedSession: PersistedSession = {
       ...mockSession,
       healthConnect: {
@@ -148,6 +192,36 @@ describe('useHealthConnectSessionSync', () => {
 
     expect(writeSpy).toHaveBeenCalledWith(failedSession, {
       title: undefined,
+      manual: true,
+    });
+    expect(result.current.state).toBe('synced');
+    expect(result.current.syncedAt).toBe(1700004000000);
+  });
+
+  it('allows retry on abandoned state and passes manual: true', async () => {
+    const abandonedSession: PersistedSession = {
+      ...mockSession,
+      healthConnect: {
+        state: 'abandoned',
+        attemptedAt: 1700004000000,
+        failedAttempts: 5,
+        reason: 'write-failed',
+      },
+    };
+
+    const { result } = await renderHook(() =>
+      useHealthConnectSessionSync(abandonedSession),
+    );
+
+    expect(writeSpy).not.toHaveBeenCalled();
+
+    await act(async () => {
+      result.current.retry();
+    });
+
+    expect(writeSpy).toHaveBeenCalledWith(abandonedSession, {
+      title: undefined,
+      manual: true,
     });
     expect(result.current.state).toBe('synced');
     expect(result.current.syncedAt).toBe(1700004000000);

@@ -20,6 +20,13 @@ function deriveInitialState(session: PersistedSession | null): SyncInfo {
       syncedAt: session.healthConnect.syncedAt ?? null,
     };
   }
+  if (session?.healthConnect?.state === 'abandoned') {
+    return {
+      state: 'abandoned',
+      reason: session.healthConnect.reason ?? null,
+      syncedAt: null,
+    };
+  }
   if (session?.healthConnect?.state === 'failed') {
     return {
       state: 'failed',
@@ -54,7 +61,10 @@ export function useHealthConnectSessionSync(
   }, [session]);
 
   const performSync = useCallback(
-    async (targetSession: PersistedSession) => {
+    async (
+      targetSession: PersistedSession,
+      syncOptions?: { manual?: boolean },
+    ) => {
       setSyncInfo({
         state: 'syncing',
         reason: null,
@@ -63,6 +73,7 @@ export function useHealthConnectSessionSync(
 
       const result = await writeSessionToHealthConnect(targetSession, {
         title: options?.title,
+        manual: syncOptions?.manual,
       });
 
       // Unmount guard
@@ -78,7 +89,7 @@ export function useHealthConnectSessionSync(
         });
       } else {
         setSyncInfo({
-          state: 'failed',
+          state: result.sync.state === 'abandoned' ? 'abandoned' : 'failed',
           reason: result.sync.reason ?? null,
           syncedAt: null,
         });
@@ -108,7 +119,7 @@ export function useHealthConnectSessionSync(
     ) {
       return;
     }
-    performSync(session);
+    performSync(session, { manual: true });
   }, [session, syncInfo.state, performSync]);
 
   return {

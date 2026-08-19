@@ -223,7 +223,7 @@ export function computeSessionStats(
 - [ ] A session with a disconnect gap reports full active `durationMs` (unaffected by the
       gap) alongside a lower `sampleCount` for the span with no notifications.
 - [ ] `bpm: 0` and implausible-spike samples (outside `[MIN_PLAUSIBLE_BPM,
-    MAX_PLAUSIBLE_BPM]`) are excluded from `avgHr`/`maxHr`/`minHr`/`sampleCount` but
+MAX_PLAUSIBLE_BPM]`) are excluded from `avgHr`/`maxHr`/`minHr`/`sampleCount` but
       counted in `rawSampleCount`.
 - [ ] `pnpm test` passes, including every new case above, with no mocks.
 - [ ] `sessionStats.ts` imports nothing from `react`, `react-native`, or

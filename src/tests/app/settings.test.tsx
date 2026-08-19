@@ -19,37 +19,31 @@ describe('SettingsScreen', () => {
   });
 
   it('renders language option buttons with accessibility label, hint, and selected state', async () => {
-    const { getAllByRole } = await render(<SettingsScreen />);
+    const { getByRole } = await render(<SettingsScreen />);
 
-    const buttons = getAllByRole('button');
-    expect(buttons.length).toBe(2);
+    const enButton = getByRole('button', { name: 'English' });
+    const jaButton = getByRole('button', { name: 'Japanese' });
 
-    const btn0 = buttons[0];
-    const btn1 = buttons[1];
-    expect(btn0).toBeDefined();
-    expect(btn1).toBeDefined();
+    expect(enButton).toBeDefined();
+    expect(enButton.props.accessibilityRole).toBe('button');
+    expect(enButton.props.accessibilityLabel).toBe('English');
+    expect(enButton.props.accessibilityHint).toBe('Selects this language');
+    expect(enButton.props.accessibilityState).toEqual({ selected: true });
 
-    // English option
-    expect(btn0!.props.accessibilityRole).toBe('button');
-    expect(btn0!.props.accessibilityLabel).toBe('English');
-    expect(btn0!.props.accessibilityHint).toBe('Selects this language');
-    expect(btn0!.props.accessibilityState).toEqual({ selected: true });
-
-    // Japanese option
-    expect(btn1!.props.accessibilityRole).toBe('button');
-    expect(btn1!.props.accessibilityLabel).toBe('Japanese');
-    expect(btn1!.props.accessibilityHint).toBe('Selects this language');
-    expect(btn1!.props.accessibilityState).toEqual({ selected: false });
+    expect(jaButton).toBeDefined();
+    expect(jaButton.props.accessibilityRole).toBe('button');
+    expect(jaButton.props.accessibilityLabel).toBe('Japanese');
+    expect(jaButton.props.accessibilityHint).toBe('Selects this language');
+    expect(jaButton.props.accessibilityState).toEqual({ selected: false });
   });
 
   it('switches language and updates accessibility state and labels', async () => {
-    const { getAllByRole, findByText } = await render(<SettingsScreen />);
+    const { getByRole, findByText } = await render(<SettingsScreen />);
 
-    const buttons = getAllByRole('button');
-    const btn1 = buttons[1];
-    expect(btn1).toBeDefined();
+    const jaButton = getByRole('button', { name: 'Japanese' });
+    expect(jaButton).toBeDefined();
     await act(async () => {
-      fireEvent.press(btn1!);
+      fireEvent.press(jaButton);
     });
 
     expect(useSettingsStore.getState().language).toBe('ja');
@@ -59,5 +53,12 @@ describe('SettingsScreen', () => {
   it('renders health connect status section', async () => {
     const { getByText } = await render(<SettingsScreen />);
     expect(getByText('Health Connect')).toBeTruthy();
+  });
+
+  it('renders sync queue card and allows tapping Sync Now when items are pending', async () => {
+    const { getByText, queryByText } = await render(<SettingsScreen />);
+    expect(getByText('Sync Queue')).toBeTruthy();
+    expect(getByText('All workouts are synced')).toBeTruthy();
+    expect(queryByText('Sync Now')).toBeTruthy();
   });
 });

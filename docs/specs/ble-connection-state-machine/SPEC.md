@@ -420,7 +420,7 @@ export const bleService: BleService;
 ## Acceptance Criteria
 
 - [ ] Every state in `idle | scanning | connecting | connected | disconnected
-    | error` is reached by at least one `bleService.test.ts` case, and each
+| error` is reached by at least one `bleService.test.ts` case, and each
       transition matches the documented table exactly (see Implementation
       Steps for the specific cases).
 - [ ] `reduceBleConnectionState` has a passing test for every row of the

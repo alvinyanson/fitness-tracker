@@ -111,4 +111,26 @@ describe('HealthConnectSyncBadge', () => {
       getByText('Failed to write workout to Health Connect.'),
     ).toBeTruthy();
   });
+
+  it('renders abandoned state with abandoned reason and clickable retry action', async () => {
+    const { getByText } = await render(
+      <HealthConnectSyncBadge
+        state="abandoned"
+        reason="write-failed"
+        syncedAt={null}
+        onRetry={onRetryMock}
+      />,
+    );
+
+    expect(getByText('Sync abandoned')).toBeTruthy();
+    expect(
+      getByText('Sync failed repeatedly. Tap Retry to attempt again.'),
+    ).toBeTruthy();
+
+    const retryButton = getByText('Retry');
+    expect(retryButton).toBeTruthy();
+
+    fireEvent.press(retryButton);
+    expect(onRetryMock).toHaveBeenCalledTimes(1);
+  });
 });

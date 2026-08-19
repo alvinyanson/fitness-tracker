@@ -98,6 +98,19 @@ export function HealthConnectSyncBadge({
           showRetry: true,
         };
       }
+      case 'abandoned': {
+        const label = t('healthConnect.syncStatusAbandoned');
+        const description = t('healthConnect.syncReasonAbandoned');
+        const accessibilityLabel = `${label}. ${description}`;
+        return {
+          iconName: 'alert-circle-outline' as const,
+          iconColor: colors.error,
+          statusText: label,
+          description,
+          accessibilityLabel,
+          showRetry: true,
+        };
+      }
     }
   };
 
