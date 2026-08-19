@@ -251,7 +251,7 @@ export interface UseDevicePairingResult {
 - [ ] A manual tap-to-connect (`connectToDevice`) always renders `pairing.connecting` and
       never shows the Cancel button, distinguishing it from the auto-reconnect path.
 - [ ] `reduceBleConnectionState` has a passing test for `connecting + connectCancelled ->
-    idle` and at least one no-op case for the same event.
+idle` and at least one no-op case for the same event.
 - [ ] `cancelConnect()` is a no-op (no dispatch, no snapshot change) when called while not
       `connecting`.
 - [ ] A connect promise that resolves or rejects after `cancelConnect()` has already run

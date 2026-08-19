@@ -5,6 +5,8 @@ import {
   ErrorBoundaryView,
   type ErrorBoundaryProps,
 } from '@/components/ErrorBoundary';
+import { useHealthConnectSyncQueue } from '@/hooks/useHealthConnectSyncQueue';
+import { useTranslation } from '@/hooks/useTranslation';
 import { reportError } from '@/services/crashService';
 import { colors } from '@/theme';
 
@@ -24,6 +26,12 @@ export function ErrorBoundary(props: ErrorBoundaryProps) {
 }
 
 export default function RootLayout() {
+  const { t } = useTranslation();
+  useHealthConnectSyncQueue({
+    autoFlushOnForeground: true,
+    title: t('healthConnect.syncSessionTitle'),
+  });
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Stack

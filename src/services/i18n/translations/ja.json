@@ -159,7 +159,20 @@
     "syncReasonWriteFailed": "Health Connect へのワークアウト書き込みに失敗しました。",
     "syncRetry": "再試行",
     "syncRetryHint": "このワークアウトセッションの Health Connect への同期を再試行します",
-    "syncSessionTitle": "心拍数ワークアウト"
+    "syncSessionTitle": "心拍数ワークアウト",
+    "syncStatusAbandoned": "同期中断",
+    "syncReasonAbandoned": "同期が繰り返し失敗しました。「再試行」をタップして再試行してください。",
+    "queueTitle": "同期キュー",
+    "queuePendingCount": "%{count}件のワークアウトが同期待ちです",
+    "queueNothingPending": "すべてのワークアウトが同期済みです",
+    "queueAbandonedCount": "%{count}件のワークアウトが複数回の失敗により中断されました",
+    "queueSyncNow": "今すぐ同期",
+    "queueSyncNowHint": "保留中および中断されたすべてのワークアウトを Health Connect に同期します",
+    "queueSyncing": "ワークアウトを同期中…",
+    "queueLastResultSynced": "%{count}件のワークアウトを同期しました",
+    "queueLastResultFailed": "%{count}件のワークアウトの同期に失敗しました",
+    "queueSkippedUnavailable": "Health Connect が利用できません",
+    "queueSkippedPermissionDenied": "同期には Health Connect の権限が必要です"
   },
   "common": {
     "profile": "プロフィール",

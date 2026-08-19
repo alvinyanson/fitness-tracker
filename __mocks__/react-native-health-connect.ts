@@ -93,6 +93,7 @@ export const requestPermission = jest.fn(
     if (mockedGrantedPermissions instanceof Error) {
       throw mockedGrantedPermissions;
     }
+    mockedGrantedPermissionsList = mockedGrantedPermissions;
     return mockedGrantedPermissions;
   },
 );

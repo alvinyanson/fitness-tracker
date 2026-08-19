@@ -14,9 +14,18 @@ import {
 import { mapSessionToHealthRecords } from '@/services/healthConnect/sessionToHealthRecords';
 import { updateSessionHealthConnect } from '@/services/storage/sessionHistoryStorage';
 
+export const MAX_SYNC_ATTEMPTS = 5;
+
 export async function writeSessionToHealthConnect(
   session: PersistedSession,
-  options?: { title?: string; now?: () => number },
+  options?: {
+    title?: string;
+    now?: () => number;
+    /** Default `true` — preserves the summary screen's behavior. */
+    promptForPermissions?: boolean;
+    /** User-initiated: clears `failedAttempts` before attempting. */
+    manual?: boolean;
+  },
 ): Promise<HealthConnectWriteResult> {
   if (session.healthConnect?.state === 'synced') {
     return { status: 'already-synced', sync: session.healthConnect };
@@ -24,6 +33,11 @@ export async function writeSessionToHealthConnect(
 
   const getNow = options?.now ?? Date.now;
   const now = getNow();
+  const promptForPermissions = options?.promptForPermissions ?? true;
+  const manual = options?.manual ?? false;
+  const currentFailedAttempts = manual
+    ? 0
+    : (session.healthConnect?.failedAttempts ?? 0);
 
   try {
     const availability = await getHealthConnectAvailability();
@@ -32,6 +46,9 @@ export async function writeSessionToHealthConnect(
         state: 'failed',
         attemptedAt: now,
         reason: 'unavailable',
+        ...(currentFailedAttempts > 0
+          ? { failedAttempts: currentFailedAttempts }
+          : {}),
       };
       updateSessionHealthConnect(session.id, sync);
       return { status: 'failed', sync };
@@ -42,6 +59,19 @@ export async function writeSessionToHealthConnect(
     );
 
     if (!hasPermissions) {
+      if (!promptForPermissions) {
+        const sync: SessionHealthConnectSync = {
+          state: 'failed',
+          attemptedAt: now,
+          reason: 'permission-denied',
+          ...(currentFailedAttempts > 0
+            ? { failedAttempts: currentFailedAttempts }
+            : {}),
+        };
+        updateSessionHealthConnect(session.id, sync);
+        return { status: 'failed', sync };
+      }
+
       const permissionStatus = await requestHealthConnectPermissions(
         SESSION_WRITE_PERMISSIONS,
       );
@@ -50,6 +80,9 @@ export async function writeSessionToHealthConnect(
           state: 'failed',
           attemptedAt: now,
           reason: 'permission-denied',
+          ...(currentFailedAttempts > 0
+            ? { failedAttempts: currentFailedAttempts }
+            : {}),
         };
         updateSessionHealthConnect(session.id, sync);
         return { status: 'failed', sync };
@@ -80,9 +113,12 @@ export async function writeSessionToHealthConnect(
       scope: 'healthConnectSessionWrite',
       sessionId: session.id,
     });
+    const newFailedAttempts = currentFailedAttempts + 1;
+    const isAbandoned = newFailedAttempts >= MAX_SYNC_ATTEMPTS;
     const sync: SessionHealthConnectSync = {
-      state: 'failed',
+      state: isAbandoned ? 'abandoned' : 'failed',
       attemptedAt: now,
+      failedAttempts: newFailedAttempts,
       reason: 'write-failed',
     };
     updateSessionHealthConnect(session.id, sync);
