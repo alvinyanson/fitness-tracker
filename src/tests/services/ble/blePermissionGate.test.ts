@@ -1,6 +1,6 @@
 import { evaluateBlePermissionGate } from '@/services/ble/blePermissionGate';
 import * as blePermissionsModule from '@/services/ble/blePermissions';
-import * as bluetoothAdapterModule from '@/services/ble/bluetoothAdapter';
+import { getBleService } from '@/services/ble/bleService';
 
 describe('evaluateBlePermissionGate', () => {
   afterEach(() => {
@@ -11,10 +11,7 @@ describe('evaluateBlePermissionGate', () => {
     jest
       .spyOn(blePermissionsModule, 'requestBlePermissions')
       .mockResolvedValue('blocked');
-    const adapterSpy = jest.spyOn(
-      bluetoothAdapterModule,
-      'getBluetoothAdapterStatus',
-    );
+    const adapterSpy = jest.spyOn(getBleService(), 'getAdapterStatus');
 
     const status = await evaluateBlePermissionGate();
 
@@ -26,10 +23,7 @@ describe('evaluateBlePermissionGate', () => {
     jest
       .spyOn(blePermissionsModule, 'requestBlePermissions')
       .mockResolvedValue('denied');
-    const adapterSpy = jest.spyOn(
-      bluetoothAdapterModule,
-      'getBluetoothAdapterStatus',
-    );
+    const adapterSpy = jest.spyOn(getBleService(), 'getAdapterStatus');
 
     const status = await evaluateBlePermissionGate();
 
@@ -42,7 +36,7 @@ describe('evaluateBlePermissionGate', () => {
       .spyOn(blePermissionsModule, 'requestBlePermissions')
       .mockResolvedValue('granted');
     jest
-      .spyOn(bluetoothAdapterModule, 'getBluetoothAdapterStatus')
+      .spyOn(getBleService(), 'getAdapterStatus')
       .mockResolvedValue('poweredOff');
 
     const status = await evaluateBlePermissionGate();
@@ -55,7 +49,7 @@ describe('evaluateBlePermissionGate', () => {
       .spyOn(blePermissionsModule, 'requestBlePermissions')
       .mockResolvedValue('granted');
     jest
-      .spyOn(bluetoothAdapterModule, 'getBluetoothAdapterStatus')
+      .spyOn(getBleService(), 'getAdapterStatus')
       .mockResolvedValue('unknown');
 
     const status = await evaluateBlePermissionGate();
@@ -68,7 +62,7 @@ describe('evaluateBlePermissionGate', () => {
       .spyOn(blePermissionsModule, 'requestBlePermissions')
       .mockResolvedValue('granted');
     jest
-      .spyOn(bluetoothAdapterModule, 'getBluetoothAdapterStatus')
+      .spyOn(getBleService(), 'getAdapterStatus')
       .mockResolvedValue('poweredOn');
 
     const status = await evaluateBlePermissionGate();

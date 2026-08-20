@@ -1,16 +1,11 @@
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type {
   BleConnectionSnapshot,
   DiscoveredDevice,
   PairedDevice,
 } from '@/interfaces/ble';
-import { bleService } from '@/services/ble/bleService';
+import { useBleConnection } from '@/hooks/useBleConnection';
+import { getBleService } from '@/services/ble/bleService';
 import {
   getLastPairedDevice,
   setLastPairedDevice,
@@ -32,19 +27,12 @@ export interface UseDevicePairingResult {
 }
 
 export function useDevicePairing(): UseDevicePairingResult {
-  const subscribe = useCallback(
-    (listener: (snapshot: BleConnectionSnapshot) => void) =>
-      bleService.subscribe(listener),
-    [],
-  );
-  const getSnapshot = useCallback(() => bleService.getSnapshot(), []);
-  const connection = useSyncExternalStore(subscribe, getSnapshot);
+  const connection = useBleConnection();
 
   const [devices, setDevices] = useState<DiscoveredDevice[]>([]);
   const [pairedDevice, setPairedDevice] = useState<PairedDevice | null>(null);
   const [isAutoReconnecting, setIsAutoReconnecting] = useState(false);
 
-  const pendingConnectDeviceIdRef = useRef<string | null>(null);
   const autoReconnectAttemptedRef = useRef(false);
 
   // Load paired device from storage on mount
@@ -61,10 +49,9 @@ export function useDevicePairing(): UseDevicePairingResult {
     autoReconnectAttemptedRef.current = true;
 
     const stored = getLastPairedDevice();
-    if (stored && bleService.getSnapshot().state === 'idle') {
-      pendingConnectDeviceIdRef.current = stored.id;
+    if (stored && getBleService().getSnapshot().state === 'idle') {
       setIsAutoReconnecting(true);
-      bleService.connect(stored.id);
+      getBleService().connect(stored.id);
     }
   }, []);
 
@@ -81,14 +68,13 @@ export function useDevicePairing(): UseDevicePairingResult {
       const device = connection.device;
       setLastPairedDevice({ id: device.id, name: device.name });
       setPairedDevice({ id: device.id, name: device.name });
-      pendingConnectDeviceIdRef.current = null;
     }
   }, [connection]);
 
   // Cleanup: stop scanning on unmount
   useEffect(() => {
     return () => {
-      bleService.stopScan();
+      getBleService().stopScan();
     };
   }, []);
 
@@ -106,32 +92,31 @@ export function useDevicePairing(): UseDevicePairingResult {
 
   const scan = useCallback(() => {
     setDevices([]);
-    bleService.startScan(handleDeviceFound, [HEART_RATE_SERVICE_UUID]);
+    getBleService().startScan(handleDeviceFound, [HEART_RATE_SERVICE_UUID]);
   }, [handleDeviceFound]);
 
   const stopScan = useCallback(() => {
-    bleService.stopScan();
+    getBleService().stopScan();
   }, []);
 
   const connectToDevice = useCallback((deviceId: string) => {
-    pendingConnectDeviceIdRef.current = deviceId;
-    bleService.connect(deviceId);
+    getBleService().connect(deviceId);
   }, []);
 
   const disconnect = useCallback(() => {
-    bleService.disconnect();
+    getBleService().disconnect();
   }, []);
 
   const unpair = useCallback(() => {
-    if (bleService.getSnapshot().state === 'connected') {
-      bleService.disconnect();
+    if (getBleService().getSnapshot().state === 'connected') {
+      getBleService().disconnect();
     }
     setLastPairedDevice(null);
     setPairedDevice(null);
   }, []);
 
   const cancelReconnect = useCallback(() => {
-    bleService.cancelConnect();
+    getBleService().cancelConnect();
   }, []);
 
   const isScanning = connection.state === 'scanning';

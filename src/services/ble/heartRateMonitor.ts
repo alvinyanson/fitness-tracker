@@ -1,5 +1,5 @@
 import type { HeartRateSample } from '@/interfaces/heartRate';
-import { bleService } from './bleService';
+import { getBleService } from './bleService';
 import {
   HEART_RATE_SERVICE_UUID,
   HEART_RATE_MEASUREMENT_CHARACTERISTIC_UUID,
@@ -18,16 +18,10 @@ export function subscribeToHeartRate(
     }
   };
 
-  const handleError = (error: Error) => {
-    if (onError) {
-      onError(error);
-    }
-  };
-
-  return bleService.monitorCharacteristic(
+  return getBleService().monitorCharacteristic(
     HEART_RATE_SERVICE_UUID,
     HEART_RATE_MEASUREMENT_CHARACTERISTIC_UUID,
     onValue,
-    handleError,
+    onError ?? (() => {}),
   );
 }

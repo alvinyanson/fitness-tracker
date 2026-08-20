@@ -3,7 +3,7 @@ import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import type { BleManager } from 'react-native-ble-plx';
 import { createMMKV } from 'react-native-mmkv';
 import { useWorkoutSession } from '@/hooks/useWorkoutSession';
-import { bleService } from '@/services/ble/bleService';
+import { getBleService, resetBleService } from '@/services/ble/bleService';
 import { HEART_RATE_MEASUREMENT_CHARACTERISTIC_UUID } from '@/services/ble/gattProfiles';
 import {
   getSession,
@@ -35,12 +35,12 @@ describe('useWorkoutSession', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     resetStore();
-    bleService.destroy();
-    managerInstance = (bleService as any).manager;
+    resetBleService();
+    managerInstance = (getBleService() as any).manager;
   });
 
   afterEach(() => {
-    bleService.destroy();
+    resetBleService();
     resetStore();
   });
 
@@ -99,7 +99,7 @@ describe('useWorkoutSession', () => {
       // Connect BLE device first
       managerInstance.__connectOutcome('success');
       await act(async () => {
-        await bleService.connect('dev-1');
+        await getBleService().connect('dev-1');
       });
 
       const { result, unmount } = await renderHook(() => useWorkoutSession());
@@ -113,7 +113,7 @@ describe('useWorkoutSession', () => {
 
       // Disconnect device
       await act(async () => {
-        await bleService.disconnect();
+        await getBleService().disconnect();
       });
 
       expect(result.current.status).toBe('active');
@@ -122,7 +122,7 @@ describe('useWorkoutSession', () => {
       // Reconnect device
       managerInstance.__connectOutcome('success');
       await act(async () => {
-        await bleService.connect('dev-1');
+        await getBleService().connect('dev-1');
       });
 
       expect(result.current.status).toBe('active');
@@ -138,7 +138,7 @@ describe('useWorkoutSession', () => {
     it('ingests samples only while active, gating during pause', async () => {
       managerInstance.__connectOutcome('success');
       await act(async () => {
-        await bleService.connect('dev-1');
+        await getBleService().connect('dev-1');
       });
 
       const { result, unmount } = await renderHook(() => useWorkoutSession());
@@ -211,7 +211,7 @@ describe('useWorkoutSession', () => {
     it('derives currentBpm and rollingAverageBpm from ingested samples', async () => {
       managerInstance.__connectOutcome('success');
       await act(async () => {
-        await bleService.connect('dev-1');
+        await getBleService().connect('dev-1');
       });
 
       const { result, unmount } = await renderHook(() => useWorkoutSession());
@@ -250,7 +250,7 @@ describe('useWorkoutSession', () => {
     it('retains last known currentBpm when paused or reconnecting', async () => {
       managerInstance.__connectOutcome('success');
       await act(async () => {
-        await bleService.connect('dev-1');
+        await getBleService().connect('dev-1');
       });
 
       const { result, unmount } = await renderHook(() => useWorkoutSession());
@@ -270,7 +270,7 @@ describe('useWorkoutSession', () => {
 
       // Disconnect -> reconnecting
       await act(async () => {
-        await bleService.disconnect();
+        await getBleService().disconnect();
       });
 
       expect(result.current.reconnecting).toBe(true);

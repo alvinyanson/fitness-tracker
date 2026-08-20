@@ -86,10 +86,9 @@ export class Device {
   }
 }
 
-let sharedAdapterState: State = State.PoweredOn;
-const stateChangeListeners = new Set<(state: State) => void>();
-
 export class BleManager {
+  private adapterState: State = State.PoweredOn;
+  private stateChangeListeners = new Set<(state: State) => void>();
   private queuedScanResults: ScriptedScanResult[] = [];
   private scanListener:
     ((error: Error | null, device: Device | null) => void) | null = null;
@@ -100,9 +99,9 @@ export class BleManager {
   private devicesById = new Map<string, Device>();
 
   __setAdapterState(state: State): void {
-    sharedAdapterState = state;
-    for (const listener of Array.from(stateChangeListeners)) {
-      listener(sharedAdapterState);
+    this.adapterState = state;
+    for (const listener of Array.from(this.stateChangeListeners)) {
+      listener(this.adapterState);
     }
   }
 
@@ -110,19 +109,19 @@ export class BleManager {
     listener: (state: State) => void,
     emitCurrentState?: boolean,
   ): Subscription {
-    stateChangeListeners.add(listener);
+    this.stateChangeListeners.add(listener);
     if (emitCurrentState) {
-      listener(sharedAdapterState);
+      listener(this.adapterState);
     }
     return {
       remove: () => {
-        stateChangeListeners.delete(listener);
+        this.stateChangeListeners.delete(listener);
       },
     };
   }
 
   async state(): Promise<State> {
-    return sharedAdapterState;
+    return this.adapterState;
   }
 
   __scanResults(results: ScriptedScanResult[]): void {
@@ -210,8 +209,8 @@ export class BleManager {
     this.notificationListeners.clear();
     this.disconnectListeners.clear();
     this.devicesById.clear();
-    stateChangeListeners.clear();
-    sharedAdapterState = State.PoweredOn;
+    this.stateChangeListeners.clear();
+    this.adapterState = State.PoweredOn;
   }
 
   /** @internal */

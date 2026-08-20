@@ -1,6 +1,6 @@
 import type { BleManager } from 'react-native-ble-plx';
 import type { HeartRateSample } from '@/interfaces/heartRate';
-import { bleService } from '@/services/ble/bleService';
+import { getBleService, resetBleService } from '@/services/ble/bleService';
 import { HEART_RATE_MEASUREMENT_CHARACTERISTIC_UUID } from '@/services/ble/gattProfiles';
 import { subscribeToHeartRate } from '@/services/ble/heartRateMonitor';
 
@@ -8,17 +8,17 @@ describe('subscribeToHeartRate', () => {
   let managerInstance: BleManager;
 
   beforeEach(() => {
-    bleService.destroy();
-    managerInstance = (bleService as any).manager;
+    resetBleService();
+    managerInstance = (getBleService() as any).manager;
   });
 
   afterEach(() => {
-    bleService.destroy();
+    resetBleService();
   });
 
   it('delivers successfully decoded samples to onSample', async () => {
     managerInstance.__connectOutcome('success');
-    await bleService.connect('dev-1');
+    await getBleService().connect('dev-1');
 
     const samples: HeartRateSample[] = [];
     const onSample = jest.fn((s: HeartRateSample) => samples.push(s));
@@ -45,7 +45,7 @@ describe('subscribeToHeartRate', () => {
 
   it('silently drops malformed notifications without calling onSample or onError', async () => {
     managerInstance.__connectOutcome('success');
-    await bleService.connect('dev-1');
+    await getBleService().connect('dev-1');
 
     const onSample = jest.fn();
     const onError = jest.fn();
@@ -71,7 +71,7 @@ describe('subscribeToHeartRate', () => {
 
   it('calling the returned unsubscribe function stops further delivery', async () => {
     managerInstance.__connectOutcome('success');
-    await bleService.connect('dev-1');
+    await getBleService().connect('dev-1');
 
     const onSample = jest.fn();
     const unsub = subscribeToHeartRate(onSample);
@@ -92,7 +92,7 @@ describe('subscribeToHeartRate', () => {
   });
 
   it('throws the same error as monitorCharacteristic when called while not connected', () => {
-    expect(bleService.getSnapshot().state).toBe('idle');
+    expect(getBleService().getSnapshot().state).toBe('idle');
 
     expect(() => {
       subscribeToHeartRate(jest.fn());

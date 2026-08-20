@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
-import type { BleConnectionSnapshot } from '@/interfaces/ble';
 import type { WorkoutSessionStatus } from '@/interfaces/session';
-import { bleService } from '@/services/ble/bleService';
+import { useBleConnection } from '@/hooks/useBleConnection';
 import { subscribeToHeartRate } from '@/services/ble/heartRateMonitor';
 import { getRollingAverageBpm } from '@/services/session/rollingAverageBpm';
 import { persistCompletedSession } from '@/services/session/persistSession';
@@ -85,14 +84,7 @@ export function useWorkoutSession(): UseWorkoutSessionResult {
   }, [status]);
 
   // BLE connection subscription for reconnect detection and HR monitoring
-  const subscribe = useCallback(
-    (listener: (snapshot: BleConnectionSnapshot) => void) =>
-      bleService.subscribe(listener),
-    [],
-  );
-  const getSnapshot = useCallback(() => bleService.getSnapshot(), []);
-  const connection = useSyncExternalStore(subscribe, getSnapshot);
-
+  const connection = useBleConnection();
   const isConnected = connection.state === 'connected';
 
   // Reconnect detection effect
