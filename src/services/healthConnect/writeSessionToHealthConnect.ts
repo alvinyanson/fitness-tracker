@@ -1,7 +1,7 @@
 import { insertRecords } from 'react-native-health-connect';
 import type {
+  HealthConnectWriteFailureReason,
   HealthConnectWriteResult,
-  SessionHealthConnectSync,
 } from '@/interfaces/healthConnect';
 import type { PersistedSession } from '@/interfaces/session';
 import { reportError } from '@/services/crashService';
@@ -12,9 +12,58 @@ import {
   SESSION_WRITE_PERMISSIONS,
 } from '@/services/healthConnect/healthConnectPermissions';
 import { mapSessionToHealthRecords } from '@/services/healthConnect/sessionToHealthRecords';
+import {
+  failedOutcome,
+  MAX_SYNC_ATTEMPTS,
+  syncedOutcome,
+} from '@/services/healthConnect/syncOutcome';
 import { updateSessionHealthConnect } from '@/services/storage/sessionHistoryStorage';
 
-export const MAX_SYNC_ATTEMPTS = 5;
+export { MAX_SYNC_ATTEMPTS };
+
+function persistSyncOutcome(
+  sessionId: string,
+  sync: ReturnType<typeof syncedOutcome> | ReturnType<typeof failedOutcome>,
+): void {
+  const updated = updateSessionHealthConnect(sessionId, sync);
+  if (!updated) {
+    reportError(
+      new Error(`Session not found when updating sync state: ${sessionId}`),
+      {
+        scope: 'healthConnectSessionWrite.storageUpdate',
+        sessionId,
+      },
+    );
+  }
+}
+
+async function checkPreconditions(
+  promptForPermissions: boolean,
+): Promise<HealthConnectWriteFailureReason | null> {
+  const availability = await getHealthConnectAvailability();
+  if (availability !== 'available') {
+    return 'unavailable';
+  }
+
+  const hasPermissions = await hasHealthConnectPermissions(
+    SESSION_WRITE_PERMISSIONS,
+  );
+
+  if (!hasPermissions) {
+    if (!promptForPermissions) {
+      return 'permission-denied';
+    }
+
+    const permissionStatus = await requestHealthConnectPermissions(
+      SESSION_WRITE_PERMISSIONS,
+    );
+    if (permissionStatus !== 'granted') {
+      return 'permission-denied';
+    }
+  }
+
+  return null;
+}
 
 export async function writeSessionToHealthConnect(
   session: PersistedSession,
@@ -25,6 +74,8 @@ export async function writeSessionToHealthConnect(
     promptForPermissions?: boolean;
     /** User-initiated: clears `failedAttempts` before attempting. */
     manual?: boolean;
+    /** Skip availability/permission checks (caller already verified). */
+    skipPreconditions?: boolean;
   },
 ): Promise<HealthConnectWriteResult> {
   if (session.healthConnect?.state === 'synced') {
@@ -40,51 +91,16 @@ export async function writeSessionToHealthConnect(
     : (session.healthConnect?.failedAttempts ?? 0);
 
   try {
-    const availability = await getHealthConnectAvailability();
-    if (availability !== 'available') {
-      const sync: SessionHealthConnectSync = {
-        state: 'failed',
-        attemptedAt: now,
-        reason: 'unavailable',
-        ...(currentFailedAttempts > 0
-          ? { failedAttempts: currentFailedAttempts }
-          : {}),
-      };
-      updateSessionHealthConnect(session.id, sync);
-      return { status: 'failed', sync };
-    }
-
-    const hasPermissions = await hasHealthConnectPermissions(
-      SESSION_WRITE_PERMISSIONS,
-    );
-
-    if (!hasPermissions) {
-      if (!promptForPermissions) {
-        const sync: SessionHealthConnectSync = {
-          state: 'failed',
-          attemptedAt: now,
-          reason: 'permission-denied',
-          ...(currentFailedAttempts > 0
-            ? { failedAttempts: currentFailedAttempts }
-            : {}),
-        };
-        updateSessionHealthConnect(session.id, sync);
-        return { status: 'failed', sync };
-      }
-
-      const permissionStatus = await requestHealthConnectPermissions(
-        SESSION_WRITE_PERMISSIONS,
-      );
-      if (permissionStatus !== 'granted') {
-        const sync: SessionHealthConnectSync = {
-          state: 'failed',
-          attemptedAt: now,
-          reason: 'permission-denied',
-          ...(currentFailedAttempts > 0
-            ? { failedAttempts: currentFailedAttempts }
-            : {}),
-        };
-        updateSessionHealthConnect(session.id, sync);
+    if (!options?.skipPreconditions) {
+      const preconditionFailure =
+        await checkPreconditions(promptForPermissions);
+      if (preconditionFailure) {
+        const sync = failedOutcome(
+          now,
+          preconditionFailure,
+          currentFailedAttempts,
+        );
+        persistSyncOutcome(session.id, sync);
         return { status: 'failed', sync };
       }
     }
@@ -100,28 +116,34 @@ export async function writeSessionToHealthConnect(
     const ids = await insertRecords(recordsToInsert);
     const exerciseRecordId = ids[0];
 
-    const sync: SessionHealthConnectSync = {
-      state: 'synced',
-      attemptedAt: now,
-      syncedAt: now,
-      exerciseRecordId,
-    };
-    updateSessionHealthConnect(session.id, sync);
+    const sync = syncedOutcome(now, exerciseRecordId);
+    persistSyncOutcome(session.id, sync);
     return { status: 'synced', sync };
   } catch (error) {
     reportError(error, {
       scope: 'healthConnectSessionWrite',
       sessionId: session.id,
     });
-    const newFailedAttempts = currentFailedAttempts + 1;
-    const isAbandoned = newFailedAttempts >= MAX_SYNC_ATTEMPTS;
-    const sync: SessionHealthConnectSync = {
-      state: isAbandoned ? 'abandoned' : 'failed',
-      attemptedAt: now,
-      failedAttempts: newFailedAttempts,
-      reason: 'write-failed',
-    };
-    updateSessionHealthConnect(session.id, sync);
+
+    let reason: HealthConnectWriteFailureReason = 'write-failed';
+    try {
+      const availability = await getHealthConnectAvailability();
+      if (availability !== 'available') {
+        reason = 'unavailable';
+      } else {
+        const hasPermissions = await hasHealthConnectPermissions(
+          SESSION_WRITE_PERMISSIONS,
+        );
+        if (!hasPermissions) {
+          reason = 'permission-denied';
+        }
+      }
+    } catch {
+      // Retain write-failed fallback
+    }
+
+    const sync = failedOutcome(now, reason, currentFailedAttempts);
+    persistSyncOutcome(session.id, sync);
     return { status: 'failed', sync };
   }
 }

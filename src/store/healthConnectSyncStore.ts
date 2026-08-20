@@ -29,19 +29,12 @@ export const useHealthConnectSyncStore = create<HealthConnectSyncQueueState>(
         return;
       }
       set({ status: 'flushing' });
-      try {
-        const result = await flushPendingSessions(options);
-        set({
-          status: 'idle',
-          lastResult: result,
-          summary: getSyncQueueSummary(),
-        });
-      } finally {
-        set({
-          status: 'idle',
-          summary: getSyncQueueSummary(),
-        });
-      }
+      const result = await flushPendingSessions(options);
+      set({
+        status: 'idle',
+        lastResult: result,
+        summary: getSyncQueueSummary(),
+      });
     },
   }),
 );

@@ -11,13 +11,14 @@ import {
   requestHealthConnectPermissions,
   SESSION_WRITE_PERMISSIONS,
 } from '@/services/healthConnect/healthConnectPermissions';
+import { MAX_SYNC_ATTEMPTS } from '@/services/healthConnect/syncOutcome';
 import { writeSessionToHealthConnect } from '@/services/healthConnect/writeSessionToHealthConnect';
 import {
   getSession,
   getSessionIndex,
 } from '@/services/storage/sessionHistoryStorage';
 
-export { MAX_SYNC_ATTEMPTS } from './writeSessionToHealthConnect';
+export { MAX_SYNC_ATTEMPTS };
 
 /** Backoff before attempt N+1, indexed by `failedAttempts`; last value is the cap. */
 export const SYNC_BACKOFF_MS: readonly number[] = [
@@ -39,6 +40,23 @@ export function nextEligibleAt(
     SYNC_BACKOFF_MS.length - 1,
   );
   return sync.attemptedAt + SYNC_BACKOFF_MS[backoffIndex]!;
+}
+
+type SyncCategory =
+  'unsynced' | 'eligible' | 'backoff' | 'abandoned' | 'synced';
+
+function classifySession(session: PersistedSession, now: number): SyncCategory {
+  const sync = session.healthConnect;
+  if (!sync) {
+    return 'unsynced';
+  }
+  if (sync.state === 'synced') {
+    return 'synced';
+  }
+  if (sync.state === 'abandoned') {
+    return 'abandoned';
+  }
+  return nextEligibleAt(sync) <= now ? 'eligible' : 'backoff';
 }
 
 export function selectPendingSessions(options?: {
@@ -69,25 +87,13 @@ export function selectPendingSessions(options?: {
         continue;
       }
 
-      const sync = session.healthConnect;
-      if (!sync) {
-        pendingSessions.push(session);
-        continue;
-      }
-
-      if (sync.state === 'synced') {
-        continue;
-      }
-
-      if (sync.state === 'abandoned') {
-        if (includeAbandoned) {
-          pendingSessions.push(session);
-        }
-        continue;
-      }
-
-      // sync.state === 'failed'
-      if (ignoreBackoff || nextEligibleAt(sync) <= now) {
+      const category = classifySession(session, now);
+      if (
+        category === 'unsynced' ||
+        category === 'eligible' ||
+        (category === 'backoff' && ignoreBackoff) ||
+        (category === 'abandoned' && includeAbandoned)
+      ) {
         pendingSessions.push(session);
       }
     } catch (error) {
@@ -124,17 +130,21 @@ export function getSyncQueueSummary(options?: {
         continue;
       }
 
-      const sync = session.healthConnect;
-      if (!sync) {
-        pending += 1;
-        eligible += 1;
-      } else if (sync.state === 'failed') {
-        pending += 1;
-        if (nextEligibleAt(sync) <= now) {
+      const category = classifySession(session, now);
+      switch (category) {
+        case 'unsynced':
+        case 'eligible':
+          pending += 1;
           eligible += 1;
-        }
-      } else if (sync.state === 'abandoned') {
-        abandoned += 1;
+          break;
+        case 'backoff':
+          pending += 1;
+          break;
+        case 'abandoned':
+          abandoned += 1;
+          break;
+        case 'synced':
+          break;
       }
     } catch (error) {
       reportError(error, {
@@ -254,6 +264,7 @@ export async function flushPendingSessions(options?: {
           promptForPermissions: false,
           manual,
           now: options?.now,
+          skipPreconditions: true,
         });
 
         if (result.status === 'synced' || result.status === 'already-synced') {

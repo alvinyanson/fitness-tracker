@@ -9,6 +9,8 @@ import {
   SdkAvailabilityStatus,
   insertRecords,
   requestPermission,
+  getSdkStatus,
+  getGrantedPermissions,
 } from 'react-native-health-connect';
 import { createMMKV } from 'react-native-mmkv';
 import type { PersistedSession } from '@/interfaces/session';
@@ -457,6 +459,27 @@ describe('pendingSessionSync', () => {
       const result = await flushPendingSessions();
       expect(result.skipped).toBe('nothing-pending');
       expect(insertRecords).not.toHaveBeenCalled();
+    });
+
+    it('performs availability and permission checks only once per batch flush across multiple sessions', async () => {
+      const session1 = createMockSession('session-1', 1000000);
+      const session2 = createMockSession('session-2', 1100000);
+      const session3 = createMockSession('session-3', 1200000);
+      saveSession(session1);
+      saveSession(session2);
+      saveSession(session3);
+
+      (getSdkStatus as jest.Mock).mockClear();
+      (getGrantedPermissions as jest.Mock).mockClear();
+
+      const result = await flushPendingSessions();
+      expect(result.attempted).toBe(3);
+      expect(result.synced).toBe(3);
+
+      // Verify availability and granted permissions were checked exactly once for the whole batch
+      expect(getSdkStatus).toHaveBeenCalledTimes(1);
+      expect(getGrantedPermissions).toHaveBeenCalledTimes(1);
+      expect(insertRecords).toHaveBeenCalledTimes(3);
     });
   });
 });
