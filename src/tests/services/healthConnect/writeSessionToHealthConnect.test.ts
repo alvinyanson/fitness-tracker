@@ -440,4 +440,21 @@ describe('writeSessionToHealthConnect', () => {
     });
     expect(requestPermission).not.toHaveBeenCalled();
   });
+
+  it('bypasses availability and permission checks when skipPreconditions: true', async () => {
+    const { getSdkStatus } = jest.requireMock('react-native-health-connect');
+    const { getGrantedPermissions } = jest.requireMock(
+      'react-native-health-connect',
+    );
+
+    const result = await writeSessionToHealthConnect(mockSession, {
+      skipPreconditions: true,
+      now: nowFn,
+    });
+
+    expect(result.status).toBe('synced');
+    expect(getSdkStatus).not.toHaveBeenCalled();
+    expect(getGrantedPermissions).not.toHaveBeenCalled();
+    expect(insertRecords).toHaveBeenCalled();
+  });
 });
