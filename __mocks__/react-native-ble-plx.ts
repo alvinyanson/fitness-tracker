@@ -20,7 +20,10 @@ export enum State {
 declare module 'react-native-ble-plx' {
   interface BleManager {
     __scanResults(results: ScriptedScanResult[]): void;
+    __scanError(error: Error): void;
     __connectOutcome(outcome: 'success' | 'pending' | { error: Error }): void;
+    __discoverOutcome(o: 'success' | 'pending' | { error: Error }): void;
+    __resolveConnect(deviceId: string): void;
     __emitNotification(characteristicUUID: string, base64Value: string): void;
     __emitDisconnect(error?: Error): void;
     __setAdapterState(state: State): void;
@@ -60,6 +63,13 @@ export class Device {
   }
 
   async discoverAllServicesAndCharacteristics(): Promise<Device> {
+    const outcome = this.manager._getDiscoverOutcome();
+    if (outcome === 'pending') {
+      return new Promise<Device>(() => {});
+    }
+    if (typeof outcome === 'object' && 'error' in outcome) {
+      throw outcome.error;
+    }
     return this;
   }
 
@@ -94,6 +104,9 @@ export class BleManager {
     ((error: Error | null, device: Device | null) => void) | null = null;
   private connectOutcomeState: 'success' | 'pending' | { error: Error } =
     'success';
+  private discoverOutcomeState: 'success' | 'pending' | { error: Error } =
+    'success';
+  private pendingConnects = new Map<string, (device: Device) => void>();
   private notificationListeners = new Set<NotificationItem>();
   private disconnectListeners = new Set<DisconnectItem>();
   private devicesById = new Map<string, Device>();
@@ -131,8 +144,31 @@ export class BleManager {
     }
   }
 
+  __scanError(error: Error): void {
+    if (this.scanListener) {
+      this.scanListener(error, null);
+    }
+  }
+
   __connectOutcome(outcome: 'success' | 'pending' | { error: Error }): void {
     this.connectOutcomeState = outcome;
+  }
+
+  __discoverOutcome(o: 'success' | 'pending' | { error: Error }): void {
+    this.discoverOutcomeState = o;
+  }
+
+  __resolveConnect(deviceId: string): void {
+    let device = this.devicesById.get(deviceId);
+    if (!device) {
+      device = new Device(deviceId, null, null, this);
+      this.devicesById.set(deviceId, device);
+    }
+    const resolver = this.pendingConnects.get(deviceId);
+    if (resolver) {
+      this.pendingConnects.delete(deviceId);
+      resolver(device);
+    }
   }
 
   __emitNotification(characteristicUUID: string, base64Value: string): void {
@@ -172,7 +208,9 @@ export class BleManager {
 
   async connectToDevice(deviceId: string): Promise<Device> {
     if (this.connectOutcomeState === 'pending') {
-      return new Promise<Device>(() => {});
+      return new Promise<Device>((resolve) => {
+        this.pendingConnects.set(deviceId, resolve);
+      });
     }
     if (
       typeof this.connectOutcomeState === 'object' &&
@@ -206,11 +244,19 @@ export class BleManager {
   destroy(): void {
     this.scanListener = null;
     this.queuedScanResults = [];
+    this.pendingConnects.clear();
+    this.discoverOutcomeState = 'success';
+    this.connectOutcomeState = 'success';
     this.notificationListeners.clear();
     this.disconnectListeners.clear();
     this.devicesById.clear();
     this.stateChangeListeners.clear();
     this.adapterState = State.PoweredOn;
+  }
+
+  /** @internal */
+  _getDiscoverOutcome(): 'success' | 'pending' | { error: Error } {
+    return this.discoverOutcomeState;
   }
 
   /** @internal */

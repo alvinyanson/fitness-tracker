@@ -45,6 +45,7 @@ export type BleDisconnectReason = 'userInitiated' | 'unexpected';
  */
 export type BleConnectionErrorCause =
   | 'scanTimeout'
+  | 'scanFailed' // The native scan callback reported an error, distinct from a scan timer expiry
   | 'connectTimeout'
   | 'connectRejected'
   | 'adapterOff'

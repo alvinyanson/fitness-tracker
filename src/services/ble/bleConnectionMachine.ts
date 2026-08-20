@@ -8,6 +8,7 @@ export type BleConnectionEvent =
   | { type: 'scanStarted' }
   | { type: 'scanStopped' }
   | { type: 'scanTimedOut' }
+  | { type: 'scanFailed'; message: string }
   | { type: 'connectRequested'; deviceId: string }
   | { type: 'connectSucceeded'; device: PairedDevice }
   | { type: 'connectTimedOut' }
@@ -49,7 +50,23 @@ export function reduceBleConnectionState(
       }
       return current;
 
+    case 'scanFailed':
+      if (current.state === 'scanning') {
+        return {
+          state: 'error',
+          cause: 'scanFailed',
+          message: event.message || 'BLE scan failed',
+        };
+      }
+      return current;
+
     case 'connectRequested':
+      if (current.state === 'connecting') {
+        if (current.deviceId === event.deviceId) {
+          return current;
+        }
+        return { state: 'connecting', deviceId: event.deviceId };
+      }
       if (
         current.state === 'idle' ||
         current.state === 'scanning' ||

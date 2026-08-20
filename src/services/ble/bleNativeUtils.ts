@@ -32,3 +32,11 @@ export function safeRemoveSubscription(
     reportError(error, { scope: 'safeRemoveSubscription' });
   }
 }
+
+export function safeDestroyManager(manager: BleManager): void {
+  try {
+    manager.destroy();
+  } catch (error) {
+    reportError(error, { scope: 'safeDestroyManager' });
+  }
+}

@@ -2,6 +2,7 @@ import type { BleManager, Subscription } from 'react-native-ble-plx';
 import { reportError } from '@/services/crashService';
 import {
   safeCancelDeviceConnection,
+  safeDestroyManager,
   safeRemoveSubscription,
   safeStopScan,
 } from '@/services/ble/bleNativeUtils';
@@ -19,6 +20,7 @@ describe('bleNativeUtils', () => {
     mockManager = {
       stopDeviceScan: jest.fn(),
       cancelDeviceConnection: jest.fn().mockResolvedValue({} as any),
+      destroy: jest.fn(),
     } as unknown as BleManager;
   });
 
@@ -109,6 +111,26 @@ describe('bleNativeUtils', () => {
       expect(() => safeRemoveSubscription(sub)).not.toThrow();
       expect(reportError).toHaveBeenCalledWith(error, {
         scope: 'safeRemoveSubscription',
+      });
+    });
+  });
+
+  describe('safeDestroyManager', () => {
+    it('destroys manager without error', () => {
+      safeDestroyManager(mockManager);
+      expect(mockManager.destroy).toHaveBeenCalledTimes(1);
+      expect(reportError).not.toHaveBeenCalled();
+    });
+
+    it('catches and reports error when manager.destroy throws', () => {
+      const error = new Error('Native manager destroy failure');
+      (mockManager.destroy as jest.Mock).mockImplementation(() => {
+        throw error;
+      });
+
+      expect(() => safeDestroyManager(mockManager)).not.toThrow();
+      expect(reportError).toHaveBeenCalledWith(error, {
+        scope: 'safeDestroyManager',
       });
     });
   });
