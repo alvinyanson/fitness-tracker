@@ -1,5 +1,50 @@
-import { PermissionsAndroid, Platform } from 'react-native';
-import { BlePermissionStatus } from '@/interfaces/ble';
+import {
+  PermissionsAndroid,
+  Platform,
+  type PermissionStatus,
+} from 'react-native';
+import type { BlePermissionStatus } from '@/interfaces/ble';
+
+export function mapMultiPermissionResult(
+  results: Record<string, PermissionStatus>,
+): BlePermissionStatus {
+  const statuses = Object.values(results);
+
+  if (statuses.includes(PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN)) {
+    return 'blocked';
+  }
+
+  if (statuses.includes(PermissionsAndroid.RESULTS.DENIED)) {
+    return 'denied';
+  }
+
+  const scanStatus = results[PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN];
+  const connectStatus =
+    results[PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT];
+
+  if (
+    scanStatus === PermissionsAndroid.RESULTS.GRANTED &&
+    connectStatus === PermissionsAndroid.RESULTS.GRANTED
+  ) {
+    return 'granted';
+  }
+
+  return 'denied';
+}
+
+export function mapSinglePermissionResult(
+  result: PermissionStatus,
+): BlePermissionStatus {
+  if (result === PermissionsAndroid.RESULTS.GRANTED) {
+    return 'granted';
+  }
+
+  if (result === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
+    return 'blocked';
+  }
+
+  return 'denied';
+}
 
 export async function requestBlePermissions(): Promise<BlePermissionStatus> {
   if (Platform.OS !== 'android') {
@@ -17,28 +62,7 @@ export async function requestBlePermissions(): Promise<BlePermissionStatus> {
       PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
     ]);
 
-    const statuses = Object.values(results);
-
-    if (statuses.includes(PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN)) {
-      return 'blocked';
-    }
-
-    if (statuses.includes(PermissionsAndroid.RESULTS.DENIED)) {
-      return 'denied';
-    }
-
-    const scanStatus = results[PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN];
-    const connectStatus =
-      results[PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT];
-
-    if (
-      scanStatus === PermissionsAndroid.RESULTS.GRANTED &&
-      connectStatus === PermissionsAndroid.RESULTS.GRANTED
-    ) {
-      return 'granted';
-    }
-
-    return 'denied';
+    return mapMultiPermissionResult(results);
   }
 
   const result = await PermissionsAndroid.request(
@@ -52,13 +76,5 @@ export async function requestBlePermissions(): Promise<BlePermissionStatus> {
     },
   );
 
-  if (result === PermissionsAndroid.RESULTS.GRANTED) {
-    return 'granted';
-  }
-
-  if (result === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
-    return 'blocked';
-  }
-
-  return 'denied';
+  return mapSinglePermissionResult(result);
 }

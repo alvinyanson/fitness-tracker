@@ -1,6 +1,12 @@
-import { BleManager, State, Subscription } from 'react-native-ble-plx';
+import {
+  BleManager,
+  State,
+  type Device,
+  type Subscription,
+} from 'react-native-ble-plx';
 import type {
   BleConnectionSnapshot,
+  BluetoothAdapterStatus,
   DiscoveredDevice,
   PairedDevice,
 } from '@/interfaces/ble';
@@ -15,6 +21,7 @@ import {
   safeStopScan,
 } from './bleNativeUtils';
 import { BleSubscriptionTracker } from './bleSubscriptions';
+import { toBluetoothAdapterStatus } from './bluetoothAdapter';
 
 export interface BleServiceOptions {
   scanTimeoutMs?: number; // default 15000
@@ -53,8 +60,9 @@ export class BleService {
     return this.snapshot;
   }
 
-  getManager(): BleManager {
-    return this.manager;
+  async getAdapterStatus(): Promise<BluetoothAdapterStatus> {
+    const state = await this.manager.state();
+    return toBluetoothAdapterStatus(state);
   }
 
   subscribe(listener: (snapshot: BleConnectionSnapshot) => void): () => void {
@@ -80,7 +88,6 @@ export class BleService {
     logBreadcrumb('BLE: startScan initiated');
     this.clearScanTimer();
     this.dispatch({ type: 'scanStarted' });
-    if (this.getSnapshot().state !== 'scanning') return;
 
     this.scanTimer = setTimeout(() => {
       if (this.snapshot.state === 'scanning') {
@@ -123,48 +130,19 @@ export class BleService {
     this.clearConnectTimer();
     this.isUserInitiatedDisconnect = false;
 
-    let timedOut = false;
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      this.connectTimer = setTimeout(() => {
-        timedOut = true;
-        reject(new Error('CONNECT_TIMEOUT'));
-      }, this.connectTimeoutMs);
-    });
-
     try {
-      const device = await Promise.race([
-        this.manager.connectToDevice(deviceId, { autoConnect: false }),
-        timeoutPromise,
-      ]);
-
-      this.clearConnectTimer();
+      const device = await this.raceConnectWithTimeout(deviceId);
       await device.discoverAllServicesAndCharacteristics();
 
       if (this.snapshot.state !== 'connecting') return;
 
-      this.subscriptions.setDevice(device);
-      const pairedDevice: PairedDevice = {
-        id: device.id,
-        name: device.name ?? null,
-      };
-
-      const disconnectSub = device.onDisconnected((_err, dev) => {
-        if (this.isUserInitiatedDisconnect) return;
-        logBreadcrumb('BLE: device disconnected unexpectedly');
-        this.subscriptions.cleanupAll();
-        this.dispatch({
-          type: 'disconnected',
-          reason: 'unexpected',
-          device: { id: dev.id, name: dev.name ?? null },
-        });
-      });
-      this.subscriptions.setDisconnectSubscription(disconnectSub);
-
-      this.dispatch({ type: 'connectSucceeded', device: pairedDevice });
-    } catch (err: any) {
+      this.attachConnectedDevice(device);
+    } catch (err: unknown) {
       this.clearConnectTimer();
       reportError(err, { scope: 'bleService.connect', deviceId });
-      if (timedOut || err?.message === 'CONNECT_TIMEOUT') {
+      const message =
+        err instanceof Error ? err.message : err ? String(err) : '';
+      if (message === 'CONNECT_TIMEOUT') {
         safeCancelDeviceConnection(this.manager, deviceId);
         if (this.snapshot.state === 'connecting') {
           this.dispatch({ type: 'connectTimedOut' });
@@ -172,7 +150,7 @@ export class BleService {
       } else if (this.snapshot.state === 'connecting') {
         this.dispatch({
           type: 'connectRejected',
-          message: err?.message || 'Connection rejected',
+          message: message || 'Connection rejected',
         });
       }
     }
@@ -187,17 +165,11 @@ export class BleService {
     this.dispatch({ type: 'connectCancelled' });
   }
 
-  async disconnect(): Promise<void> {
+  disconnect(): void {
     if (this.snapshot.state !== 'connected') return;
 
     this.isUserInitiatedDisconnect = true;
-    const deviceId = this.subscriptions.currentDevice?.id;
-
-    this.subscriptions.cleanupAll();
-    if (deviceId) {
-      safeCancelDeviceConnection(this.manager, deviceId);
-    }
-
+    this.teardownActiveDevice();
     this.dispatch({ type: 'disconnectRequested' });
   }
 
@@ -242,12 +214,7 @@ export class BleService {
       safeStopScan(this.manager);
     }
 
-    const deviceId = this.subscriptions.currentDevice?.id;
-    this.subscriptions.cleanupAll();
-
-    if (deviceId) {
-      safeCancelDeviceConnection(this.manager, deviceId);
-    }
+    this.teardownActiveDevice();
 
     if (this.adapterStateSubscription) {
       safeRemoveSubscription(this.adapterStateSubscription);
@@ -259,6 +226,51 @@ export class BleService {
   }
 
   /* ---------------- Private Helpers ---------------- */
+
+  private teardownActiveDevice(): void {
+    const deviceId = this.subscriptions.currentDevice?.id;
+    this.subscriptions.cleanupAll();
+    if (deviceId) {
+      safeCancelDeviceConnection(this.manager, deviceId);
+    }
+  }
+
+  private async raceConnectWithTimeout(deviceId: string): Promise<Device> {
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      this.connectTimer = setTimeout(() => {
+        reject(new Error('CONNECT_TIMEOUT'));
+      }, this.connectTimeoutMs);
+    });
+
+    const device = await Promise.race([
+      this.manager.connectToDevice(deviceId, { autoConnect: false }),
+      timeoutPromise,
+    ]);
+    this.clearConnectTimer();
+    return device;
+  }
+
+  private attachConnectedDevice(device: Device): void {
+    this.subscriptions.setDevice(device);
+    const pairedDevice: PairedDevice = {
+      id: device.id,
+      name: device.name ?? null,
+    };
+
+    const disconnectSub = device.onDisconnected((_err, dev) => {
+      if (this.isUserInitiatedDisconnect) return;
+      logBreadcrumb('BLE: device disconnected unexpectedly');
+      this.subscriptions.cleanupAll();
+      this.dispatch({
+        type: 'disconnected',
+        reason: 'unexpected',
+        device: { id: dev.id, name: dev.name ?? null },
+      });
+    });
+    this.subscriptions.setDisconnectSubscription(disconnectSub);
+
+    this.dispatch({ type: 'connectSucceeded', device: pairedDevice });
+  }
 
   private dispatch(event: BleConnectionEvent): void {
     const next = reduceBleConnectionState(this.snapshot, event);
@@ -287,11 +299,7 @@ export class BleService {
       if (state === 'scanning') {
         safeStopScan(this.manager);
       } else {
-        const deviceId = this.subscriptions.currentDevice?.id;
-        this.subscriptions.cleanupAll();
-        if (deviceId) {
-          safeCancelDeviceConnection(this.manager, deviceId);
-        }
+        this.teardownActiveDevice();
       }
 
       this.dispatch({ type: 'adapterPoweredOff' });
@@ -313,4 +321,18 @@ export class BleService {
   }
 }
 
-export const bleService = new BleService();
+let defaultBleService: BleService | null = null;
+
+export function getBleService(): BleService {
+  if (!defaultBleService) {
+    defaultBleService = new BleService();
+  }
+  return defaultBleService;
+}
+
+export function resetBleService(): void {
+  if (defaultBleService) {
+    defaultBleService.destroy();
+    defaultBleService = null;
+  }
+}

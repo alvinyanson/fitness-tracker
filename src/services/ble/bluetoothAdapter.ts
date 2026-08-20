@@ -1,12 +1,7 @@
-import { BleManager, State } from 'react-native-ble-plx';
-import { BluetoothAdapterStatus } from '@/interfaces/ble';
-import { bleService } from './bleService';
+import { State } from 'react-native-ble-plx';
+import type { BluetoothAdapterStatus } from '@/interfaces/ble';
 
-export async function getBluetoothAdapterStatus(
-  manager?: BleManager,
-): Promise<BluetoothAdapterStatus> {
-  const m = manager ?? bleService.getManager();
-  const state = await m.state();
+export function toBluetoothAdapterStatus(state: State): BluetoothAdapterStatus {
   if (state === State.PoweredOn) {
     return 'poweredOn';
   }

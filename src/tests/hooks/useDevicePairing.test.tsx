@@ -16,24 +16,26 @@ function mockEmitSnapshot(snapshot: BleConnectionSnapshot) {
   }
 }
 
+const mockBleService = {
+  getSnapshot: jest.fn(() => mockSnapshot),
+  subscribe: jest.fn((listener: (s: BleConnectionSnapshot) => void) => {
+    mockListeners.add(listener);
+    return () => {
+      mockListeners.delete(listener);
+    };
+  }),
+  startScan: jest.fn(),
+  stopScan: jest.fn(),
+  connect: jest.fn((deviceId: string) => {
+    mockEmitSnapshot({ state: 'connecting', deviceId });
+  }),
+  cancelConnect: jest.fn(),
+  disconnect: jest.fn(),
+  destroy: jest.fn(),
+};
+
 jest.mock('@/services/ble/bleService', () => ({
-  bleService: {
-    getSnapshot: jest.fn(() => mockSnapshot),
-    subscribe: jest.fn((listener: (s: BleConnectionSnapshot) => void) => {
-      mockListeners.add(listener);
-      return () => {
-        mockListeners.delete(listener);
-      };
-    }),
-    startScan: jest.fn(),
-    stopScan: jest.fn(),
-    connect: jest.fn((deviceId: string) => {
-      mockEmitSnapshot({ state: 'connecting', deviceId });
-    }),
-    cancelConnect: jest.fn(),
-    disconnect: jest.fn(),
-    destroy: jest.fn(),
-  },
+  getBleService: () => mockBleService,
 }));
 
 // ── Mock deviceStorage ──
@@ -50,7 +52,6 @@ jest.mock('@/services/storage/deviceStorage', () => ({
 }));
 
 import { useDevicePairing } from '@/hooks/useDevicePairing';
-import { bleService } from '@/services/ble/bleService';
 import { setLastPairedDevice } from '@/services/storage/deviceStorage';
 
 // ── Test Probe Component ──
@@ -102,10 +103,10 @@ describe('useDevicePairing', () => {
     jest.clearAllMocks();
 
     // Re-bind mock implementations after clearAllMocks
-    (bleService.getSnapshot as jest.Mock).mockImplementation(
+    (mockBleService.getSnapshot as jest.Mock).mockImplementation(
       () => mockSnapshot,
     );
-    (bleService.subscribe as jest.Mock).mockImplementation(
+    (mockBleService.subscribe as jest.Mock).mockImplementation(
       (listener: (s: BleConnectionSnapshot) => void) => {
         mockListeners.add(listener);
         return () => {
@@ -130,9 +131,10 @@ describe('useDevicePairing', () => {
       fireEvent.press(screen.getByText('scan'));
     });
 
-    expect(bleService.startScan).toHaveBeenCalledWith(expect.any(Function), [
-      HEART_RATE_SERVICE_UUID,
-    ]);
+    expect(mockBleService.startScan).toHaveBeenCalledWith(
+      expect.any(Function),
+      [HEART_RATE_SERVICE_UUID],
+    );
   });
 
   it('scan() clears devices and accumulates discovered devices by upsert', async () => {
@@ -144,7 +146,7 @@ describe('useDevicePairing', () => {
     });
 
     // Extract the onDeviceFound callback
-    const onDeviceFound = (bleService.startScan as jest.Mock).mock
+    const onDeviceFound = (mockBleService.startScan as jest.Mock).mock
       .calls[0][0] as (device: DiscoveredDevice) => void;
 
     // Simulate device discovery
@@ -182,7 +184,7 @@ describe('useDevicePairing', () => {
       fireEvent.press(screen.getByText('stopScan'));
     });
 
-    expect(bleService.stopScan).toHaveBeenCalled();
+    expect(mockBleService.stopScan).toHaveBeenCalled();
   });
 
   it('connectToDevice() calls bleService.connect and persists on connected', async () => {
@@ -193,7 +195,7 @@ describe('useDevicePairing', () => {
       fireEvent.press(screen.getByText('scan'));
     });
 
-    const onDeviceFound = (bleService.startScan as jest.Mock).mock
+    const onDeviceFound = (mockBleService.startScan as jest.Mock).mock
       .calls[0][0] as (device: DiscoveredDevice) => void;
 
     await act(async () => {
@@ -205,7 +207,7 @@ describe('useDevicePairing', () => {
       fireEvent.press(screen.getByText('connect-dev-1'));
     });
 
-    expect(bleService.connect).toHaveBeenCalledWith('dev-1');
+    expect(mockBleService.connect).toHaveBeenCalledWith('dev-1');
 
     // Simulate successful connection
     await act(async () => {
@@ -246,7 +248,7 @@ describe('useDevicePairing', () => {
       fireEvent.press(screen.getByText('disconnect'));
     });
 
-    expect(bleService.disconnect).toHaveBeenCalled();
+    expect(mockBleService.disconnect).toHaveBeenCalled();
 
     // Simulate disconnected
     await act(async () => {
@@ -278,7 +280,7 @@ describe('useDevicePairing', () => {
       fireEvent.press(screen.getByText('unpair'));
     });
 
-    expect(bleService.disconnect).toHaveBeenCalled();
+    expect(mockBleService.disconnect).toHaveBeenCalled();
     expect(setLastPairedDevice).toHaveBeenCalledWith(null);
     expect(screen.getByTestId('pairedDevice')).toHaveTextContent('none');
   });
@@ -289,8 +291,8 @@ describe('useDevicePairing', () => {
 
     await render(<TestProbe />);
 
-    expect(bleService.connect).toHaveBeenCalledWith('stored-1');
-    expect(bleService.connect).toHaveBeenCalledTimes(1);
+    expect(mockBleService.connect).toHaveBeenCalledWith('stored-1');
+    expect(mockBleService.connect).toHaveBeenCalledTimes(1);
   });
 
   it('mount with a stored device sets isAutoReconnecting true immediately and false once snapshot moves off connecting', async () => {
@@ -322,7 +324,7 @@ describe('useDevicePairing', () => {
       fireEvent.press(screen.getByText('cancelReconnect'));
     });
 
-    expect(bleService.cancelConnect).toHaveBeenCalled();
+    expect(mockBleService.cancelConnect).toHaveBeenCalled();
   });
 
   it('a manual connectToDevice() call never sets isAutoReconnecting', async () => {
@@ -348,20 +350,20 @@ describe('useDevicePairing', () => {
 
     await render(<TestProbe />);
 
-    expect(bleService.connect).not.toHaveBeenCalled();
+    expect(mockBleService.connect).not.toHaveBeenCalled();
   });
 
   it('calls bleService.stopScan on unmount', async () => {
     const screen = await render(<TestProbe />);
     await screen.unmount();
 
-    expect(bleService.stopScan).toHaveBeenCalled();
+    expect(mockBleService.stopScan).toHaveBeenCalled();
   });
 
   it('does not call bleService.destroy on unmount', async () => {
     const screen = await render(<TestProbe />);
     await screen.unmount();
 
-    expect(bleService.destroy).not.toHaveBeenCalled();
+    expect(mockBleService.destroy).not.toHaveBeenCalled();
   });
 });

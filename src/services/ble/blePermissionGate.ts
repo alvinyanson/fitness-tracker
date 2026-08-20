@@ -1,6 +1,6 @@
-import { BleGateStatus } from '@/interfaces/ble';
+import type { BleGateStatus } from '@/interfaces/ble';
 import { requestBlePermissions } from './blePermissions';
-import { getBluetoothAdapterStatus } from './bluetoothAdapter';
+import { getBleService } from './bleService';
 
 export async function evaluateBlePermissionGate(): Promise<BleGateStatus> {
   const permissionStatus = await requestBlePermissions();
@@ -13,7 +13,7 @@ export async function evaluateBlePermissionGate(): Promise<BleGateStatus> {
     return 'permissionDenied';
   }
 
-  const adapterStatus = await getBluetoothAdapterStatus();
+  const adapterStatus = await getBleService().getAdapterStatus();
 
   if (adapterStatus === 'poweredOff' || adapterStatus === 'unknown') {
     return 'bluetoothOff';

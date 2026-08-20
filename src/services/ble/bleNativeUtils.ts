@@ -15,7 +15,7 @@ export function safeCancelDeviceConnection(
 ): void {
   try {
     manager.cancelDeviceConnection(deviceId).catch((error) => {
-      reportError(error, { scope: 'cancelDeviceConnectionAsync', deviceId });
+      reportError(error, { scope: 'safeCancelDeviceConnection', deviceId });
     });
   } catch (error) {
     reportError(error, { scope: 'safeCancelDeviceConnection', deviceId });

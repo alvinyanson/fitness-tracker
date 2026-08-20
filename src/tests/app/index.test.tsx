@@ -17,24 +17,26 @@ function mockEmitSnapshot(snapshot: BleConnectionSnapshot) {
   }
 }
 
+const mockBleService = {
+  getSnapshot: jest.fn(() => mockSnapshot),
+  subscribe: jest.fn((listener: (s: BleConnectionSnapshot) => void) => {
+    mockListeners.add(listener);
+    return () => {
+      mockListeners.delete(listener);
+    };
+  }),
+  startScan: jest.fn(),
+  stopScan: jest.fn(),
+  connect: jest.fn((deviceId: string) => {
+    mockEmitSnapshot({ state: 'connecting', deviceId });
+  }),
+  cancelConnect: jest.fn(),
+  disconnect: jest.fn(),
+  destroy: jest.fn(),
+};
+
 jest.mock('@/services/ble/bleService', () => ({
-  bleService: {
-    getSnapshot: jest.fn(() => mockSnapshot),
-    subscribe: jest.fn((listener: (s: BleConnectionSnapshot) => void) => {
-      mockListeners.add(listener);
-      return () => {
-        mockListeners.delete(listener);
-      };
-    }),
-    startScan: jest.fn(),
-    stopScan: jest.fn(),
-    connect: jest.fn((deviceId: string) => {
-      mockEmitSnapshot({ state: 'connecting', deviceId });
-    }),
-    cancelConnect: jest.fn(),
-    disconnect: jest.fn(),
-    destroy: jest.fn(),
-  },
+  getBleService: () => mockBleService,
 }));
 
 // ── Mock deviceStorage ──
@@ -53,7 +55,6 @@ jest.mock('@/services/storage/deviceStorage', () => ({
 // Import after mocks are set up
 import PairingScreen from '@/app/index';
 import * as blePermissionGateModule from '@/services/ble/blePermissionGate';
-import { bleService } from '@/services/ble/bleService';
 
 describe('PairingScreen', () => {
   beforeEach(() => {
@@ -63,10 +64,10 @@ describe('PairingScreen', () => {
     jest.clearAllMocks();
 
     // Re-bind getSnapshot to return current mockSnapshot
-    (bleService.getSnapshot as jest.Mock).mockImplementation(
+    (mockBleService.getSnapshot as jest.Mock).mockImplementation(
       () => mockSnapshot,
     );
-    (bleService.subscribe as jest.Mock).mockImplementation(
+    (mockBleService.subscribe as jest.Mock).mockImplementation(
       (listener: (s: BleConnectionSnapshot) => void) => {
         mockListeners.add(listener);
         return () => {
@@ -172,7 +173,7 @@ describe('PairingScreen', () => {
       fireEvent.press(getByText('Scan'));
     });
 
-    expect(bleService.startScan).toHaveBeenCalled();
+    expect(mockBleService.startScan).toHaveBeenCalled();
 
     // Simulate scanning state
     await act(async () => {
@@ -201,7 +202,7 @@ describe('PairingScreen', () => {
     });
 
     // Extract onDeviceFound callback and simulate device discovery
-    const onDeviceFound = (bleService.startScan as jest.Mock).mock
+    const onDeviceFound = (mockBleService.startScan as jest.Mock).mock
       .calls[0][0] as (device: DiscoveredDevice) => void;
 
     await act(async () => {
@@ -220,7 +221,7 @@ describe('PairingScreen', () => {
       fireEvent.press(getByText('HR Monitor'));
     });
 
-    expect(bleService.connect).toHaveBeenCalledWith('dev-1');
+    expect(mockBleService.connect).toHaveBeenCalledWith('dev-1');
 
     // Simulate connected state
     await act(async () => {
@@ -244,7 +245,7 @@ describe('PairingScreen', () => {
     await render(<PairingScreen />);
 
     await waitFor(() => {
-      expect(bleService.connect).toHaveBeenCalledWith('stored-1');
+      expect(mockBleService.connect).toHaveBeenCalledWith('stored-1');
     });
   });
 
@@ -258,7 +259,7 @@ describe('PairingScreen', () => {
     const { getByText } = await render(<PairingScreen />);
 
     await waitFor(() => {
-      expect(bleService.connect).toHaveBeenCalledWith('stored-1');
+      expect(mockBleService.connect).toHaveBeenCalledWith('stored-1');
     });
 
     // Simulate connecting/connected states
@@ -283,7 +284,7 @@ describe('PairingScreen', () => {
     const { getByText, queryByText } = await render(<PairingScreen />);
 
     await waitFor(() => {
-      expect(bleService.connect).toHaveBeenCalledWith('stored-1');
+      expect(mockBleService.connect).toHaveBeenCalledWith('stored-1');
     });
 
     await act(async () => {
@@ -305,7 +306,7 @@ describe('PairingScreen', () => {
     const { getByText, queryByText } = await render(<PairingScreen />);
 
     await waitFor(() => {
-      expect(bleService.connect).toHaveBeenCalledWith('stored-1');
+      expect(mockBleService.connect).toHaveBeenCalledWith('stored-1');
     });
 
     await act(async () => {
@@ -318,7 +319,7 @@ describe('PairingScreen', () => {
       fireEvent.press(getByText('Cancel'));
     });
 
-    expect(bleService.cancelConnect).toHaveBeenCalled();
+    expect(mockBleService.cancelConnect).toHaveBeenCalled();
 
     await act(async () => {
       mockEmitSnapshot({ state: 'idle' });
@@ -346,7 +347,7 @@ describe('PairingScreen', () => {
       fireEvent.press(getByText('Scan'));
     });
 
-    const onDeviceFound = (bleService.startScan as jest.Mock).mock
+    const onDeviceFound = (mockBleService.startScan as jest.Mock).mock
       .calls[0][0] as (device: DiscoveredDevice) => void;
 
     await act(async () => {
