@@ -32,8 +32,8 @@ disconnected | error`) that stays stable across drops and failed scans.
   automatically on next launch.
 - **Live workout screen**: live BPM readout from Heart Rate Measurement notifications,
   an elapsed session timer with Start / Pause / Resume / Stop, and a rolling average
-  BPM. Disconnects mid-session show a reconnecting indicator rather than ending the
-  session.
+  BPM, plus a heart-rate zone bar tracking the live reading. Disconnects mid-session show
+  a reconnecting indicator rather than ending the session.
 - **Session summary screen**: total duration and avg/max/min HR shown immediately after
   Stop; the session is saved to local storage before anything else happens.
 - **History screen**: past sessions listed newest-first (date, duration, avg HR), tap
@@ -48,11 +48,30 @@ disconnected | error`) that stays stable across drops and failed scans.
   screen and locale coverage tests. ✅ Implemented.
 - **Accessibility**: roles, labels, hints, and selected-state across screens and
   components. ✅ Implemented.
-- **Crash reporting**: Firebase Crashlytics wired in behind a thin service. ✅
+- **Crash reporting**: Firebase Crashlytics wired in behind a thin service
+  (`src/services/crashService.ts`), plus a top-level error boundary. BLE, storage, and
+  Health Connect calls that can throw report through it rather than failing silently. ✅
   Implemented.
-- Units toggle (metric/imperial). _Not yet implemented._
-- Health Connect write-back for completed sessions (Android's platform health store;
-  Google Fit is deliberately not used, it's deprecated). _Not yet implemented._
+- **Health Connect write-back**: a completed session lands in Health Connect as an
+  `ExerciseSession` record, plus a `HeartRate` series when the session has samples,
+  exactly once. Android's platform health store - Google Fit is deliberately not used,
+  it's deprecated. ✅ Implemented, in three parts:
+  - **Availability guard**: an availability check
+    (`available | needs-install | needs-update | unsupported`) behind a Settings status
+    card that links out to the Play Store listing when Health Connect is missing or out
+    of date. The app records and saves sessions identically whether or not Health
+    Connect is usable on the device.
+  - **Session write-back**: attempted from the summary screen right after the local
+    save, with a badge showing that session's sync state - synced, not synced, or failed
+    with a reason and a retry. A missing Health Connect, a denied permission, or a
+    rejected insert never affects the local save.
+  - **Retry queue**: sessions that haven't reached Health Connect are retried
+    automatically when the app comes to the foreground, and on demand from a Settings
+    action that shows the pending count. Retries are bounded (5 attempts) and backed
+    off; a permanently failing session is marked abandoned and surfaced instead of
+    retried forever, and no duplicate record is written.
+- Units toggle (metric/imperial). _Not yet implemented - `units` already lives in the
+  persisted settings store, but no Settings control is wired to it._
 - Offline/online indicator for anything needing a network call. _Not yet implemented._
 - Google login (Firebase Auth) + Firestore cloud sync for units/language settings. _Not
   yet implemented - `@react-native-firebase/app` is installed and configured, `auth` and
@@ -91,22 +110,35 @@ packages below are specified but not yet installed - noted inline.
   [Gesture Handler](https://docs.swmansion.com/react-native-gesture-handler/),
   React Native Screens, React Native Safe Area Context - Expo Router dependencies, also
   used for the animated BPM readout.
+- **Health Connect**: [`react-native-health-connect`](https://github.com/matinzd/react-native-health-connect)
+  for reading availability/permissions and writing `ExerciseSession` + `HeartRate`
+  records, with `expo-build-properties` pinning the required `compileSdkVersion` /
+  `minSdkVersion` and a local config plugin
+  (`plugins/withHealthConnectManifest.js`) adding the permissions-rationale activity and
+  intent filters Health Connect requires.
 - **i18n**: [`i18n-js`](https://github.com/fnando/i18n-js) + `expo-localization` for
   English/Japanese translations and device-locale detection.
 - **Crash Reporting**: `@react-native-firebase/app` + `@react-native-firebase/crashlytics`
   (optional, already wired in).
+- **Icons**: `@expo/vector-icons` (Ionicons).
+- **Fonts**: `expo-font` is installed and its plugin registered, but the three custom
+  faces (Hanken Grotesk, Inter, JetBrains Mono) are not loaded yet - `src/theme/typography.ts`
+  holds the family names as constants and screens still render in the system face.
+- **Builds & Updates**: `eas.json` build profiles (development / preview / production)
+  with `expo-updates` for OTA delivery, and an EAS Workflow
+  (`.eas/workflows/production.yml`) that fingerprints the project first, reuses a
+  matching production build and ships an OTA update when the native layer is unchanged,
+  and only rebuilds when it isn't.
 - **Testing**: [`jest-expo`](https://docs.expo.dev/develop/unit-testing/) with
   [`@testing-library/react-native`](https://callstack.github.io/react-native-testing-library/)
   for unit and component tests. Maestro for E2E flows it can drive (manual-entry and
   history), planned for Milestone 2. _Maestro not yet installed._
 - **Linting & Code Quality**: [Oxlint](https://oxc.rs/docs/guide/usage/linter.html),
-  Prettier, Husky, lint-staged.
+  Prettier, Husky, lint-staged, enforced on every push and PR by
+  `.github/workflows/ci.yml` (lint → typecheck → test).
 
 Deferred, rest of Milestone 2:
 
-- [`react-native-health-connect`](https://github.com/matinzd/react-native-health-connect)
-  for Health Connect read/write.
-- `expo-build-properties` for the Health Connect `minSdkVersion` / `compileSdkVersion`.
 - `@react-native-firebase/auth` + `@react-native-firebase/firestore` for Google login and
   cloud settings sync (`@react-native-firebase/app` is already installed and configured).
 - `@react-native-google-signin/google-signin` for Google Sign-In.
