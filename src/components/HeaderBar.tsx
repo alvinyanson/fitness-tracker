@@ -1,19 +1,47 @@
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import { Feather, Ionicons } from '@expo/vector-icons';
+import { router, usePathname } from 'expo-router';
+import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from '@/hooks/useTranslation';
 import { colors, space, type as typeStyles } from '@/theme';
 
+/** Mirrors the bottom nav bar's icon vocabulary so header and tab agree. */
+export type HeaderIcon =
+  'signal' | 'bluetooth' | 'workout' | 'history' | 'settings';
+
 export interface HeaderBarProps {
   title: string;
-  showSignalIcon?: boolean;
+  icon?: HeaderIcon | null;
   deviceStatusBadge?: {
     connected: boolean;
     name: string;
   } | null;
   onProfilePress?: () => void;
+}
+
+function HeaderIconGlyph({ icon }: { icon: HeaderIcon }): ReactNode {
+  const color = colors.surfaceTint;
+  switch (icon) {
+    case 'bluetooth':
+      return <Feather name="bluetooth" size={18} color={color} />;
+    case 'workout':
+      return <MaterialCommunityIcons name="dumbbell" size={20} color={color} />;
+    case 'history':
+      return <MaterialCommunityIcons name="history" size={20} color={color} />;
+    case 'settings':
+      return <Ionicons name="settings-outline" size={18} color={color} />;
+    case 'signal':
+      return <Feather name="radio" size={18} color={color} />;
+  }
+}
+
+function useCurrentPathname(): string {
+  try {
+    return usePathname() ?? '';
+  } catch {
+    return '';
+  }
 }
 
 function useSafeInsets() {
@@ -26,17 +54,19 @@ function useSafeInsets() {
 
 export function HeaderBar({
   title,
-  showSignalIcon = true,
+  icon = 'signal',
   deviceStatusBadge,
   onProfilePress,
 }: HeaderBarProps): ReactNode {
   const insets = useSafeInsets();
   const { t } = useTranslation();
+  const pathname = useCurrentPathname();
+  const isOnSettings = pathname.includes('settings');
 
   const handleProfilePress = () => {
     if (onProfilePress) {
       onProfilePress();
-    } else {
+    } else if (!isOnSettings) {
       try {
         router.push('/settings' as any);
       } catch {
@@ -57,15 +87,12 @@ export function HeaderBar({
     >
       {/* Content Row */}
       <View style={styles.headerContent}>
-        {/* Left section: Signal icon + Title */}
+        {/* Left section: Screen icon + Title */}
         <View style={styles.leftSection}>
-          {showSignalIcon && (
-            <Feather
-              name="radio"
-              size={18}
-              color={colors.surfaceTint}
-              style={styles.signalIcon}
-            />
+          {icon && (
+            <View style={styles.screenIcon}>
+              <HeaderIconGlyph icon={icon} />
+            </View>
           )}
           <Text style={styles.titleText} accessibilityRole="header">
             {title}
@@ -108,11 +135,14 @@ export function HeaderBar({
           accessibilityRole="button"
           accessibilityLabel={t('common.profile')}
           accessibilityHint={t('common.profileHint')}
+          accessibilityState={{ selected: isOnSettings }}
         >
           <Ionicons
-            name="person-circle-outline"
+            name={isOnSettings ? 'person-circle' : 'person-circle-outline'}
             size={24}
-            color={colors.onSurfaceVariant}
+            color={
+              isOnSettings ? colors.primaryContainer : colors.onSurfaceVariant
+            }
           />
         </Pressable>
       </View>
@@ -139,7 +169,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: space.unit * 2,
   },
-  signalIcon: {
+  screenIcon: {
+    width: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: 2,
   },
   titleText: {

@@ -72,7 +72,7 @@ export default function SummaryScreen() {
   if (!session) {
     return (
       <View style={styles.container}>
-        <HeaderBar title={t('summary.title')} showSignalIcon={false} />
+        <HeaderBar title={t('summary.headerTitle')} icon="history" />
         <View style={styles.notFoundContent}>
           <Ionicons
             name="alert-circle-outline"
@@ -118,7 +118,7 @@ export default function SummaryScreen() {
 
   return (
     <View style={styles.container}>
-      <HeaderBar title={t('summary.title')} showSignalIcon={false} />
+      <HeaderBar title={t('summary.headerTitle')} icon="history" />
 
       <ScrollView
         style={styles.scrollView}

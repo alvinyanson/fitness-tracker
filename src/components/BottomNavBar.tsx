@@ -7,7 +7,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { colors, space, type as typeStyles } from '@/theme';
 
 export interface BottomNavBarProps {
-  currentRoute?: 'pairing' | 'workout' | 'history';
+  currentRoute?: 'pairing' | 'workout' | 'history' | 'settings';
 }
 
 function useSafeInsets() {
@@ -33,11 +33,13 @@ export function BottomNavBar({ currentRoute }: BottomNavBarProps): ReactNode {
 
   const activeRoute =
     currentRoute ??
-    (pathname.includes('workout')
-      ? 'workout'
-      : pathname.includes('history') || pathname.includes('summary')
-        ? 'history'
-        : 'pairing');
+    (pathname.includes('settings')
+      ? 'settings'
+      : pathname.includes('workout')
+        ? 'workout'
+        : pathname.includes('history') || pathname.includes('summary')
+          ? 'history'
+          : 'pairing');
 
   const navigateTo = (path: string) => {
     router.push(path as any);

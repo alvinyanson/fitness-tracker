@@ -114,7 +114,7 @@ function PairingContent() {
   return (
     <View style={styles.container}>
       {/* Top Header Bar */}
-      <HeaderBar title={t('pairing.headerTitle')} showSignalIcon={true} />
+      <HeaderBar title={t('pairing.headerTitle')} icon="bluetooth" />
 
       <FlatList
         data={devices}

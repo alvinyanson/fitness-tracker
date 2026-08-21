@@ -134,6 +134,7 @@ export default function WorkoutScreen() {
       {/* Top Header Bar */}
       <HeaderBar
         title={t('workout.headerTitle')}
+        icon="workout"
         deviceStatusBadge={deviceBadge}
       />
 
