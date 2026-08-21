@@ -65,7 +65,8 @@
     "emptyMessage": "ワークアウトを完了すると、ここに表示されます。",
     "avgHrUnit": "BPM",
     "tabHint": "ワークアウト履歴画面へ移動します",
-    "sessionItemHint": "ワークアウトセッションの概要を表示します"
+    "sessionItemHint": "ワークアウトセッションの概要を表示します",
+    "headerTitle": "ワークアウト履歴"
   },
   "workout": {
     "title": "ワークアウト",
@@ -123,14 +124,16 @@
     "deleteTitle": "セッションを削除しますか？",
     "deleteMessage": "このワークアウトセッションは永久に削除されます。この操作は取り消せません。",
     "deleteCancel": "キャンセル",
-    "deleteConfirm": "削除"
+    "deleteConfirm": "削除",
+    "headerTitle": "セッション概要"
   },
   "settings": {
     "title": "設定",
     "languageLabel": "言語",
     "languageEnglish": "英語",
     "languageJapanese": "日本語",
-    "languageOptionHint": "この言語を選択します"
+    "languageOptionHint": "この言語を選択します",
+    "headerTitle": "設定"
   },
   "healthConnect": {
     "title": "Health Connect",

@@ -65,7 +65,8 @@
     "emptyMessage": "Complete a workout to see it appear here.",
     "avgHrUnit": "BPM",
     "tabHint": "Navigates to workout history screen",
-    "sessionItemHint": "Opens workout session summary"
+    "sessionItemHint": "Opens workout session summary",
+    "headerTitle": "Workout History"
   },
   "workout": {
     "title": "Workout",
@@ -123,14 +124,16 @@
     "deleteTitle": "Delete Session?",
     "deleteMessage": "This will permanently delete this workout session. This action cannot be undone.",
     "deleteCancel": "Cancel",
-    "deleteConfirm": "Delete"
+    "deleteConfirm": "Delete",
+    "headerTitle": "Session Summary"
   },
   "settings": {
     "title": "Settings",
     "languageLabel": "Language",
     "languageEnglish": "English",
     "languageJapanese": "Japanese",
-    "languageOptionHint": "Selects this language"
+    "languageOptionHint": "Selects this language",
+    "headerTitle": "Settings"
   },
   "healthConnect": {
     "title": "Health Connect",

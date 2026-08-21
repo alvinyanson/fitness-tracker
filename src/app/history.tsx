@@ -75,7 +75,7 @@ export default function HistoryScreen() {
 
   return (
     <View style={styles.container}>
-      <HeaderBar title={t('history.title')} showSignalIcon={false} />
+      <HeaderBar title={t('history.headerTitle')} icon="history" />
 
       {entries.length === 0 ? (
         <View style={styles.emptyContainer}>
