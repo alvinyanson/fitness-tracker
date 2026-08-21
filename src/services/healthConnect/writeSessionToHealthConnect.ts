@@ -108,13 +108,13 @@ export async function writeSessionToHealthConnect(
     const mapped = mapSessionToHealthRecords(session, {
       title: options?.title,
     });
-    const recordsToInsert = [
-      mapped.exercise,
-      ...(mapped.heartRate ? [mapped.heartRate] : []),
-    ];
+    // Health Connect rejects a mixed-type batch — one insert call per record type.
+    const exerciseIds = await insertRecords([mapped.exercise]);
+    const exerciseRecordId = exerciseIds[0];
 
-    const ids = await insertRecords(recordsToInsert);
-    const exerciseRecordId = ids[0];
+    if (mapped.heartRate) {
+      await insertRecords([mapped.heartRate]);
+    }
 
     const sync = syncedOutcome(now, exerciseRecordId);
     persistSyncOutcome(session.id, sync);

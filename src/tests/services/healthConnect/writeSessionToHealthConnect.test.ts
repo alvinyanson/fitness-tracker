@@ -202,12 +202,16 @@ describe('writeSessionToHealthConnect', () => {
       },
     });
 
-    expect(insertRecords).toHaveBeenCalledTimes(1);
-    const passedRecords = (insertRecords as jest.Mock).mock.calls[0][0];
-    expect(passedRecords).toHaveLength(2);
-    expect(passedRecords[0].recordType).toBe('ExerciseSession');
-    expect(passedRecords[0].title).toBe('Morning Workout');
-    expect(passedRecords[1].recordType).toBe('HeartRate');
+    // Separate calls: Health Connect rejects a batch mixing record types.
+    expect(insertRecords).toHaveBeenCalledTimes(2);
+    const exerciseBatch = (insertRecords as jest.Mock).mock.calls[0][0];
+    expect(exerciseBatch).toHaveLength(1);
+    expect(exerciseBatch[0].recordType).toBe('ExerciseSession');
+    expect(exerciseBatch[0].title).toBe('Morning Workout');
+
+    const heartRateBatch = (insertRecords as jest.Mock).mock.calls[1][0];
+    expect(heartRateBatch).toHaveLength(1);
+    expect(heartRateBatch[0].recordType).toBe('HeartRate');
 
     expect(updateStorageSpy).toHaveBeenCalledWith(mockSession.id, {
       state: 'synced',

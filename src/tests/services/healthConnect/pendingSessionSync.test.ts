@@ -346,15 +346,20 @@ describe('pendingSessionSync', () => {
       saveSession(session2);
       saveSession(session3);
 
-      // Session 1 succeeds, Session 2 throws, Session 3 succeeds
-      let callCount = 0;
-      (insertRecords as jest.Mock).mockImplementation(async () => {
-        callCount++;
-        if (callCount === 2) {
-          throw new Error('Disk error on session 2');
-        }
-        return ['rec-id'];
-      });
+      // Session 1 succeeds, Session 2 throws, Session 3 succeeds.
+      // Keyed on clientRecordId, not call order: each session now issues one
+      // insert per record type.
+      (insertRecords as jest.Mock).mockImplementation(
+        async (records: { metadata?: { clientRecordId?: string } }[] = []) => {
+          const belongsToSession2 = records.some((record) =>
+            record?.metadata?.clientRecordId?.includes('session-2'),
+          );
+          if (belongsToSession2) {
+            throw new Error('Disk error on session 2');
+          }
+          return ['rec-id'];
+        },
+      );
 
       const result = await flushPendingSessions();
       expect(result).toMatchObject({
@@ -479,7 +484,8 @@ describe('pendingSessionSync', () => {
       // Verify availability and granted permissions were checked exactly once for the whole batch
       expect(getSdkStatus).toHaveBeenCalledTimes(1);
       expect(getGrantedPermissions).toHaveBeenCalledTimes(1);
-      expect(insertRecords).toHaveBeenCalledTimes(3);
+      // Two inserts per session: one ExerciseSession, one HeartRate.
+      expect(insertRecords).toHaveBeenCalledTimes(6);
     });
   });
 });
