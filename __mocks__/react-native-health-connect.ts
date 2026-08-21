@@ -67,7 +67,9 @@ export function __resetMocks(): void {
   initialize.mockClear();
   requestPermission.mockClear();
   getGrantedPermissions.mockClear();
-  insertRecords.mockClear();
+  // Reset, not clear: per-test mockImplementation overrides must not leak.
+  insertRecords.mockReset();
+  insertRecords.mockImplementation(insertRecordsImpl);
 }
 
 export const getSdkStatus = jest.fn(
@@ -111,12 +113,19 @@ export const getGrantedPermissions = jest.fn(
 export const revokeAllPermissions = jest.fn(async () => {});
 export const readRecords = jest.fn(async () => ({ records: [] }));
 export const readRecord = jest.fn(async () => ({}));
-export const insertRecords = jest.fn(
-  async (_records: any[] = []): Promise<string[]> => {
-    if (mockedInsertResult instanceof Error) {
-      throw mockedInsertResult;
-    }
-    return mockedInsertResult;
-  },
-);
+async function insertRecordsImpl(records: any[] = []): Promise<string[]> {
+  // Mirrors the native constraint: a batch may not mix record types.
+  const recordTypes = new Set(records.map((record) => record?.recordType));
+  if (recordTypes.size > 1) {
+    throw new Error(
+      'HealthConnect.insertRecords: All records must have the same type',
+    );
+  }
+  if (mockedInsertResult instanceof Error) {
+    throw mockedInsertResult;
+  }
+  return mockedInsertResult;
+}
+
+export const insertRecords = jest.fn(insertRecordsImpl);
 export const aggregateRecord = jest.fn(async () => ({}));
