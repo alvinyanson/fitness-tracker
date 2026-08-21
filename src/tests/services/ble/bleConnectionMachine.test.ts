@@ -26,6 +26,32 @@ describe('reduceBleConnectionState', () => {
     });
   });
 
+  it('scanning + scanFailed -> error (scanFailed) with given message', () => {
+    const current: BleConnectionSnapshot = { state: 'scanning' };
+    const next = reduceBleConnectionState(current, {
+      type: 'scanFailed',
+      message: 'Hardware scan failure',
+    });
+    expect(next).toEqual({
+      state: 'error',
+      cause: 'scanFailed',
+      message: 'Hardware scan failure',
+    });
+  });
+
+  it('scanning + scanFailed -> error (scanFailed) with default fallback message when empty', () => {
+    const current: BleConnectionSnapshot = { state: 'scanning' };
+    const next = reduceBleConnectionState(current, {
+      type: 'scanFailed',
+      message: '',
+    });
+    expect(next).toEqual({
+      state: 'error',
+      cause: 'scanFailed',
+      message: 'BLE scan failed',
+    });
+  });
+
   it('scanning + connectRequested -> connecting', () => {
     const current: BleConnectionSnapshot = { state: 'scanning' };
     const next = reduceBleConnectionState(current, {
@@ -42,6 +68,18 @@ describe('reduceBleConnectionState', () => {
       deviceId: 'dev-123',
     });
     expect(next).toEqual({ state: 'connecting', deviceId: 'dev-123' });
+  });
+
+  it('connecting + connectRequested -> connecting with new deviceId', () => {
+    const current: BleConnectionSnapshot = {
+      state: 'connecting',
+      deviceId: 'dev-123',
+    };
+    const next = reduceBleConnectionState(current, {
+      type: 'connectRequested',
+      deviceId: 'dev-456',
+    });
+    expect(next).toEqual({ state: 'connecting', deviceId: 'dev-456' });
   });
 
   it('disconnected + connectRequested -> connecting', () => {
@@ -247,6 +285,77 @@ describe('reduceBleConnectionState', () => {
       const current: BleConnectionSnapshot = { state: 'scanning' };
       const next = reduceBleConnectionState(current, {
         type: 'disconnectRequested',
+      });
+      expect(next).toBe(current);
+    });
+
+    it('idle + scanFailed -> unchanged', () => {
+      const current: BleConnectionSnapshot = { state: 'idle' };
+      const next = reduceBleConnectionState(current, {
+        type: 'scanFailed',
+        message: 'error',
+      });
+      expect(next).toBe(current);
+    });
+
+    it('connecting + scanFailed -> unchanged', () => {
+      const current: BleConnectionSnapshot = {
+        state: 'connecting',
+        deviceId: 'dev-123',
+      };
+      const next = reduceBleConnectionState(current, {
+        type: 'scanFailed',
+        message: 'error',
+      });
+      expect(next).toBe(current);
+    });
+
+    it('connected + scanFailed -> unchanged', () => {
+      const current: BleConnectionSnapshot = {
+        state: 'connected',
+        device: mockDevice,
+      };
+      const next = reduceBleConnectionState(current, {
+        type: 'scanFailed',
+        message: 'error',
+      });
+      expect(next).toBe(current);
+    });
+
+    it('disconnected + scanFailed -> unchanged', () => {
+      const current: BleConnectionSnapshot = {
+        state: 'disconnected',
+        device: mockDevice,
+        reason: 'unexpected',
+      };
+      const next = reduceBleConnectionState(current, {
+        type: 'scanFailed',
+        message: 'error',
+      });
+      expect(next).toBe(current);
+    });
+
+    it('error + scanFailed -> unchanged', () => {
+      const current: BleConnectionSnapshot = {
+        state: 'error',
+        cause: 'connectTimeout',
+        message: 'timed out',
+      };
+      const next = reduceBleConnectionState(current, {
+        type: 'scanFailed',
+        message: 'error',
+      });
+      expect(next).toBe(current);
+    });
+
+    it('connecting + connectRequested (same deviceId) -> unchanged', () => {
+      const current: BleConnectionSnapshot = {
+        state: 'connecting',
+        deviceId: 'dev-123',
+      };
+      const next = reduceBleConnectionState(current, {
+        type: 'connectRequested',
+        deviceId: 'dev-123',
       });
       expect(next).toBe(current);
     });

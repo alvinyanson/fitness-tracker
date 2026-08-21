@@ -17,6 +17,7 @@ import {
 } from './bleConnectionMachine';
 import {
   safeCancelDeviceConnection,
+  safeDestroyManager,
   safeRemoveSubscription,
   safeStopScan,
 } from './bleNativeUtils';
@@ -43,6 +44,8 @@ export class BleService {
   private connectTimer: ReturnType<typeof setTimeout> | null = null;
   private adapterStateSubscription: Subscription | null = null;
   private isUserInitiatedDisconnect = false;
+  private connectAttemptId = 0;
+  private isDestroyed = false;
 
   constructor(options?: BleServiceOptions) {
     this.scanTimeoutMs = options?.scanTimeoutMs ?? 15000;
@@ -76,6 +79,8 @@ export class BleService {
     onDeviceFound: (device: DiscoveredDevice) => void,
     serviceUUIDs?: string[] | null,
   ): void {
+    if (this.isDestroyed) return;
+
     if (
       this.snapshot.state === 'disconnected' ||
       this.snapshot.state === 'error'
@@ -100,7 +105,17 @@ export class BleService {
       serviceUUIDs ?? null,
       { allowDuplicates: false },
       (error, device) => {
-        if (error || !device) return;
+        if (error) {
+          reportError(error, { scope: 'bleService.startScan' });
+          this.clearScanTimer();
+          safeStopScan(this.manager);
+          this.dispatch({
+            type: 'scanFailed',
+            message: error.message || 'BLE scan failed',
+          });
+          return;
+        }
+        if (!device) return;
         onDeviceFound({
           id: device.id,
           name: device.name ?? null,
@@ -111,6 +126,7 @@ export class BleService {
   }
 
   stopScan(): void {
+    if (this.isDestroyed) return;
     if (this.snapshot.state !== 'scanning') return;
     logBreadcrumb('BLE: stopScan initiated');
     this.clearScanTimer();
@@ -119,9 +135,20 @@ export class BleService {
   }
 
   async connect(deviceId: string): Promise<void> {
+    if (this.isDestroyed) return;
+
+    if (
+      this.snapshot.state === 'connecting' &&
+      this.snapshot.deviceId === deviceId
+    ) {
+      return;
+    }
+
     if (this.snapshot.state === 'scanning') {
       this.stopScan();
     }
+
+    const currentAttempt = ++this.connectAttemptId;
 
     logBreadcrumb(`BLE: connect requested for device ${deviceId}`);
     this.dispatch({ type: 'connectRequested', deviceId });
@@ -131,14 +158,26 @@ export class BleService {
     this.isUserInitiatedDisconnect = false;
 
     try {
-      const device = await this.raceConnectWithTimeout(deviceId);
-      await device.discoverAllServicesAndCharacteristics();
+      const device = await this.raceConnectWithTimeout(
+        deviceId,
+        currentAttempt,
+      );
 
-      if (this.snapshot.state !== 'connecting') return;
+      if (
+        this.isDestroyed ||
+        this.snapshot.state !== 'connecting' ||
+        this.connectAttemptId !== currentAttempt ||
+        !device
+      ) {
+        return;
+      }
 
       this.attachConnectedDevice(device);
     } catch (err: unknown) {
       this.clearConnectTimer();
+      if (this.isDestroyed || this.connectAttemptId !== currentAttempt) {
+        return;
+      }
       reportError(err, { scope: 'bleService.connect', deviceId });
       const message =
         err instanceof Error ? err.message : err ? String(err) : '';
@@ -157,6 +196,7 @@ export class BleService {
   }
 
   cancelConnect(): void {
+    if (this.isDestroyed) return;
     if (this.snapshot.state !== 'connecting') return;
 
     const deviceId = this.snapshot.deviceId;
@@ -166,6 +206,7 @@ export class BleService {
   }
 
   disconnect(): void {
+    if (this.isDestroyed) return;
     if (this.snapshot.state !== 'connected') return;
 
     this.isUserInitiatedDisconnect = true;
@@ -207,6 +248,9 @@ export class BleService {
   }
 
   destroy(): void {
+    if (this.isDestroyed) return;
+    this.isDestroyed = true;
+
     this.clearScanTimer();
     this.clearConnectTimer();
 
@@ -220,6 +264,8 @@ export class BleService {
       safeRemoveSubscription(this.adapterStateSubscription);
       this.adapterStateSubscription = null;
     }
+
+    safeDestroyManager(this.manager);
 
     this.listeners.clear();
     this.snapshot = { state: 'idle' };
@@ -235,19 +281,63 @@ export class BleService {
     }
   }
 
-  private async raceConnectWithTimeout(deviceId: string): Promise<Device> {
+  private async raceConnectWithTimeout(
+    deviceId: string,
+    attemptId: number,
+  ): Promise<Device | null> {
+    let timer: ReturnType<typeof setTimeout> | null = null;
     const timeoutPromise = new Promise<never>((_, reject) => {
-      this.connectTimer = setTimeout(() => {
+      timer = setTimeout(() => {
         reject(new Error('CONNECT_TIMEOUT'));
       }, this.connectTimeoutMs);
+      this.connectTimer = timer;
     });
 
-    const device = await Promise.race([
-      this.manager.connectToDevice(deviceId, { autoConnect: false }),
-      timeoutPromise,
-    ]);
-    this.clearConnectTimer();
-    return device;
+    const connectOp = this.manager
+      .connectToDevice(deviceId, { autoConnect: false })
+      .then(async (device) => {
+        if (
+          this.isDestroyed ||
+          this.snapshot.state !== 'connecting' ||
+          this.connectAttemptId !== attemptId
+        ) {
+          safeCancelDeviceConnection(this.manager, device.id);
+          return device;
+        }
+
+        await device.discoverAllServicesAndCharacteristics();
+
+        if (
+          this.isDestroyed ||
+          this.snapshot.state !== 'connecting' ||
+          this.connectAttemptId !== attemptId
+        ) {
+          safeCancelDeviceConnection(this.manager, device.id);
+        }
+        return device;
+      })
+      .catch((error) => {
+        if (
+          this.isDestroyed ||
+          this.snapshot.state !== 'connecting' ||
+          this.connectAttemptId !== attemptId
+        ) {
+          return null;
+        }
+        throw error;
+      });
+
+    try {
+      const device = await Promise.race([connectOp, timeoutPromise]);
+      return device;
+    } finally {
+      if (timer !== null) {
+        clearTimeout(timer);
+      }
+      if (this.connectTimer === timer) {
+        this.connectTimer = null;
+      }
+    }
   }
 
   private attachConnectedDevice(device: Device): void {

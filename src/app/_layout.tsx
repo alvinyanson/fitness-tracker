@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -7,6 +8,7 @@ import {
 } from '@/components/ErrorBoundary';
 import { useHealthConnectSyncQueue } from '@/hooks/useHealthConnectSyncQueue';
 import { useTranslation } from '@/hooks/useTranslation';
+import { resetBleService } from '@/services/ble/bleService';
 import { reportError } from '@/services/crashService';
 import { colors } from '@/theme';
 
@@ -31,6 +33,12 @@ export default function RootLayout() {
     autoFlushOnForeground: true,
     title: t('healthConnect.syncSessionTitle'),
   });
+
+  useEffect(() => {
+    return () => {
+      resetBleService();
+    };
+  }, []);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

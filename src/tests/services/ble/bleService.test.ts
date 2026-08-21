@@ -1,12 +1,19 @@
 import { BleManager, State } from 'react-native-ble-plx';
 import type { BleConnectionSnapshot } from '@/interfaces/ble';
 import { BleService } from '@/services/ble/bleService';
+import { reportError } from '@/services/crashService';
+
+jest.mock('@/services/crashService', () => ({
+  reportError: jest.fn(),
+  logBreadcrumb: jest.fn(),
+}));
 
 describe('BleService', () => {
   let service: BleService;
   let managerInstance: BleManager;
 
   beforeEach(() => {
+    jest.clearAllMocks();
     jest.useFakeTimers();
     // Instantiating BleService creates a new BleManager under the hood
     service = new BleService({ scanTimeoutMs: 15000, connectTimeoutMs: 10000 });
@@ -53,6 +60,35 @@ describe('BleService', () => {
     ]);
   });
 
+  it('surfaces scan errors immediately as scanFailed without waiting for timeout', () => {
+    const stopScanSpy = jest.spyOn(managerInstance, 'stopDeviceScan');
+    const onDeviceFound = jest.fn();
+    service.startScan(onDeviceFound);
+    expect(service.getSnapshot()).toEqual({ state: 'scanning' });
+
+    const scanError = new Error('SCAN_FAILED');
+    managerInstance.__scanError(scanError);
+
+    expect(reportError).toHaveBeenCalledWith(scanError, {
+      scope: 'bleService.startScan',
+    });
+    expect(stopScanSpy).toHaveBeenCalled();
+    expect(onDeviceFound).not.toHaveBeenCalled();
+    expect(service.getSnapshot()).toEqual({
+      state: 'error',
+      cause: 'scanFailed',
+      message: 'SCAN_FAILED',
+    });
+
+    // Advancing timer past scanTimeoutMs produces no further transition
+    jest.advanceTimersByTime(15000);
+    expect(service.getSnapshot()).toEqual({
+      state: 'error',
+      cause: 'scanFailed',
+      message: 'SCAN_FAILED',
+    });
+  });
+
   it('surfaces found devices via startScan callback without changing connection snapshot', () => {
     managerInstance.__scanResults([
       { id: 'dev-1', name: 'Heart Rate Monitor', rssi: -60 },
@@ -96,6 +132,31 @@ describe('BleService', () => {
     });
   });
 
+  it('times out connect attempt when discovery stalls (P2)', async () => {
+    const cancelConnectSpy = jest.spyOn(
+      managerInstance,
+      'cancelDeviceConnection',
+    );
+    managerInstance.__connectOutcome('success');
+    managerInstance.__discoverOutcome('pending');
+
+    const connectPromise = service.connect('dev-1');
+    expect(service.getSnapshot()).toEqual({
+      state: 'connecting',
+      deviceId: 'dev-1',
+    });
+
+    jest.advanceTimersByTime(10000);
+    await connectPromise;
+
+    expect(cancelConnectSpy).toHaveBeenCalledWith('dev-1');
+    expect(service.getSnapshot()).toEqual({
+      state: 'error',
+      cause: 'connectTimeout',
+      message: 'Connection attempt timed out',
+    });
+  });
+
   it('cancelConnect() while connecting clears timer, calls cancelDeviceConnection, and resets snapshot to idle', () => {
     const cancelConnectSpy = jest.spyOn(
       managerInstance,
@@ -113,6 +174,185 @@ describe('BleService', () => {
 
     expect(cancelConnectSpy).toHaveBeenCalledWith('dev-1');
     expect(service.getSnapshot()).toEqual({ state: 'idle' });
+  });
+
+  it('cancelling a pending connect then resolving it leaves snapshot idle and cancels the resolved device (P3)', async () => {
+    const cancelConnectSpy = jest.spyOn(
+      managerInstance,
+      'cancelDeviceConnection',
+    );
+    managerInstance.__connectOutcome('pending');
+
+    const connectPromise = service.connect('dev-1');
+    expect(service.getSnapshot()).toEqual({
+      state: 'connecting',
+      deviceId: 'dev-1',
+    });
+
+    service.cancelConnect();
+    expect(service.getSnapshot()).toEqual({ state: 'idle' });
+    expect(cancelConnectSpy).toHaveBeenCalledWith('dev-1');
+    cancelConnectSpy.mockClear();
+
+    // Resolve the pending connect after cancellation
+    managerInstance.__resolveConnect('dev-1');
+    await connectPromise;
+
+    expect(service.getSnapshot()).toEqual({ state: 'idle' });
+    expect(cancelConnectSpy).toHaveBeenCalledWith('dev-1');
+  });
+
+  it('cancelling a pending connect whose discovery stalls cancels device immediately on connect resolution (Finding 1)', async () => {
+    const cancelConnectSpy = jest.spyOn(
+      managerInstance,
+      'cancelDeviceConnection',
+    );
+    managerInstance.__connectOutcome('pending');
+    managerInstance.__discoverOutcome('pending');
+
+    const connectPromise = service.connect('dev-1');
+    expect(service.getSnapshot()).toEqual({
+      state: 'connecting',
+      deviceId: 'dev-1',
+    });
+
+    service.cancelConnect();
+    expect(service.getSnapshot()).toEqual({ state: 'idle' });
+    expect(cancelConnectSpy).toHaveBeenCalledWith('dev-1');
+    cancelConnectSpy.mockClear();
+
+    // Resolve connectToDevice while discoverAllServicesAndCharacteristics is pending
+    managerInstance.__resolveConnect('dev-1');
+    await connectPromise;
+
+    expect(service.getSnapshot()).toEqual({ state: 'idle' });
+    expect(cancelConnectSpy).toHaveBeenCalledWith('dev-1');
+  });
+
+  it('cancelling a pending connect that rejects later does not report a TypeError (Finding 2)', async () => {
+    let rejectConnect!: (err: Error) => void;
+    jest.spyOn(managerInstance, 'connectToDevice').mockImplementation(
+      () =>
+        new Promise((_, reject) => {
+          rejectConnect = reject;
+        }),
+    );
+
+    const connectPromise = service.connect('dev-1');
+    expect(service.getSnapshot()).toEqual({
+      state: 'connecting',
+      deviceId: 'dev-1',
+    });
+
+    service.cancelConnect();
+    expect(service.getSnapshot()).toEqual({ state: 'idle' });
+
+    (reportError as jest.Mock).mockClear();
+
+    rejectConnect(new Error('GATT connect failure'));
+    await connectPromise;
+
+    expect(service.getSnapshot()).toEqual({ state: 'idle' });
+    // Should not report TypeError: Cannot read properties of undefined
+    const calls = (reportError as jest.Mock).mock.calls;
+    const typeErrors = calls.filter(([err]) => err instanceof TypeError);
+    expect(typeErrors).toHaveLength(0);
+  });
+
+  it('duplicate connect() call for the same deviceId while connecting is a no-op (Finding 3)', async () => {
+    const connectSpy = jest.spyOn(managerInstance, 'connectToDevice');
+    managerInstance.__connectOutcome('pending');
+
+    const connectPromise1 = service.connect('dev-1');
+    expect(service.getSnapshot()).toEqual({
+      state: 'connecting',
+      deviceId: 'dev-1',
+    });
+    expect(connectSpy).toHaveBeenCalledTimes(1);
+
+    // Second connect call to same device
+    const connectPromise2 = service.connect('dev-1');
+    expect(connectSpy).toHaveBeenCalledTimes(1);
+    expect(service.getSnapshot()).toEqual({
+      state: 'connecting',
+      deviceId: 'dev-1',
+    });
+
+    managerInstance.__resolveConnect('dev-1');
+    await connectPromise1;
+    await connectPromise2;
+  });
+
+  it('a superseded connect attempt cancels the abandoned device and connects to the winning device (P3)', async () => {
+    const cancelConnectSpy = jest.spyOn(
+      managerInstance,
+      'cancelDeviceConnection',
+    );
+    managerInstance.__connectOutcome('pending');
+
+    const connectPromise1 = service.connect('dev-1');
+    expect(service.getSnapshot()).toEqual({
+      state: 'connecting',
+      deviceId: 'dev-1',
+    });
+
+    // Start second connect to dev-2 while dev-1 is still pending
+    managerInstance.__connectOutcome('success');
+    const connectPromise2 = service.connect('dev-2');
+    expect(service.getSnapshot()).toEqual({
+      state: 'connecting',
+      deviceId: 'dev-2',
+    });
+
+    // Resolve connect 1
+    managerInstance.__resolveConnect('dev-1');
+    await connectPromise1;
+    await connectPromise2;
+
+    expect(service.getSnapshot()).toEqual({
+      state: 'connected',
+      device: { id: 'dev-2', name: null },
+    });
+    // dev-1 was cancelled because it was superseded
+    expect(cancelConnectSpy).toHaveBeenCalledWith('dev-1');
+    // dev-2 was NOT cancelled because it is the active winning connection
+    expect(cancelConnectSpy).not.toHaveBeenCalledWith('dev-2');
+  });
+
+  it('a superseded pending connect resolving late does not disarm the active attempt connect timer', async () => {
+    managerInstance.__connectOutcome('pending');
+
+    const connectPromise1 = service.connect('dev-1');
+    expect(service.getSnapshot()).toEqual({
+      state: 'connecting',
+      deviceId: 'dev-1',
+    });
+
+    const connectPromise2 = service.connect('dev-2');
+    expect(service.getSnapshot()).toEqual({
+      state: 'connecting',
+      deviceId: 'dev-2',
+    });
+
+    // Resolve dev-1 late
+    managerInstance.__resolveConnect('dev-1');
+    await connectPromise1;
+
+    // Snapshot is still connecting to dev-2
+    expect(service.getSnapshot()).toEqual({
+      state: 'connecting',
+      deviceId: 'dev-2',
+    });
+
+    // Advance 10s -> dev-2 timer must still fire and transition to connectTimeout
+    jest.advanceTimersByTime(10000);
+    await connectPromise2;
+
+    expect(service.getSnapshot()).toEqual({
+      state: 'error',
+      cause: 'connectTimeout',
+      message: 'Connection attempt timed out',
+    });
   });
 
   it('cancelConnect() while not connecting is a no-op', () => {
@@ -323,7 +563,8 @@ describe('BleService', () => {
     }).toThrow('Cannot monitor characteristic when not connected');
   });
 
-  it('destroy() clears timers, removes adapter listener, and resets snapshot to idle', async () => {
+  it('destroy() destroys BleManager, clears timers, removes adapter listener, and resets snapshot to idle (P8)', async () => {
+    const destroySpy = jest.spyOn(managerInstance, 'destroy');
     managerInstance.__connectOutcome('success');
     await service.connect('dev-1');
     expect(service.getSnapshot().state).toBe('connected');
@@ -333,11 +574,40 @@ describe('BleService', () => {
 
     service.destroy();
 
+    expect(destroySpy).toHaveBeenCalledTimes(1);
     expect(service.getSnapshot()).toEqual({ state: 'idle' });
+
+    // Calling destroy a second time is an idempotent no-op
+    service.destroy();
+    expect(destroySpy).toHaveBeenCalledTimes(1);
 
     // Listener was cleared, so adapter changes after destroy do not notify subscriber
     managerInstance.__setAdapterState(State.PoweredOff);
     expect(listenerSpy).not.toHaveBeenCalled();
+  });
+
+  it('destroyed service ignores startScan, connect, cancelConnect, and disconnect commands (P8)', async () => {
+    const startScanSpy = jest.spyOn(managerInstance, 'startDeviceScan');
+    const connectSpy = jest.spyOn(managerInstance, 'connectToDevice');
+    const cancelSpy = jest.spyOn(managerInstance, 'cancelDeviceConnection');
+
+    service.destroy();
+
+    const onDeviceFound = jest.fn();
+    service.startScan(onDeviceFound);
+    expect(startScanSpy).not.toHaveBeenCalled();
+    expect(service.getSnapshot()).toEqual({ state: 'idle' });
+
+    await service.connect('dev-1');
+    expect(connectSpy).not.toHaveBeenCalled();
+    expect(service.getSnapshot()).toEqual({ state: 'idle' });
+
+    service.cancelConnect();
+    expect(cancelSpy).not.toHaveBeenCalled();
+    expect(service.getSnapshot()).toEqual({ state: 'idle' });
+
+    service.disconnect();
+    expect(service.getSnapshot()).toEqual({ state: 'idle' });
   });
 
   it('passes serviceUUIDs to manager.startDeviceScan when provided', () => {
