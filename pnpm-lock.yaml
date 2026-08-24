@@ -59,6 +59,9 @@ importers:
       react-native:
         specifier: 0.85.3
         version: 0.85.3(@babel/core@7.29.7)(@react-native/jest-preset@0.85.3(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.85.3(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3)
+      react-native-ble-plx:
+        specifier: ^3.5.1
+        version: 3.5.1(react-native@0.85.3(@babel/core@7.29.7)(@react-native/jest-preset@0.85.3(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.85.3(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3))(react@19.2.3)
       react-native-gesture-handler:
         specifier: ~2.31.2
         version: 2.31.2(react-native@0.85.3(@babel/core@7.29.7)(@react-native/jest-preset@0.85.3(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.85.3(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3))(react@19.2.3)
@@ -114,9 +117,6 @@ importers:
       prettier:
         specifier: ^3.9.6
         version: 3.9.6
-      react-native-ble-plx:
-        specifier: ^3.5.1
-        version: 3.5.1(react-native@0.85.3(@babel/core@7.29.7)(@react-native/jest-preset@0.85.3(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.85.3(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.3))(react@19.2.3)
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
