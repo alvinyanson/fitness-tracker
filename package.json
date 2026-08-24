@@ -53,7 +53,10 @@
     "typecheck": "tsc --noEmit",
     "test": "jest",
     "format": "prettier --write .",
-    "prepare": "husky"
+    "prepare": "husky",
+    "clean:modules": "node -e \"require('fs').rmSync('node_modules', { recursive: true, force: true })\"",
+    "build:prod": "pnpm clean:modules && pnpm install --frozen-lockfile && eas build --profile production --platform android",
+    "release:prod": "eas workflow:run .eas/workflows/production.yml"
   },
   "lint-staged": {
     "*.{ts,tsx,js}": [

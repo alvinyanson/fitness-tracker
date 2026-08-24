@@ -1,0 +1,5 @@
+# Build artifacts inside node_modules that only exist after a local `expo run:android`.
+# `**/android/build/**` is already ignored by @expo/fingerprint defaults; these are not.
+**/android-expo/build/**/*
+**/android-expo/.cxx/**/*
+**/android-expo/.gradle/**/*
