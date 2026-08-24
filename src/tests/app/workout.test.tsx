@@ -4,13 +4,13 @@ import { Alert, BackHandler } from 'react-native';
 import { setLocale } from '@/services/i18n/i18n';
 import { useSettingsStore } from '@/store/settingsStore';
 
-const mockReplace = jest.fn();
+const mockNavigate = jest.fn();
 
 jest.mock('expo-router', () => {
   return {
     __esModule: true,
     router: {
-      replace: (...args: unknown[]) => mockReplace(...args),
+      navigate: (...args: unknown[]) => mockNavigate(...args),
       push: jest.fn(),
     },
     useFocusEffect: (cb: any) => cb(),
@@ -112,7 +112,7 @@ jest.mock('react-native-reanimated', () => {
   };
 });
 
-import WorkoutScreen from '@/app/workout';
+import WorkoutScreen from '@/app/(tabs)/workout';
 import { createMMKV } from 'react-native-mmkv';
 import { useWorkoutSessionStore } from '@/store/workoutSessionStore';
 
@@ -218,7 +218,7 @@ describe('WorkoutScreen', () => {
     });
 
     expect(useWorkoutSessionStore.getState().status).toBe('stopped');
-    expect(mockReplace).toHaveBeenCalledWith(`/summary/${expectedId}`);
+    expect(mockNavigate).toHaveBeenCalledWith(`/summary/${expectedId}`);
   });
 
   it('displays reconnecting banner without pausing timer or disabling Stop button', async () => {
@@ -255,7 +255,7 @@ describe('WorkoutScreen', () => {
     });
 
     expect(useWorkoutSessionStore.getState().status).toBe('stopped');
-    expect(mockReplace).toHaveBeenCalledWith(`/summary/${expectedId}`);
+    expect(mockNavigate).toHaveBeenCalledWith(`/summary/${expectedId}`);
   });
 
   it('hardware back press is not intercepted when idle', async () => {
@@ -303,7 +303,7 @@ describe('WorkoutScreen', () => {
 
     // Cancel leaves session active
     expect(useWorkoutSessionStore.getState().status).toBe('active');
-    expect(mockReplace).not.toHaveBeenCalled();
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 
   it('hardware back press while active and confirming alert stops session and navigates', async () => {
@@ -336,7 +336,7 @@ describe('WorkoutScreen', () => {
     });
 
     expect(useWorkoutSessionStore.getState().status).toBe('stopped');
-    expect(mockReplace).toHaveBeenCalledWith(`/summary/${expectedId}`);
+    expect(mockNavigate).toHaveBeenCalledWith(`/summary/${expectedId}`);
   });
 
   it('hardware back press while paused shows confirm alert and confirming alert stops session and navigates', async () => {
@@ -386,6 +386,6 @@ describe('WorkoutScreen', () => {
     });
 
     expect(useWorkoutSessionStore.getState().status).toBe('stopped');
-    expect(mockReplace).toHaveBeenCalledWith(`/summary/${expectedId}`);
+    expect(mockNavigate).toHaveBeenCalledWith(`/summary/${expectedId}`);
   });
 });

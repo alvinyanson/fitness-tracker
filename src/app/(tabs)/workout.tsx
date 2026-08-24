@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { BpmReadout } from '@/components/BpmReadout';
-import { BottomNavBar } from '@/components/BottomNavBar';
 import { HeaderBar } from '@/components/HeaderBar';
 import { HrZoneBar } from '@/components/HrZoneBar';
 import { ReconnectingBanner } from '@/components/ReconnectingBanner';
@@ -75,7 +74,7 @@ export default function WorkoutScreen() {
   // Stop -> summary navigation effect
   useEffect(() => {
     if (status === 'stopped' && lastCompletedSessionId) {
-      router.replace(`/summary/${lastCompletedSessionId}`);
+      router.navigate(`/summary/${lastCompletedSessionId}`);
     }
   }, [status, lastCompletedSessionId]);
 
@@ -328,9 +327,6 @@ export default function WorkoutScreen() {
           </Link>
         )}
       </ScrollView>
-
-      {/* Bottom Navigation Bar */}
-      <BottomNavBar currentRoute="workout" />
     </View>
   );
 }

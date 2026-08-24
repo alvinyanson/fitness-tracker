@@ -175,8 +175,9 @@ three apply, by default, without being asked per-task:
 is configured: its Expo config plugin is registered and `android.permissions` declares
 `BLUETOOTH`, `BLUETOOTH_ADMIN`, `BLUETOOTH_CONNECT`, `BLUETOOTH_SCAN`, and
 `ACCESS_FINE_LOCATION`, added and permission-reviewed in
-`docs/specs/android-ble-permission-gate/SPEC.md`. The pairing screen (`src/app/index.tsx`)
-gates on these via `useBlePermissionGate` before rendering anything else — see
+`docs/specs/android-ble-permission-gate/SPEC.md`. The pairing screen
+(`src/app/(tabs)/index.tsx`) gates on these via `useBlePermissionGate` before rendering
+anything else — see
 `src/services/ble/blePermissionGate.ts` for the permission/adapter-state precedence.
 Health Connect (M2) adds its own permission set and config plugin, and requires the
 Health Connect app present on the device — handle the "not available" case. Changing

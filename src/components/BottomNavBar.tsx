@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { router, usePathname } from 'expo-router';
+import { type Href, router, usePathname } from 'expo-router';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from '@/hooks/useTranslation';
 import { colors, space, type as typeStyles } from '@/theme';
@@ -41,8 +41,8 @@ export function BottomNavBar({ currentRoute }: BottomNavBarProps): ReactNode {
           ? 'history'
           : 'pairing');
 
-  const navigateTo = (path: string) => {
-    router.push(path as any);
+  const navigateTo = (path: Href) => {
+    router.navigate(path);
   };
 
   return (
@@ -181,7 +181,10 @@ const styles = StyleSheet.create({
   iconWrapper: {
     width: 38,
     height: 38,
-    borderRadius: 19,
+    borderRadius: 50,
+    flexGrow: 0,
+    flexShrink: 0,
+    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 2,

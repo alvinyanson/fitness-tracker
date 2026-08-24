@@ -1,6 +1,5 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { BottomNavBar } from '@/components/BottomNavBar';
 import { HeaderBar } from '@/components/HeaderBar';
 import { HealthConnectStatusCard } from '@/components/HealthConnectStatusCard';
 import { HealthConnectSyncQueueCard } from '@/components/HealthConnectSyncQueueCard';
@@ -93,8 +92,6 @@ export default function SettingsScreen() {
           />
         </View>
       </ScrollView>
-
-      <BottomNavBar currentRoute="settings" />
     </View>
   );
 }

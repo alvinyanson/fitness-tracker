@@ -2,11 +2,11 @@ import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import { HeaderBar } from '@/components/HeaderBar';
 
-const mockPush = jest.fn();
+const mockNavigate = jest.fn();
 jest.mock('expo-router', () => ({
   __esModule: true,
   router: {
-    push: (...args: unknown[]) => mockPush(...args),
+    navigate: (...args: unknown[]) => mockNavigate(...args),
   },
 }));
 
@@ -43,7 +43,7 @@ describe('HeaderBar', () => {
 
     const button = getByRole('button');
     fireEvent.press(button);
-    expect(mockPush).toHaveBeenCalledWith('/settings');
+    expect(mockNavigate).toHaveBeenCalledWith('/settings');
   });
 
   it('renders device status badge with accessible description when provided', async () => {

@@ -2,7 +2,6 @@ import { useCallback, useState } from 'react';
 import { router, useFocusEffect } from 'expo-router';
 import { Alert, FlatList, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { BottomNavBar } from '@/components/BottomNavBar';
 import { HeaderBar } from '@/components/HeaderBar';
 import { HistoryListItem } from '@/components/HistoryListItem';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -100,8 +99,6 @@ export default function HistoryScreen() {
           showsVerticalScrollIndicator={false}
         />
       )}
-
-      <BottomNavBar currentRoute="history" />
     </View>
   );
 }

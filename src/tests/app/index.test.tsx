@@ -53,7 +53,7 @@ jest.mock('@/services/storage/deviceStorage', () => ({
 }));
 
 // Import after mocks are set up
-import PairingScreen from '@/app/index';
+import PairingScreen from '@/app/(tabs)/index';
 import * as blePermissionGateModule from '@/services/ble/blePermissionGate';
 
 describe('PairingScreen', () => {
