@@ -50,6 +50,38 @@ describe('SettingsScreen', () => {
     expect(await findByText('設定')).toBeTruthy();
   });
 
+  it('renders units segments with accessibility label, hint, and selected state', async () => {
+    const { getByRole } = await render(<SettingsScreen />);
+
+    const metric = getByRole('button', { name: 'Metric' });
+    const imperial = getByRole('button', { name: 'Imperial' });
+
+    expect(metric.props.accessibilityRole).toBe('button');
+    expect(metric.props.accessibilityLabel).toBe('Metric');
+    expect(metric.props.accessibilityHint).toBe(
+      'Selects this measurement system',
+    );
+    expect(metric.props.accessibilityState).toEqual({ selected: true });
+
+    expect(imperial.props.accessibilityHint).toBe(
+      'Selects this measurement system',
+    );
+    expect(imperial.props.accessibilityState).toEqual({ selected: false });
+  });
+
+  it('switches the unit system when Imperial is pressed', async () => {
+    const { getByRole } = await render(<SettingsScreen />);
+
+    await act(async () => {
+      fireEvent.press(getByRole('button', { name: 'Imperial' }));
+    });
+
+    expect(useSettingsStore.getState().units).toBe('imperial');
+    expect(
+      getByRole('button', { name: 'Imperial' }).props.accessibilityState,
+    ).toEqual({ selected: true });
+  });
+
   it('renders health connect status section', async () => {
     const { getByText } = await render(<SettingsScreen />);
     expect(getByText('Health Connect')).toBeTruthy();
