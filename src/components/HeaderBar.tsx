@@ -68,7 +68,7 @@ export function HeaderBar({
       onProfilePress();
     } else if (!isOnSettings) {
       try {
-        router.push('/settings' as any);
+        router.navigate('/settings');
       } catch {
         // fallback
       }

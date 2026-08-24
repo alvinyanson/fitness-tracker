@@ -9,7 +9,6 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { BottomNavBar } from '@/components/BottomNavBar';
 import { HeaderBar } from '@/components/HeaderBar';
 import { HealthConnectSyncBadge } from '@/components/HealthConnectSyncBadge';
 import { StatCard } from '@/components/StatCard';
@@ -96,7 +95,6 @@ export default function SummaryScreen() {
             <Text style={styles.linkText}>{t('summary.backToHistory')}</Text>
           </Link>
         </View>
-        <BottomNavBar currentRoute="history" />
       </View>
     );
   }
@@ -234,8 +232,6 @@ export default function SummaryScreen() {
           <Text style={styles.linkText}>{t('summary.backToHistory')}</Text>
         </Link>
       </ScrollView>
-
-      <BottomNavBar currentRoute="history" />
     </View>
   );
 }

@@ -2,18 +2,20 @@ import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import { BottomNavBar } from '@/components/BottomNavBar';
 
-const mockPush = jest.fn();
+const mockNavigate = jest.fn();
+let mockPathname = '/';
 jest.mock('expo-router', () => ({
   __esModule: true,
   router: {
-    push: (...args: unknown[]) => mockPush(...args),
+    navigate: (...args: unknown[]) => mockNavigate(...args),
   },
-  usePathname: () => '/',
+  usePathname: () => mockPathname,
 }));
 
 describe('BottomNavBar', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockPathname = '/';
   });
 
   it('renders all three tabs with accessibility roles, hints, and selected states', async () => {
@@ -67,10 +69,34 @@ describe('BottomNavBar', () => {
     expect(tab1).toBeDefined();
     expect(tab2).toBeDefined();
 
-    fireEvent.press(tab1!);
-    expect(mockPush).toHaveBeenCalledWith('/workout');
+    await fireEvent.press(tab1!);
+    expect(mockNavigate).toHaveBeenCalledWith('/workout');
 
-    fireEvent.press(tab2!);
-    expect(mockPush).toHaveBeenCalledWith('/history');
+    await fireEvent.press(tab2!);
+    expect(mockNavigate).toHaveBeenCalledWith('/history');
+  });
+
+  // The tabs layout renders the bar with no currentRoute prop, so the selected
+  // tab comes from the pathname alone.
+  describe('active tab derived from pathname', () => {
+    const cases: [string, number | null][] = [
+      ['/', 0],
+      ['/workout', 1],
+      ['/history', 2],
+      ['/summary/session-123', 2],
+      ['/settings', null],
+    ];
+
+    it.each(cases)(
+      'marks the right tab selected on %s',
+      async (path, expected) => {
+        mockPathname = path;
+        const { getAllByRole } = await render(<BottomNavBar />);
+        const selected = getAllByRole('tab').map(
+          (tab) => tab.props.accessibilityState.selected,
+        );
+        expect(selected).toEqual([0, 1, 2].map((i) => i === expected));
+      },
+    );
   });
 });

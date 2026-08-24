@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, fireEvent, act } from '@testing-library/react-native';
-import SettingsScreen from '@/app/settings';
+import SettingsScreen from '@/app/(tabs)/settings';
 import { createMMKV } from 'react-native-mmkv';
 import { useSettingsStore } from '@/store/settingsStore';
 import { setLocale } from '@/services/i18n/i18n';

@@ -3,7 +3,6 @@ import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from '@/hooks/useTranslation';
 import { colors, radii, space, type as typeStyles } from '@/theme';
 import { BlePermissionGateView } from '@/components/BlePermissionGateView';
-import { BottomNavBar } from '@/components/BottomNavBar';
 import { DeviceListItem } from '@/components/DeviceListItem';
 import { HeaderBar } from '@/components/HeaderBar';
 import { useBlePermissionGate } from '@/hooks/useBlePermissionGate';
@@ -336,9 +335,6 @@ function PairingContent() {
         style={styles.list}
         contentContainerStyle={styles.listContent}
       />
-
-      {/* Bottom Navigation Bar */}
-      <BottomNavBar currentRoute="pairing" />
     </View>
   );
 }

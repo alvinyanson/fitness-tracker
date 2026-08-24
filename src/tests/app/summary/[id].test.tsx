@@ -2,7 +2,7 @@ import React from 'react';
 import { act, fireEvent, render } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 import { createMMKV } from 'react-native-mmkv';
-import SummaryScreen from '@/app/summary/[id]';
+import SummaryScreen from '@/app/(tabs)/(history)/summary/[id]';
 import { useHealthConnectSessionSync } from '@/hooks/useHealthConnectSessionSync';
 import { PersistedSession, SESSION_SCHEMA_VERSION } from '@/interfaces/session';
 import { setLocale } from '@/services/i18n/i18n';
