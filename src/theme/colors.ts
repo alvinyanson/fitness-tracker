@@ -14,10 +14,16 @@ export const colors = {
   outline: '#849495',
   outlineVariant: '#3b494b',
   surfaceTint: '#00dbe9',
+  // Translucent surfaceTint, for glow fills and outlines.
+  surfaceTintFill: 'rgba(0, 219, 233, 0.08)',
+  surfaceTintOutline: 'rgba(0, 219, 233, 0.25)',
   primary: '#dbfcff',
   onPrimary: '#00363a',
   primaryContainer: '#00f0ff',
   onPrimaryContainer: '#006970',
+  // Translucent primaryContainer, for selected-state fills and outlines.
+  primaryContainerFill: 'rgba(0, 240, 255, 0.12)',
+  primaryContainerOutline: 'rgba(0, 240, 255, 0.3)',
   inversePrimary: '#006970',
   secondary: '#c8c6c8',
   onSecondary: '#303032',
@@ -28,6 +34,8 @@ export const colors = {
   tertiaryContainer: '#dbd9db',
   onTertiaryContainer: '#5f5e61',
   error: '#ffb4ab',
+  // Translucent error, for danger outlines.
+  errorOutline: 'rgba(255, 180, 171, 0.3)',
   onError: '#690005',
   errorContainer: '#93000a',
   onErrorContainer: '#ffdad6',

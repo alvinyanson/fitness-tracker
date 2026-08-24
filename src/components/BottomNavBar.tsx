@@ -184,15 +184,18 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     flexGrow: 0,
     flexShrink: 0,
-    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 2,
+    // Always painted, never a layout-only view: toggling these off entirely lets
+    // the New Architecture flatten the wrapper mid-render and drop the icon.
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: 'transparent',
   },
   iconWrapperActive: {
-    backgroundColor: 'rgba(0, 240, 255, 0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(0, 240, 255, 0.3)',
+    backgroundColor: colors.primaryContainerFill,
+    borderColor: colors.primaryContainerOutline,
   },
   tabLabel: {
     color: colors.onSurfaceVariant,
