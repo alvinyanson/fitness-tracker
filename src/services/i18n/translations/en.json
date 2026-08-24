@@ -133,7 +133,12 @@
     "languageEnglish": "English",
     "languageJapanese": "Japanese",
     "languageOptionHint": "Selects this language",
-    "headerTitle": "Settings"
+    "headerTitle": "Settings",
+    "unitsLabel": "Units",
+    "unitsMeasurementSystem": "Measurement System",
+    "unitsMetric": "Metric",
+    "unitsImperial": "Imperial",
+    "unitsOptionHint": "Selects this measurement system"
   },
   "healthConnect": {
     "title": "Health Connect",
@@ -186,5 +191,17 @@
   "errorBoundaryTitle": "Something Went Wrong",
   "errorBoundarySubtitle": "An unexpected error occurred in the application.",
   "errorBoundaryMessage": "The error has been logged. Please try reloading.",
-  "retryText": "Retry"
+  "retryText": "Retry",
+  "units": {
+    "kilometers": "km",
+    "miles": "mi",
+    "meters": "m",
+    "feet": "ft",
+    "kilograms": "kg",
+    "pounds": "lb",
+    "kilometersPerHour": "km/h",
+    "milesPerHour": "mph",
+    "perKilometer": "/km",
+    "perMile": "/mi"
+  }
 }

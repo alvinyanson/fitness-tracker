@@ -133,7 +133,12 @@
     "languageEnglish": "英語",
     "languageJapanese": "日本語",
     "languageOptionHint": "この言語を選択します",
-    "headerTitle": "設定"
+    "headerTitle": "設定",
+    "unitsLabel": "単位",
+    "unitsMeasurementSystem": "測定単位系",
+    "unitsMetric": "メートル法",
+    "unitsImperial": "ヤード・ポンド法",
+    "unitsOptionHint": "この測定単位系を選択します"
   },
   "healthConnect": {
     "title": "Health Connect",
@@ -186,5 +191,17 @@
   "errorBoundaryTitle": "問題が発生しました",
   "errorBoundarySubtitle": "アプリケーションで予期しないエラーが発生しました。",
   "errorBoundaryMessage": "エラーが記録されました。再読み込みを試してください。",
-  "retryText": "再試行"
+  "retryText": "再試行",
+  "units": {
+    "kilometers": "km",
+    "miles": "mi",
+    "meters": "m",
+    "feet": "ft",
+    "kilograms": "kg",
+    "pounds": "lb",
+    "kilometersPerHour": "km/h",
+    "milesPerHour": "mph",
+    "perKilometer": "/km",
+    "perMile": "/mi"
+  }
 }
