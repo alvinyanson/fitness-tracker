@@ -7,6 +7,7 @@ import {
   type ErrorBoundaryProps,
 } from '@/components/ErrorBoundary';
 import { useHealthConnectSyncQueue } from '@/hooks/useHealthConnectSyncQueue';
+import { useNetworkMonitor } from '@/hooks/useNetworkMonitor';
 import { useTranslation } from '@/hooks/useTranslation';
 import { resetBleService } from '@/services/ble/bleService';
 import { reportError } from '@/services/crashService';
@@ -33,6 +34,7 @@ export default function RootLayout() {
     autoFlushOnForeground: true,
     title: t('healthConnect.syncSessionTitle'),
   });
+  useNetworkMonitor();
 
   useEffect(() => {
     return () => {

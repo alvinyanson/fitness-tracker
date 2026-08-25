@@ -2,6 +2,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { HeaderBar } from '@/components/HeaderBar';
 import { HealthConnectStatusCard } from '@/components/HealthConnectStatusCard';
 import { HealthConnectSyncQueueCard } from '@/components/HealthConnectSyncQueueCard';
+import { OfflineBanner } from '@/components/OfflineBanner';
 import {
   SegmentedControl,
   type SegmentOption,
@@ -9,6 +10,7 @@ import {
 import { SettingsRow } from '@/components/SettingsRow';
 import { useHealthConnectAvailability } from '@/hooks/useHealthConnectAvailability';
 import { useHealthConnectSyncQueue } from '@/hooks/useHealthConnectSyncQueue';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useUnitFormat } from '@/hooks/useUnitFormat';
 import { type LocaleCode, SUPPORTED_LOCALES } from '@/interfaces/i18n';
@@ -33,6 +35,7 @@ export default function SettingsScreen() {
   const { status, summary, lastResult, syncNow } = useHealthConnectSyncQueue({
     title: t('healthConnect.syncSessionTitle'),
   });
+  const { isOffline } = useNetworkStatus();
 
   const unitOptions: SegmentOption<UnitSystem>[] = SUPPORTED_UNIT_SYSTEMS.map(
     (system) => ({
@@ -59,6 +62,8 @@ export default function SettingsScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        <OfflineBanner visible={isOffline} />
+
         <View style={styles.section}>
           <Text style={styles.sectionLabel} accessibilityRole="header">
             {t('settings.unitsLabel')}

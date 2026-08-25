@@ -4,12 +4,28 @@ import SettingsScreen from '@/app/(tabs)/settings';
 import { createMMKV } from 'react-native-mmkv';
 import { useSettingsStore } from '@/store/settingsStore';
 import { setLocale } from '@/services/i18n/i18n';
+import { useNetworkStore } from '@/store/networkStore';
+
+jest.mock('react-native-reanimated', () => {
+  const { View } = require('react-native');
+  return {
+    __esModule: true,
+    default: {
+      View,
+    },
+    useSharedValue: (init: unknown) => ({ value: init }),
+    useAnimatedStyle: (fn: () => unknown) => fn(),
+    withTiming: (val: unknown) => val,
+    withSequence: (...args: unknown[]) => args[args.length - 1],
+  };
+});
 
 describe('SettingsScreen', () => {
   beforeEach(() => {
     createMMKV().clearAll();
     useSettingsStore.setState({ language: 'en', units: 'metric' });
     setLocale('en');
+    useNetworkStore.setState({ status: 'unknown' });
   });
 
   it('renders settings title with header role', async () => {
@@ -92,5 +108,30 @@ describe('SettingsScreen', () => {
     expect(getByText('Sync Queue')).toBeTruthy();
     expect(getByText('All workouts are synced')).toBeTruthy();
     expect(queryByText('Sync Now')).toBeTruthy();
+  });
+  it('shows the offline banner when the network store is offline', async () => {
+    useNetworkStore.setState({ status: 'offline' });
+
+    const { getByRole, getByText } = await render(<SettingsScreen />);
+
+    expect(getByText("You're offline")).toBeTruthy();
+    expect(getByRole('alert').props.accessibilityLiveRegion).toBe('assertive');
+  });
+
+  it('keeps the offline banner collapsed when online', async () => {
+    useNetworkStore.setState({ status: 'online' });
+
+    const { queryByRole, queryByText } = await render(<SettingsScreen />);
+
+    expect(queryByRole('alert')).toBeNull();
+    expect(queryByText("You're offline")).toBeNull();
+  });
+
+  it('keeps the offline banner collapsed while the status is unknown', async () => {
+    const { queryByRole, queryByText } = await render(<SettingsScreen />);
+
+    expect(useNetworkStore.getState().status).toBe('unknown');
+    expect(queryByRole('alert')).toBeNull();
+    expect(queryByText("You're offline")).toBeNull();
   });
 });
