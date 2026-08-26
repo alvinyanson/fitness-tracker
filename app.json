@@ -60,7 +60,9 @@
           }
         }
       ],
-      "./plugins/withHealthConnectManifest"
+      "./plugins/withHealthConnectManifest",
+      "@react-native-firebase/auth",
+      "@react-native-google-signin/google-signin"
     ],
     "experiments": {
       "typedRoutes": true
@@ -69,7 +71,8 @@
       "router": {},
       "eas": {
         "projectId": "b7bf3e78-004e-44e9-a711-3af0b1742732"
-      }
+      },
+      "googleWebClientId": "548471957693-ts5glcjfdcv6h7gegijplo2ievm8lr9p.apps.googleusercontent.com"
     },
     "owner": "alvin-yanson-organization",
     "runtimeVersion": {

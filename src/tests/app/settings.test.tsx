@@ -5,6 +5,14 @@ import { createMMKV } from 'react-native-mmkv';
 import { useSettingsStore } from '@/store/settingsStore';
 import { setLocale } from '@/services/i18n/i18n';
 import { useNetworkStore } from '@/store/networkStore';
+import { useAuthStore } from '@/store/authStore';
+
+// jest-expo leaves `expoConfig.extra` undefined, which useAuth reads as an unconfigured
+// Firebase project and reports as 'unknown'. Supply the id so the account states render.
+jest.mock('expo-constants', () => ({
+  __esModule: true,
+  default: { expoConfig: { extra: { googleWebClientId: 'web-client-id' } } },
+}));
 
 jest.mock('react-native-reanimated', () => {
   const { View } = require('react-native');
@@ -26,6 +34,11 @@ describe('SettingsScreen', () => {
     useSettingsStore.setState({ language: 'en', units: 'metric' });
     setLocale('en');
     useNetworkStore.setState({ status: 'unknown' });
+    useAuthStore.setState({
+      status: 'unknown',
+      user: null,
+      errorReason: null,
+    });
   });
 
   it('renders settings title with header role', async () => {
@@ -133,5 +146,92 @@ describe('SettingsScreen', () => {
     expect(useNetworkStore.getState().status).toBe('unknown');
     expect(queryByRole('alert')).toBeNull();
     expect(queryByText("You're offline")).toBeNull();
+  });
+});
+
+describe('SettingsScreen account section', () => {
+  beforeEach(() => {
+    createMMKV().clearAll();
+    useSettingsStore.setState({ language: 'en', units: 'metric' });
+    setLocale('en');
+    useNetworkStore.setState({ status: 'online' });
+    useAuthStore.setState({ status: 'unknown', user: null, errorReason: null });
+  });
+
+  it('renders the account section header', async () => {
+    const { getByText } = await render(<SettingsScreen />);
+    expect(getByText('Account')).toBeTruthy();
+  });
+
+  it('shows the placeholder while the auth status is unknown', async () => {
+    const { getByText, queryByText } = await render(<SettingsScreen />);
+
+    expect(getByText('Checking…')).toBeTruthy();
+    expect(queryByText('Sign in with Google')).toBeNull();
+  });
+
+  it('shows the sign-in button when signed out', async () => {
+    useAuthStore.setState({ status: 'signed-out' });
+
+    const { getByRole } = await render(<SettingsScreen />);
+    expect(getByRole('button', { name: 'Sign in with Google' })).toBeTruthy();
+  });
+
+  it('shows the signed-in identity and a log out row', async () => {
+    useAuthStore.setState({
+      status: 'signed-in',
+      user: {
+        uid: 'uid-1',
+        displayName: 'Alex Rivera',
+        email: 'alex@example.com',
+        photoURL: null,
+      },
+    });
+
+    const { getByRole, getByText } = await render(<SettingsScreen />);
+    expect(getByText('Alex Rivera')).toBeTruthy();
+    expect(getByRole('button', { name: 'Log Out' })).toBeTruthy();
+  });
+
+  it('leaves every other control ungated while signed out', async () => {
+    useAuthStore.setState({ status: 'signed-out' });
+
+    const { getByRole } = await render(<SettingsScreen />);
+
+    for (const name of ['Metric', 'Imperial', 'English', 'Japanese']) {
+      const control = getByRole('button', { name });
+      expect(control.props.accessibilityState?.disabled).not.toBe(true);
+    }
+  });
+});
+
+describe('SettingsScreen guest account', () => {
+  beforeEach(() => {
+    createMMKV().clearAll();
+    useSettingsStore.setState({ language: 'en', units: 'metric' });
+    setLocale('en');
+    useNetworkStore.setState({ status: 'online' });
+    useAuthStore.setState({
+      status: 'signed-out',
+      user: null,
+      errorReason: null,
+      pendingProvider: null,
+    });
+  });
+
+  it('offers Continue as Guest when signed out', async () => {
+    const { getByRole } = await render(<SettingsScreen />);
+    expect(getByRole('button', { name: 'Continue as Guest' })).toBeTruthy();
+  });
+
+  it('shows the guest identity when signed in anonymously', async () => {
+    useAuthStore.setState({
+      status: 'signed-in',
+      user: { uid: 'anon-uid', isAnonymous: true },
+    });
+
+    const { getByRole, getByText } = await render(<SettingsScreen />);
+    expect(getByText('Guest')).toBeTruthy();
+    expect(getByRole('button', { name: 'Log Out' })).toBeTruthy();
   });
 });

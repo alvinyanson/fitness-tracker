@@ -171,6 +171,26 @@ Deferred to Milestone 3 / stretch:
    pnpm install
    ```
 
+### Google Sign-In (Firebase)
+
+Sign-in is optional - every flow works signed out - but the Firebase project must be
+configured for the ACCOUNT section on Settings to work:
+
+1. In the [Firebase console](https://console.firebase.google.com/), enable **Google** as a
+   sign-in provider on the project backing `google-services.json`.
+2. Register the SHA-1 **and** SHA-256 fingerprints of both signing keys on the Android app
+   (`com.arcanys.yansonalvin.fitnesstracker`):
+   - debug - `keytool -list -v -keystore android/app/debug.keystore -alias androiddebugkey -storepass android`
+   - release - `npx eas credentials --platform android` (the keystore is EAS-managed)
+3. Re-download `google-services.json` and replace the one in the repo root. It is tracked by
+   git on purpose: it ships inside the APK and is not a secret.
+4. Copy the `oauth_client` entry with `"client_type": 3` - the **web** client id - into
+   `app.json` under `extra.googleWebClientId`. Passing the Android (`client_type: 1`) id
+   instead is the usual cause of `DEVELOPER_ERROR`, as is a missing or mismatched SHA-1.
+
+The Google Sign-In config plugin is native, so this needs a rebuild (`pnpm android`) and
+moves the EAS fingerprint - it cannot ship as an OTA update.
+
 ### Running the App
 
 Build and install the dev client, then start Metro against it:
