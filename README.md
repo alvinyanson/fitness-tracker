@@ -70,12 +70,24 @@ disconnected | error`) that stays stable across drops and failed scans.
     action that shows the pending count. Retries are bounded (5 attempts) and backed
     off; a permanently failing session is marked abandoned and surfaced instead of
     retried forever, and no duplicate record is written.
-- Units toggle (metric/imperial). _Not yet implemented - `units` already lives in the
-  persisted settings store, but no Settings control is wired to it._
-- Offline/online indicator for anything needing a network call. _Not yet implemented._
-- Google login (Firebase Auth) + Firestore cloud sync for units/language settings. _Not
-  yet implemented - `@react-native-firebase/app` is installed and configured, `auth` and
-  `firestore` are not yet added._
+- **Units toggle (metric/imperial)**: a Settings segmented control over a persisted unit
+  system that defaults to the device locale's measurement system, plus a formatting layer
+  (`src/services/units/`) converting distance, weight, elevation, speed, and pace with
+  locale-aware number formatting. ✅ Implemented. The toggle has no visible effect on
+  workout data yet - Milestone 1 records only heart rate and duration, both unit-agnostic;
+  the layer is in place for the distance and weight features in Milestone 3.
+- **Offline/online indicator**: a NetInfo subscription started once at the root maps
+  connectivity to `online | offline | unknown` (reachability wins over interface
+  presence), surfaced as an animated banner on Settings and used to block sign-in attempts
+  before they reach the network. ✅ Implemented.
+- **Google login (Firebase Auth)**: an ACCOUNT section on Settings with Google Sign-In and
+  guest (anonymous) sign-in. ✅ Implemented - `onAuthStateChanged` is the single writer of
+  the signed-in state, cancelled sign-in / missing Play Services / offline attempts each
+  get their own message, and signing out leaves local sessions untouched. Auth is for
+  preference sync only; it never gates workout recording, and every flow works signed out.
+  See [Google Sign-In (Firebase)](#google-sign-in-firebase) for the setup it needs.
+- Firestore cloud sync for units/language settings. _Not yet implemented -
+  `@react-native-firebase/firestore` is not yet added._
 - Graceful web/tablet degradation where live BLE pairing isn't available. _Not yet
   implemented._
 
@@ -120,6 +132,14 @@ packages below are specified but not yet installed - noted inline.
   English/Japanese translations and device-locale detection.
 - **Crash Reporting**: `@react-native-firebase/app` + `@react-native-firebase/crashlytics`
   (optional, already wired in).
+- **Auth**: `@react-native-firebase/auth` +
+  [`@react-native-google-signin/google-signin`](https://react-native-google-signin.github.io/)
+  for Google Sign-In and anonymous guest sessions. Both register Expo config plugins, so
+  they need a native rebuild rather than an OTA update.
+- **Connectivity**: [`@react-native-community/netinfo`](https://github.com/react-native-netinfo/react-native-netinfo)
+  for the online/offline status behind the offline banner and sign-in gating.
+- **Units**: `expo-localization` for the device measurement system, with the conversion and
+  locale-aware formatting layer in `src/services/units/`.
 - **Icons**: `@expo/vector-icons` (Ionicons).
 - **Fonts**: `expo-font` is installed and its plugin registered, but the three custom
   faces (Hanken Grotesk, Inter, JetBrains Mono) are not loaded yet - `src/theme/typography.ts`
@@ -139,10 +159,7 @@ packages below are specified but not yet installed - noted inline.
 
 Deferred, rest of Milestone 2:
 
-- `@react-native-firebase/auth` + `@react-native-firebase/firestore` for Google login and
-  cloud settings sync (`@react-native-firebase/app` is already installed and configured).
-- `@react-native-google-signin/google-signin` for Google Sign-In.
-- `@react-native-community/netinfo` for connectivity status.
+- `@react-native-firebase/firestore` for cloud settings sync.
 - `react-native-svg` for the HR chart.
 
 Deferred to Milestone 3 / stretch:
