@@ -6,6 +6,7 @@ import {
   ErrorBoundaryView,
   type ErrorBoundaryProps,
 } from '@/components/ErrorBoundary';
+import { useAuthListener } from '@/hooks/useAuthListener';
 import { useHealthConnectSyncQueue } from '@/hooks/useHealthConnectSyncQueue';
 import { useNetworkMonitor } from '@/hooks/useNetworkMonitor';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -35,6 +36,7 @@ export default function RootLayout() {
     title: t('healthConnect.syncSessionTitle'),
   });
   useNetworkMonitor();
+  useAuthListener();
 
   useEffect(() => {
     return () => {

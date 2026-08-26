@@ -1,4 +1,5 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { AccountCard } from '@/components/AccountCard';
 import { HeaderBar } from '@/components/HeaderBar';
 import { HealthConnectStatusCard } from '@/components/HealthConnectStatusCard';
 import { HealthConnectSyncQueueCard } from '@/components/HealthConnectSyncQueueCard';
@@ -8,6 +9,7 @@ import {
   type SegmentOption,
 } from '@/components/SegmentedControl';
 import { SettingsRow } from '@/components/SettingsRow';
+import { useAuth } from '@/hooks/useAuth';
 import { useHealthConnectAvailability } from '@/hooks/useHealthConnectAvailability';
 import { useHealthConnectSyncQueue } from '@/hooks/useHealthConnectSyncQueue';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
@@ -36,6 +38,16 @@ export default function SettingsScreen() {
     title: t('healthConnect.syncSessionTitle'),
   });
   const { isOffline } = useNetworkStatus();
+  const {
+    status: authStatus,
+    user: authUser,
+    errorReason: authErrorReason,
+    pendingProvider,
+    isGoogleSignInAvailable,
+    signIn,
+    signInAsGuest,
+    signOut,
+  } = useAuth();
 
   const unitOptions: SegmentOption<UnitSystem>[] = SUPPORTED_UNIT_SYSTEMS.map(
     (system) => ({
@@ -63,6 +75,20 @@ export default function SettingsScreen() {
         showsVerticalScrollIndicator={false}
       >
         <OfflineBanner visible={isOffline} />
+
+        <View style={styles.section}>
+          <AccountCard
+            status={authStatus}
+            user={authUser}
+            errorReason={authErrorReason}
+            isOffline={isOffline}
+            pendingProvider={pendingProvider}
+            isGoogleSignInAvailable={isGoogleSignInAvailable}
+            onSignIn={signIn}
+            onSignInAsGuest={signInAsGuest}
+            onSignOut={signOut}
+          />
+        </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionLabel} accessibilityRole="header">

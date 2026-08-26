@@ -206,5 +206,23 @@
   },
   "network": {
     "offlineBannerTitle": "オフラインです"
+  },
+  "auth": {
+    "sectionLabel": "アカウント",
+    "signInWithGoogle": "Google でログイン",
+    "signInHint": "Google アカウントでログインします",
+    "signOut": "ログアウト",
+    "signOutHint": "ログアウトします。ワークアウトはこの端末に残ります",
+    "signedInFallbackName": "ログイン済み",
+    "checking": "確認中…",
+    "errorCancelled": "ログインをキャンセルしました。",
+    "errorInProgress": "すでにログイン処理中です。",
+    "errorPlayServices": "Google Play 開発者サービスが利用できないか、更新が必要です。",
+    "errorNetwork": "オフラインです。インターネットに接続してログインしてください。",
+    "errorUnknown": "ログインに失敗しました。もう一度お試しください。",
+    "continueAsGuest": "ゲストとして続ける",
+    "continueAsGuestHint": "Google アカウントなしでログインします",
+    "guestName": "ゲスト",
+    "guestSubtitle": "この端末のみ"
   }
 }

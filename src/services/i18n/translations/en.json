@@ -206,5 +206,23 @@
   },
   "network": {
     "offlineBannerTitle": "You're offline"
+  },
+  "auth": {
+    "sectionLabel": "Account",
+    "signInWithGoogle": "Sign in with Google",
+    "signInHint": "Signs you in with your Google account",
+    "signOut": "Log Out",
+    "signOutHint": "Signs you out; your workouts stay on this device",
+    "signedInFallbackName": "Signed in",
+    "checking": "Checking…",
+    "errorCancelled": "Sign-in cancelled.",
+    "errorInProgress": "A sign-in is already in progress.",
+    "errorPlayServices": "Google Play Services is unavailable or needs an update.",
+    "errorNetwork": "You're offline. Connect to the internet to sign in.",
+    "errorUnknown": "Sign-in failed. Please try again.",
+    "continueAsGuest": "Continue as Guest",
+    "continueAsGuestHint": "Signs you in without a Google account",
+    "guestName": "Guest",
+    "guestSubtitle": "This device only"
   }
 }
