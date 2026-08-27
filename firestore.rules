@@ -1,0 +1,20 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{uid} {
+      allow read: if request.auth != null
+        && request.auth.uid == uid
+        && request.auth.token.firebase.sign_in_provider != 'anonymous';
+      allow write: if request.auth != null
+        && request.auth.uid == uid
+        && request.auth.token.firebase.sign_in_provider != 'anonymous'
+        && request.resource.data.keys().hasOnly(['units', 'language', 'updatedAt'])
+        && request.resource.data.units in ['metric', 'imperial']
+        && request.resource.data.language in ['en', 'ja']
+        && request.resource.data.updatedAt is number;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
