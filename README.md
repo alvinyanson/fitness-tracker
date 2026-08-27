@@ -86,8 +86,12 @@ disconnected | error`) that stays stable across drops and failed scans.
   get their own message, and signing out leaves local sessions untouched. Auth is for
   preference sync only; it never gates workout recording, and every flow works signed out.
   See [Google Sign-In (Firebase)](#google-sign-in-firebase) for the setup it needs.
-- Firestore cloud sync for units/language settings. _Not yet implemented -
-  `@react-native-firebase/firestore` is not yet added._
+- **Firestore cloud sync for units/language settings**: ✅ Implemented - a Google-signed-in
+  user's units and language follow them to any device. Settings still read from MMKV and
+  still change instantly offline, signed out, or as a guest; `users/{uid}` is a mirror of
+  three fields, reconciled on sign-in by whichever side was written last. Guests are
+  excluded on both sides - the client skips them and `firestore.rules` rejects the
+  `anonymous` provider. See [Firestore rules](#firestore-rules) for the deploy step.
 - Graceful web/tablet degradation where live BLE pairing isn't available. _Not yet
   implemented._
 
@@ -136,6 +140,9 @@ packages below are specified but not yet installed - noted inline.
   [`@react-native-google-signin/google-signin`](https://react-native-google-signin.github.io/)
   for Google Sign-In and anonymous guest sessions. Both register Expo config plugins, so
   they need a native rebuild rather than an OTA update.
+- **Preference sync**: `@react-native-firebase/firestore` for the one synced document per
+  Google account (`users/{uid}`: units, language, `updatedAt`). No config plugin of its
+  own, but it is a native module - it needs a rebuild, not an OTA update.
 - **Connectivity**: [`@react-native-community/netinfo`](https://github.com/react-native-netinfo/react-native-netinfo)
   for the online/offline status behind the offline banner and sign-in gating.
 - **Units**: `expo-localization` for the device measurement system, with the conversion and
@@ -159,7 +166,6 @@ packages below are specified but not yet installed - noted inline.
 
 Deferred, rest of Milestone 2:
 
-- `@react-native-firebase/firestore` for cloud settings sync.
 - `react-native-svg` for the HR chart.
 
 Deferred to Milestone 3 / stretch:
@@ -207,6 +213,21 @@ configured for the ACCOUNT section on Settings to work:
 
 The Google Sign-In config plugin is native, so this needs a rebuild (`pnpm android`) and
 moves the EAS fingerprint - it cannot ship as an OTA update.
+
+### Firestore rules
+
+Preference sync needs a Cloud Firestore database in **Native mode** on the same Firebase
+project. `firestore.rules` is committed, but committing is not deploying - the console
+default governs until the rules are pushed:
+
+```bash
+npx firebase deploy --only firestore:rules
+```
+
+`firebase.json` already points the CLI at `firestore.rules`. The rules restrict
+`users/{uid}` to its owner, reject the `anonymous` sign-in provider, allow only the
+`units` / `language` / `updatedAt` fields, and deny everything else in the database.
+Verify the deployed rules in the console after the first deploy.
 
 ### Running the App
 

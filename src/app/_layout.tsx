@@ -9,6 +9,7 @@ import {
 import { useAuthListener } from '@/hooks/useAuthListener';
 import { useHealthConnectSyncQueue } from '@/hooks/useHealthConnectSyncQueue';
 import { useNetworkMonitor } from '@/hooks/useNetworkMonitor';
+import { usePreferencesSync } from '@/hooks/usePreferencesSync';
 import { useTranslation } from '@/hooks/useTranslation';
 import { resetBleService } from '@/services/ble/bleService';
 import { reportError } from '@/services/crashService';
@@ -37,6 +38,7 @@ export default function RootLayout() {
   });
   useNetworkMonitor();
   useAuthListener();
+  usePreferencesSync();
 
   useEffect(() => {
     return () => {

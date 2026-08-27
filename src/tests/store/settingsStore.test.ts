@@ -6,7 +6,11 @@ describe('settingsStore', () => {
   beforeEach(async () => {
     createMMKV().clearAll();
     await act(async () => {
-      useSettingsStore.setState({ language: 'en', units: 'metric' });
+      useSettingsStore.setState({
+        language: 'en',
+        units: 'metric',
+        updatedAt: 0,
+      });
     });
   });
 
@@ -24,6 +28,42 @@ describe('settingsStore', () => {
       useSettingsStore.getState().setUnits('imperial');
     });
     expect(useSettingsStore.getState().units).toBe('imperial');
+  });
+
+  describe('updatedAt', () => {
+    it('stamps a fresh timestamp when units change', async () => {
+      const before = Date.now();
+      await act(async () => {
+        useSettingsStore.getState().setUnits('imperial');
+      });
+      expect(useSettingsStore.getState().updatedAt).toBeGreaterThanOrEqual(
+        before,
+      );
+    });
+
+    it('stamps a fresh timestamp when the language changes', async () => {
+      const before = Date.now();
+      await act(async () => {
+        useSettingsStore.getState().setLanguage('ja');
+      });
+      expect(useSettingsStore.getState().updatedAt).toBeGreaterThanOrEqual(
+        before,
+      );
+    });
+
+    it('adopts a remote updatedAt verbatim instead of stamping a new one', async () => {
+      await act(async () => {
+        useSettingsStore.getState().applyRemoteSettings({
+          units: 'imperial',
+          language: 'ja',
+          updatedAt: 1234,
+        });
+      });
+      const state = useSettingsStore.getState();
+      expect(state.units).toBe('imperial');
+      expect(state.language).toBe('ja');
+      expect(state.updatedAt).toBe(1234);
+    });
   });
 
   describe('units seeding', () => {
