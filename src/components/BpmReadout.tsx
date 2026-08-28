@@ -8,13 +8,19 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from '@/hooks/useTranslation';
-import { colors, space, type as typeStyles } from '@/theme';
+import { colors, responsive, space, type as typeStyles } from '@/theme';
 
 export interface BpmReadoutProps {
   bpm: number | null;
+  fontSize?: number;
+  iconSize?: number;
 }
 
-export function BpmReadout({ bpm }: BpmReadoutProps) {
+export function BpmReadout({
+  bpm,
+  fontSize = responsive.bpmFontSize.phone,
+  iconSize = responsive.bpmIconSize.phone,
+}: BpmReadoutProps) {
   const { t } = useTranslation();
   const scale = useSharedValue(1);
   const prevBpmRef = useRef<number | null>(bpm);
@@ -49,11 +55,19 @@ export function BpmReadout({ bpm }: BpmReadoutProps) {
         <Animated.View style={[styles.heartContainer, animatedHeartStyle]}>
           <Ionicons
             name="heart-outline"
-            size={36}
+            size={iconSize}
             color={bpm !== null ? colors.primaryContainer : colors.outline}
           />
         </Animated.View>
-        <Text style={styles.readoutText}>{displayValue}</Text>
+        <Text
+          style={[
+            styles.readoutText,
+            // lineHeight tracks fontSize at the design's 72/64 ratio.
+            { fontSize, lineHeight: Math.round(fontSize * (72 / 64)) },
+          ]}
+        >
+          {displayValue}
+        </Text>
       </View>
       <Text style={styles.bpmUnit}>{t('common.bpm')}</Text>
     </View>
@@ -77,9 +91,7 @@ const styles = StyleSheet.create({
   },
   readoutText: {
     color: colors.onSurface,
-    fontSize: 64,
     fontWeight: '700',
-    lineHeight: 72,
     letterSpacing: -1,
   },
   bpmUnit: {

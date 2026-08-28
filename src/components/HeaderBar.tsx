@@ -77,10 +77,13 @@ export function HeaderBar({
 
   return (
     <View
+      testID="header-bar"
       style={[
         styles.header,
         {
           paddingTop: insets.top,
+          paddingLeft: insets.left,
+          paddingRight: insets.right,
           height: 56 + insets.top,
         },
       ]}

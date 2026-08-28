@@ -14,8 +14,10 @@ import { BpmReadout } from '@/components/BpmReadout';
 import { HeaderBar } from '@/components/HeaderBar';
 import { HrZoneBar } from '@/components/HrZoneBar';
 import { ReconnectingBanner } from '@/components/ReconnectingBanner';
+import { ResponsiveContent } from '@/components/ResponsiveContent';
 import { StatCard } from '@/components/StatCard';
 import { useDevicePairing } from '@/hooks/useDevicePairing';
+import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useWorkoutSession } from '@/hooks/useWorkoutSession';
 import { formatDuration } from '@/services/formatDuration';
@@ -25,6 +27,8 @@ import { colors, radii, space, type as typeStyles } from '@/theme';
 export default function WorkoutScreen() {
   const { t } = useTranslation();
   const { pairedDevice, connection } = useDevicePairing();
+  const { isTablet, statColumns, bpmFontSize, bpmIconSize } =
+    useResponsiveLayout();
   const {
     status,
     reconnecting,
@@ -128,6 +132,210 @@ export default function WorkoutScreen() {
       ? { connected: true, name: t('workout.defaultHrDevice') }
       : null;
 
+  const durationSection = (
+    <View
+      style={styles.durationSection}
+      accessible={true}
+      accessibilityRole="timer"
+      accessibilityLabel={`${t('workout.duration')}: ${formattedDuration}`}
+    >
+      <Text style={styles.durationCaps}>{t('workout.duration')}</Text>
+      <Text style={styles.timerText}>{formattedDuration}</Text>
+    </View>
+  );
+
+  const heartSection = (
+    <View style={styles.heartSection}>
+      <BpmReadout
+        bpm={currentBpm}
+        fontSize={bpmFontSize}
+        iconSize={bpmIconSize}
+      />
+      <HrZoneBar bpm={currentBpm} />
+    </View>
+  );
+
+  // Cards are laid out in `statColumns`-wide rows: 2×2 on a phone, one row of
+  // four on a tablet.
+  const statCards = [
+    <StatCard
+      key="avg"
+      label={t('workout.avgBpm')}
+      value={avgBpmDisplay}
+      unit={avgBpmDisplay !== '—' ? 'bpm' : undefined}
+    />,
+    <StatCard
+      key="max"
+      label={t('workout.maxBpm')}
+      value={maxBpmDisplay}
+      unit={maxBpmDisplay !== '—' ? 'bpm' : undefined}
+    />,
+    <StatCard
+      key="calories"
+      label={t('workout.calories')}
+      value={caloriesDisplay}
+      unit={t('workout.caloriesUnit')}
+    />,
+    <StatCard
+      key="effort"
+      label={t('workout.effort')}
+      value={rollingAvgText === t('workout.noData') ? '—' : rollingAvgText}
+      unit={rollingAvgText !== t('workout.noData') ? 'bpm' : undefined}
+    />,
+  ];
+
+  const statRows: (typeof statCards)[] = [];
+  for (let i = 0; i < statCards.length; i += statColumns) {
+    statRows.push(statCards.slice(i, i + statColumns));
+  }
+
+  const statsGrid = (
+    <View style={styles.statsGrid}>
+      {statRows.map((row, index) => (
+        <View
+          key={`stat-row-${index}`}
+          testID={`stat-row-${index}`}
+          style={styles.statsRow}
+        >
+          {row}
+        </View>
+      ))}
+    </View>
+  );
+
+  const rollingAvgLabel = (
+    <Text style={styles.rollingAvgLabelText}>
+      {t('workout.rollingAvgLabel')}: {rollingAvgText}
+    </Text>
+  );
+
+  const controls = (
+    <View style={styles.controlsContainer}>
+      {(status === 'idle' || status === 'stopped') && (
+        <Pressable
+          style={({ pressed }) => [
+            styles.primaryPillButton,
+            pressed && styles.buttonPressed,
+          ]}
+          onPress={start}
+          accessibilityRole="button"
+          accessibilityLabel={t('workout.start')}
+          accessibilityHint={t('workout.startHint')}
+        >
+          <Ionicons
+            name="play"
+            size={20}
+            color={colors.onPrimaryContainer}
+            style={{ marginRight: 8 }}
+          />
+          <Text style={styles.primaryPillButtonText}>{t('workout.start')}</Text>
+        </Pressable>
+      )}
+
+      {status === 'active' && (
+        <View style={styles.dualControlsRow}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.secondaryPillButton,
+              pressed && styles.buttonPressed,
+            ]}
+            onPress={pause}
+            accessibilityRole="button"
+            accessibilityLabel={t('workout.pause')}
+            accessibilityHint={t('workout.pauseHint')}
+          >
+            <Ionicons
+              name="pause"
+              size={18}
+              color={colors.onSurface}
+              style={{ marginRight: 6 }}
+            />
+            <Text style={styles.secondaryPillButtonText}>
+              {t('workout.pause')}
+            </Text>
+          </Pressable>
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.primaryPillButton,
+              pressed && styles.buttonPressed,
+            ]}
+            onPress={stop}
+            accessibilityRole="button"
+            accessibilityLabel={t('workout.stop')}
+            accessibilityHint={t('workout.stopHint')}
+          >
+            <Ionicons
+              name="square"
+              size={18}
+              color={colors.onPrimaryContainer}
+              style={{ marginRight: 6 }}
+            />
+            <Text style={styles.primaryPillButtonText}>
+              {t('workout.stop')}
+            </Text>
+          </Pressable>
+        </View>
+      )}
+
+      {status === 'paused' && (
+        <View style={styles.dualControlsRow}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.primaryPillButton,
+              pressed && styles.buttonPressed,
+            ]}
+            onPress={resume}
+            accessibilityRole="button"
+            accessibilityLabel={t('workout.resume')}
+            accessibilityHint={t('workout.resumeHint')}
+          >
+            <Ionicons
+              name="play"
+              size={18}
+              color={colors.onPrimaryContainer}
+              style={{ marginRight: 6 }}
+            />
+            <Text style={styles.primaryPillButtonText}>
+              {t('workout.resume')}
+            </Text>
+          </Pressable>
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.dangerPillButton,
+              pressed && styles.buttonPressed,
+            ]}
+            onPress={stop}
+            accessibilityRole="button"
+            accessibilityLabel={t('workout.stop')}
+            accessibilityHint={t('workout.stopHint')}
+          >
+            <Ionicons
+              name="square"
+              size={18}
+              color={colors.onErrorContainer}
+              style={{ marginRight: 6 }}
+            />
+            <Text style={styles.dangerPillButtonText}>{t('workout.stop')}</Text>
+          </Pressable>
+        </View>
+      )}
+    </View>
+  );
+
+  const backToPairingLink = status === 'idle' && (
+    <Link
+      href="/"
+      style={styles.link}
+      accessibilityRole="link"
+      accessibilityLabel={t('workout.backToPairing')}
+      accessibilityHint={t('workout.backToPairingHint')}
+    >
+      <Text style={styles.linkText}>{t('workout.backToPairing')}</Text>
+    </Link>
+  );
+
   return (
     <View style={styles.container}>
       {/* Top Header Bar */}
@@ -142,190 +350,35 @@ export default function WorkoutScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <ReconnectingBanner visible={reconnecting} />
+        {/* Tablets spend the extra width on a two-column layout rather than on a
+            clamped single column. */}
+        <ResponsiveContent style={styles.body} fullBleed={isTablet}>
+          <ReconnectingBanner visible={reconnecting} />
 
-        {/* Duration Clock Section */}
-        <View
-          style={styles.durationSection}
-          accessible={true}
-          accessibilityRole="timer"
-          accessibilityLabel={`${t('workout.duration')}: ${formattedDuration}`}
-        >
-          <Text style={styles.durationCaps}>{t('workout.duration')}</Text>
-          <Text style={styles.timerText}>{formattedDuration}</Text>
-        </View>
-
-        {/* Heart Rate Display & Zone Indicator */}
-        <View style={styles.heartSection}>
-          <BpmReadout bpm={currentBpm} />
-          <HrZoneBar bpm={currentBpm} />
-        </View>
-
-        {/* 2x2 Stats Grid */}
-        <View style={styles.statsGrid}>
-          <View style={styles.statsRow}>
-            <StatCard
-              label={t('workout.avgBpm')}
-              value={avgBpmDisplay}
-              unit={avgBpmDisplay !== '—' ? 'bpm' : undefined}
-            />
-            <StatCard
-              label={t('workout.maxBpm')}
-              value={maxBpmDisplay}
-              unit={maxBpmDisplay !== '—' ? 'bpm' : undefined}
-            />
-          </View>
-          <View style={styles.statsRow}>
-            <StatCard
-              label={t('workout.calories')}
-              value={caloriesDisplay}
-              unit={t('workout.caloriesUnit')}
-            />
-            <StatCard
-              label={t('workout.effort')}
-              value={
-                rollingAvgText === t('workout.noData') ? '—' : rollingAvgText
-              }
-              unit={rollingAvgText !== t('workout.noData') ? 'bpm' : undefined}
-            />
-          </View>
-        </View>
-
-        {/* Rolling Avg label for test assertions */}
-        <Text style={styles.rollingAvgLabelText}>
-          {t('workout.rollingAvgLabel')}: {rollingAvgText}
-        </Text>
-
-        {/* Workout Control Buttons */}
-        <View style={styles.controlsContainer}>
-          {(status === 'idle' || status === 'stopped') && (
-            <Pressable
-              style={({ pressed }) => [
-                styles.primaryPillButton,
-                pressed && styles.buttonPressed,
-              ]}
-              onPress={start}
-              accessibilityRole="button"
-              accessibilityLabel={t('workout.start')}
-              accessibilityHint={t('workout.startHint')}
-            >
-              <Ionicons
-                name="play"
-                size={20}
-                color={colors.onPrimaryContainer}
-                style={{ marginRight: 8 }}
-              />
-              <Text style={styles.primaryPillButtonText}>
-                {t('workout.start')}
-              </Text>
-            </Pressable>
-          )}
-
-          {status === 'active' && (
-            <View style={styles.dualControlsRow}>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.secondaryPillButton,
-                  pressed && styles.buttonPressed,
-                ]}
-                onPress={pause}
-                accessibilityRole="button"
-                accessibilityLabel={t('workout.pause')}
-                accessibilityHint={t('workout.pauseHint')}
-              >
-                <Ionicons
-                  name="pause"
-                  size={18}
-                  color={colors.onSurface}
-                  style={{ marginRight: 6 }}
-                />
-                <Text style={styles.secondaryPillButtonText}>
-                  {t('workout.pause')}
-                </Text>
-              </Pressable>
-
-              <Pressable
-                style={({ pressed }) => [
-                  styles.primaryPillButton,
-                  pressed && styles.buttonPressed,
-                ]}
-                onPress={stop}
-                accessibilityRole="button"
-                accessibilityLabel={t('workout.stop')}
-                accessibilityHint={t('workout.stopHint')}
-              >
-                <Ionicons
-                  name="square"
-                  size={18}
-                  color={colors.onPrimaryContainer}
-                  style={{ marginRight: 6 }}
-                />
-                <Text style={styles.primaryPillButtonText}>
-                  {t('workout.stop')}
-                </Text>
-              </Pressable>
+          {isTablet ? (
+            <View style={styles.columns}>
+              <View style={styles.readoutColumn}>
+                {durationSection}
+                {heartSection}
+              </View>
+              <View style={styles.statsColumn}>
+                {statsGrid}
+                {rollingAvgLabel}
+                {controls}
+              </View>
             </View>
+          ) : (
+            <>
+              {durationSection}
+              {heartSection}
+              {statsGrid}
+              {rollingAvgLabel}
+              {controls}
+            </>
           )}
 
-          {status === 'paused' && (
-            <View style={styles.dualControlsRow}>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.primaryPillButton,
-                  pressed && styles.buttonPressed,
-                ]}
-                onPress={resume}
-                accessibilityRole="button"
-                accessibilityLabel={t('workout.resume')}
-                accessibilityHint={t('workout.resumeHint')}
-              >
-                <Ionicons
-                  name="play"
-                  size={18}
-                  color={colors.onPrimaryContainer}
-                  style={{ marginRight: 6 }}
-                />
-                <Text style={styles.primaryPillButtonText}>
-                  {t('workout.resume')}
-                </Text>
-              </Pressable>
-
-              <Pressable
-                style={({ pressed }) => [
-                  styles.dangerPillButton,
-                  pressed && styles.buttonPressed,
-                ]}
-                onPress={stop}
-                accessibilityRole="button"
-                accessibilityLabel={t('workout.stop')}
-                accessibilityHint={t('workout.stopHint')}
-              >
-                <Ionicons
-                  name="square"
-                  size={18}
-                  color={colors.onErrorContainer}
-                  style={{ marginRight: 6 }}
-                />
-                <Text style={styles.dangerPillButtonText}>
-                  {t('workout.stop')}
-                </Text>
-              </Pressable>
-            </View>
-          )}
-        </View>
-
-        {/* Back to pairing link when idle */}
-        {status === 'idle' && (
-          <Link
-            href="/"
-            style={styles.link}
-            accessibilityRole="link"
-            accessibilityLabel={t('workout.backToPairing')}
-            accessibilityHint={t('workout.backToPairingHint')}
-          >
-            <Text style={styles.linkText}>{t('workout.backToPairing')}</Text>
-          </Link>
-        )}
+          {backToPairingLink}
+        </ResponsiveContent>
       </ScrollView>
     </View>
   );
@@ -340,9 +393,24 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: space.containerPadding,
     paddingTop: space.unit * 3,
     paddingBottom: space.unit * 6,
+  },
+  body: {
+    alignItems: 'center',
+  },
+  columns: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: space.stackGap,
+    width: '100%',
+  },
+  readoutColumn: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  statsColumn: {
+    flex: 1.4,
     alignItems: 'center',
   },
   durationSection: {

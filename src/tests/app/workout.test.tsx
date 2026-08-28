@@ -1,10 +1,56 @@
 import React from 'react';
+import type { ResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import { act, cleanup, fireEvent, render } from '@testing-library/react-native';
-import { Alert, BackHandler } from 'react-native';
+import { Alert, BackHandler, StyleSheet } from 'react-native';
 import { setLocale } from '@/services/i18n/i18n';
 import { useSettingsStore } from '@/store/settingsStore';
 
 const mockNavigate = jest.fn();
+
+// The workout screen reads window size only through useResponsiveLayout.
+const phoneLayout: ResponsiveLayout = {
+  width: 411,
+  height: 891,
+  sizeClass: 'phone',
+  orientation: 'portrait',
+  isTablet: false,
+  isTwoPane: false,
+  contentMaxWidth: null,
+  containerPadding: 20,
+  statColumns: 2,
+  bpmFontSize: 64,
+  bpmIconSize: 36,
+  masterPaneWidth: null,
+};
+
+const tabletLandscapeLayout: ResponsiveLayout = {
+  width: 1280,
+  height: 800,
+  sizeClass: 'tablet',
+  orientation: 'landscape',
+  isTablet: true,
+  isTwoPane: true,
+  contentMaxWidth: 640,
+  containerPadding: 32,
+  statColumns: 4,
+  bpmFontSize: 88,
+  bpmIconSize: 48,
+  masterPaneWidth: 320,
+};
+
+const tabletPortraitLayout: ResponsiveLayout = {
+  ...tabletLandscapeLayout,
+  width: 800,
+  height: 1280,
+  orientation: 'portrait',
+  isTwoPane: true,
+};
+
+let mockLayout: ResponsiveLayout = phoneLayout;
+
+jest.mock('@/hooks/useResponsiveLayout', () => ({
+  useResponsiveLayout: () => mockLayout,
+}));
 
 jest.mock('expo-router', () => {
   return {
@@ -138,6 +184,7 @@ describe('WorkoutScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     backHandlerListeners = [];
+    mockLayout = phoneLayout;
     resetStore();
 
     jest
@@ -387,5 +434,49 @@ describe('WorkoutScreen', () => {
 
     expect(useWorkoutSessionStore.getState().status).toBe('stopped');
     expect(mockNavigate).toHaveBeenCalledWith(`/summary/${expectedId}`);
+  });
+  it('lays the four stat cards out in one row at tablet widths', async () => {
+    mockLayout = tabletLandscapeLayout;
+
+    const { getAllByTestId } = await render(<WorkoutScreen />);
+
+    const rows = getAllByTestId(/^stat-row-/);
+    expect(rows).toHaveLength(1);
+  });
+
+  it('keeps the phone two-row grid and 64px readout', async () => {
+    const { getAllByTestId, getByText } = await render(<WorkoutScreen />);
+
+    expect(getAllByTestId(/^stat-row-/)).toHaveLength(2);
+    expect(StyleSheet.flatten(getByText('--').props.style).fontSize).toBe(64);
+  });
+
+  it('keeps the timer advancing and the session active across a rotation', async () => {
+    let now = 1_700_000_000_000;
+    jest.spyOn(Date, 'now').mockImplementation(() => now);
+
+    mockLayout = tabletPortraitLayout;
+    const { getByText, rerender } = await render(<WorkoutScreen />);
+
+    await act(async () => {
+      useWorkoutSessionStore.getState().start();
+    });
+
+    now += 5000;
+    await act(async () => {
+      await rerender(<WorkoutScreen />);
+    });
+    expect(getByText('00:05')).toBeTruthy();
+
+    // Rotate: same window, width and height swapped.
+    mockLayout = tabletLandscapeLayout;
+    now += 3000;
+    await act(async () => {
+      await rerender(<WorkoutScreen />);
+    });
+
+    expect(getByText('00:08')).toBeTruthy();
+    expect(useWorkoutSessionStore.getState().status).toBe('active');
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 });

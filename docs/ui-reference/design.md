@@ -140,6 +140,18 @@ The layout follows a **Fluid Grid** model designed for mobile-first interaction.
 - **Touch Targets:** All interactive elements maintain a minimum 44x44pt area.
 - **Safe Areas:** High-intensity workout controls (Start/Pause/Stop) are anchored to the bottom safe area for easy thumb access.
 
+### Breakpoints
+
+The fluid grid resolves to three size classes, taken from the **smallest** window dimension so a class is stable across rotation (a 7" tablet is `tablet` in both orientations, and a landscape phone stays `phone`). These follow Android's `sw` resource qualifiers.
+
+- **phone:** < 600dp. 20px horizontal padding, full-bleed content, 2-column stat grid.
+- **tablet:** >= 600dp (~7"). 32px padding, content clamped to 640px, 4-column stat grid.
+- **tabletLg:** >= 840dp (~10"). 40px padding, content clamped to 760px, 4-column stat grid.
+
+A **two-pane master/detail** layout (History list beside the selected session's summary) appears at **720dp of current width** on a non-phone class - so a 7" tablet is single-pane in portrait and two-pane in landscape. The master pane is 320px (`tablet`) or 380px (`tabletLg`).
+
+Tokens live in `src/theme/breakpoints.ts` and are read by screens only through `useResponsiveLayout`; no screen compares raw widths.
+
 ## Elevation & Depth
 
 Hierarchy is established through **Tonal Layers** and **Glassmorphism** rather than traditional drop shadows.

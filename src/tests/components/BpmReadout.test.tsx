@@ -1,6 +1,8 @@
 import React from 'react';
+import { StyleSheet } from 'react-native';
 import { render } from '@testing-library/react-native';
 import { BpmReadout } from '@/components/BpmReadout';
+import { responsive } from '@/theme';
 
 jest.mock('react-native-reanimated', () => {
   const { View } = require('react-native');
@@ -46,5 +48,26 @@ describe('BpmReadout', () => {
     expect(textNode.props.accessible).toBe(true);
     expect(textNode.props.accessibilityRole).toBe('text');
     expect(textNode.props.accessibilityLiveRegion).toBe('polite');
+  });
+  it('defaults to the phone readout sizing', async () => {
+    const { getByText } = await render(<BpmReadout bpm={142} />);
+
+    const style = StyleSheet.flatten(getByText('142').props.style);
+    expect(style.fontSize).toBe(responsive.bpmFontSize.phone);
+    expect(style.lineHeight).toBe(72);
+  });
+
+  it('applies the tablet sizes when the caller passes them', async () => {
+    const { getByText } = await render(
+      <BpmReadout
+        bpm={142}
+        fontSize={responsive.bpmFontSize.tablet}
+        iconSize={responsive.bpmIconSize.tablet}
+      />,
+    );
+
+    const style = StyleSheet.flatten(getByText('142').props.style);
+    expect(style.fontSize).toBe(88);
+    expect(style.lineHeight).toBe(99);
   });
 });
