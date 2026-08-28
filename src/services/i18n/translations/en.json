@@ -66,7 +66,9 @@
     "avgHrUnit": "BPM",
     "tabHint": "Navigates to workout history screen",
     "sessionItemHint": "Opens workout session summary",
-    "headerTitle": "Workout History"
+    "headerTitle": "Workout History",
+    "selectSessionTitle": "Select a Session",
+    "selectSessionMessage": "Choose a workout from the list to see its summary here."
   },
   "workout": {
     "title": "Workout",

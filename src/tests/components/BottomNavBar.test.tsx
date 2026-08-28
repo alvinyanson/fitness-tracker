@@ -1,6 +1,14 @@
 import React from 'react';
+import { StyleSheet } from 'react-native';
 import { render, fireEvent } from '@testing-library/react-native';
 import { BottomNavBar } from '@/components/BottomNavBar';
+
+let mockInsets = { top: 0, right: 0, bottom: 0, left: 0 };
+
+jest.mock('react-native-safe-area-context', () => ({
+  __esModule: true,
+  useSafeAreaInsets: () => mockInsets,
+}));
 
 const mockNavigate = jest.fn();
 let mockPathname = '/';
@@ -16,6 +24,7 @@ describe('BottomNavBar', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockPathname = '/';
+    mockInsets = { top: 0, right: 0, bottom: 0, left: 0 };
   });
 
   it('renders all three tabs with accessibility roles, hints, and selected states', async () => {
@@ -98,5 +107,15 @@ describe('BottomNavBar', () => {
         expect(selected).toEqual([0, 1, 2].map((i) => i === expected));
       },
     );
+  });
+  it('pads for landscape cutout insets on both sides', async () => {
+    mockInsets = { top: 24, right: 44, bottom: 16, left: 44 };
+
+    const { getByTestId } = await render(<BottomNavBar />);
+
+    const style = StyleSheet.flatten(getByTestId('bottom-nav-bar').props.style);
+    expect(style.paddingLeft).toBe(44);
+    expect(style.paddingRight).toBe(44);
+    expect(style.paddingBottom).toBe(16);
   });
 });

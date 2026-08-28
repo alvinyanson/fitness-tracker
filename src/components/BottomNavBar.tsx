@@ -47,10 +47,13 @@ export function BottomNavBar({ currentRoute }: BottomNavBarProps): ReactNode {
 
   return (
     <View
+      testID="bottom-nav-bar"
       style={[
         styles.container,
         {
           paddingBottom: Math.max(insets.bottom, space.unit * 2),
+          paddingLeft: insets.left,
+          paddingRight: insets.right,
           height: 64 + insets.bottom,
         },
       ]}

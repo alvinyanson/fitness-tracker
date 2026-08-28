@@ -92,6 +92,13 @@ disconnected | error`) that stays stable across drops and failed scans.
   three fields, reconciled on sign-in by whichever side was written last. Guests are
   excluded on both sides - the client skips them and `firestore.rules` rejects the
   `anonymous` provider. See [Firestore rules](#firestore-rules) for the deploy step.
+- **Tablet and landscape layouts**: ✅ Implemented - the app rotates freely, and every
+  screen adapts to the window size through one `useResponsiveLayout` hook over the
+  600dp / 840dp size classes. History becomes a master/detail two-pane view at 720dp and
+  wider, the live workout screen puts its stats beside the heart-rate readout with the
+  four stat cards in one row, and phones keep exactly their current layout. Rotating
+  mid-session leaves the timer, the BLE connection, and the navigation stack untouched.
+
 - Graceful web/tablet degradation where live BLE pairing isn't available. _Not yet
   implemented._
 

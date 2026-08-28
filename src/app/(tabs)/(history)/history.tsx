@@ -1,34 +1,51 @@
-import { useCallback, useState } from 'react';
-import { router, useFocusEffect } from 'expo-router';
-import { Alert, FlatList, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { useCallback, useEffect, useState } from 'react';
+import { router } from 'expo-router';
+import { Alert, StyleSheet, View } from 'react-native';
 import { HeaderBar } from '@/components/HeaderBar';
-import { HistoryListItem } from '@/components/HistoryListItem';
+import { ResponsiveContent } from '@/components/ResponsiveContent';
+import { SessionHistoryList } from '@/components/SessionHistoryList';
+import { SessionSummaryView } from '@/components/SessionSummaryView';
+import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
+import { useSessionHistory } from '@/hooks/useSessionHistory';
 import { useTranslation } from '@/hooks/useTranslation';
-import type { SessionIndexEntry } from '@/interfaces/session';
-import { formatDuration } from '@/services/formatDuration';
-import {
-  deleteSession,
-  getSessionIndex,
-} from '@/services/storage/sessionHistoryStorage';
-import { colors, space, type as typeStyles } from '@/theme';
-import { formatRelativeDate } from '@/utils/formatRelativeDate';
+import { colors, paneWidthStyle, space } from '@/theme';
 
 export default function HistoryScreen() {
-  const { t, language } = useTranslation();
-  const [entries, setEntries] = useState<SessionIndexEntry[]>(() =>
-    getSessionIndex(),
+  const { t } = useTranslation();
+  const { entries, remove } = useSessionHistory();
+  const { isTwoPane, masterPaneWidth } = useResponsiveLayout();
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  // Two-pane needs something in the right pane: default to the newest session,
+  // and drop the selection when the selected session disappears.
+  useEffect(() => {
+    if (!isTwoPane) {
+      return;
+    }
+    if (selectedId !== null && entries.some((e) => e.id === selectedId)) {
+      return;
+    }
+    setSelectedId(entries[0]?.id ?? null);
+  }, [isTwoPane, entries, selectedId]);
+
+  const handleSelect = useCallback(
+    (id: string) => {
+      if (isTwoPane) {
+        setSelectedId(id);
+        return;
+      }
+      router.push(`/summary/${id}`);
+    },
+    [isTwoPane],
   );
 
-  useFocusEffect(
-    useCallback(() => {
-      setEntries(getSessionIndex());
-    }, []),
+  const handleDeleted = useCallback(
+    (id: string) => {
+      remove(id);
+      setSelectedId((prev) => (prev === id ? null : prev));
+    },
+    [remove],
   );
-
-  const handlePress = useCallback((id: string) => {
-    router.push(`/summary/${id}`);
-  }, []);
 
   const handleLongPress = useCallback(
     (id: string) => {
@@ -37,67 +54,41 @@ export default function HistoryScreen() {
         {
           text: t('summary.deleteConfirm'),
           style: 'destructive',
-          onPress: () => {
-            deleteSession(id);
-            setEntries((prev) => prev.filter((entry) => entry.id !== id));
-          },
+          onPress: () => handleDeleted(id),
         },
       ]);
     },
-    [t],
+    [t, handleDeleted],
   );
 
-  const renderItem = useCallback(
-    ({ item }: { item: SessionIndexEntry }) => {
-      const dateLabel = formatRelativeDate(
-        new Date(item.startedAt),
-        new Date(),
-        language,
-      );
-      const durationLabel = formatDuration(Math.floor(item.durationMs / 1000));
-      const avgHrLabel =
-        item.avgHr !== null ? `${item.avgHr} ${t('history.avgHrUnit')}` : '—';
-
-      return (
-        <HistoryListItem
-          id={item.id}
-          dateLabel={dateLabel}
-          durationLabel={durationLabel}
-          avgHrLabel={avgHrLabel}
-          onPress={handlePress}
-          onLongPress={handleLongPress}
-        />
-      );
-    },
-    [language, t, handlePress, handleLongPress],
+  const list = (
+    <SessionHistoryList
+      entries={entries}
+      selectedId={isTwoPane ? selectedId : null}
+      onSelect={handleSelect}
+      onDelete={handleLongPress}
+    />
   );
 
   return (
     <View style={styles.container}>
       <HeaderBar title={t('history.headerTitle')} icon="history" />
 
-      {entries.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Ionicons
-            name="bar-chart-outline"
-            size={48}
-            color={colors.onSurfaceVariant}
-            style={styles.emptyIcon}
-          />
-          <Text style={styles.emptyTitle} accessibilityRole="header">
-            {t('history.emptyTitle')}
-          </Text>
-          <Text style={styles.emptyMessage}>{t('history.emptyMessage')}</Text>
+      {isTwoPane ? (
+        <View style={styles.panes}>
+          <View style={[styles.masterPane, paneWidthStyle(masterPaneWidth)]}>
+            {list}
+          </View>
+          <View style={styles.detailPane}>
+            <SessionSummaryView
+              sessionId={selectedId}
+              variant="pane"
+              onDeleted={handleDeleted}
+            />
+          </View>
         </View>
       ) : (
-        <FlatList
-          data={entries}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-          style={styles.list}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-        />
+        <ResponsiveContent style={styles.singlePane}>{list}</ResponsiveContent>
       )}
     </View>
   );
@@ -108,35 +99,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  list: {
+  singlePane: {
     flex: 1,
   },
-  listContent: {
+  panes: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  masterPane: {
+    borderRightWidth: 1,
+    borderRightColor: colors.surfaceContainerHigh,
     paddingHorizontal: space.containerPadding,
-    paddingTop: space.unit * 3,
-    paddingBottom: space.unit * 6,
   },
-  emptyContainer: {
+  detailPane: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: space.containerPadding,
-  },
-  emptyIcon: {
-    marginBottom: space.stackGap,
-  },
-  emptyTitle: {
-    color: colors.onSurface,
-    fontSize: typeStyles.headlineLg.fontSize,
-    fontWeight: '700',
-    lineHeight: typeStyles.headlineLg.lineHeight,
-    marginBottom: space.stackGap,
-    textAlign: 'center',
-  },
-  emptyMessage: {
-    color: colors.onSurfaceVariant,
-    fontSize: typeStyles.bodyMd.fontSize,
-    lineHeight: typeStyles.bodyMd.lineHeight,
-    textAlign: 'center',
   },
 });

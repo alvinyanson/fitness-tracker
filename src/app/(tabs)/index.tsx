@@ -5,6 +5,7 @@ import { colors, radii, space, type as typeStyles } from '@/theme';
 import { BlePermissionGateView } from '@/components/BlePermissionGateView';
 import { DeviceListItem } from '@/components/DeviceListItem';
 import { HeaderBar } from '@/components/HeaderBar';
+import { ResponsiveContent } from '@/components/ResponsiveContent';
 import { useBlePermissionGate } from '@/hooks/useBlePermissionGate';
 import { useDevicePairing } from '@/hooks/useDevicePairing';
 import type { DiscoveredDevice } from '@/interfaces/ble';
@@ -115,226 +116,229 @@ function PairingContent() {
       {/* Top Header Bar */}
       <HeaderBar title={t('pairing.headerTitle')} icon="bluetooth" />
 
-      <FlatList
-        data={devices}
-        renderItem={renderDeviceItem}
-        keyExtractor={(item) => item.id}
-        ListHeaderComponent={
-          <View style={styles.heroSection}>
-            {/* Status indicator badge / state text */}
-            <Text
-              style={styles.statusText}
-              accessibilityRole="header"
-              accessibilityLiveRegion="polite"
-            >
-              {getStatusText()}
-            </Text>
-
-            {/* Glowing Central Pairing Avatar Circle */}
-            <View style={styles.circleOuterGlow}>
-              <View style={styles.circleAvatar}>
-                <Feather
-                  name={isScanning ? 'radio' : 'bluetooth'}
-                  size={36}
-                  color={
-                    isConnected
-                      ? colors.primaryContainer
-                      : isScanning
-                        ? colors.surfaceTint
-                        : colors.onSurface
-                  }
-                />
-              </View>
-            </View>
-
-            {/* Hero Subtitle */}
-            <Text style={styles.heroStatusCaps}>{getHeroStatusLabel()}</Text>
-            <Text style={styles.heroDescription}>
-              {t('pairing.heroDescription')}
-            </Text>
-
-            {/* Cancel button during auto-reconnect */}
-            {isAutoReconnecting && (
-              <Pressable
-                style={({ pressed }) => [
-                  styles.button,
-                  styles.buttonSecondary,
-                  styles.cancelReconnectButton,
-                  pressed && styles.buttonPressed,
-                ]}
-                onPress={cancelReconnect}
-                accessibilityRole="button"
-                accessibilityLabel={t('pairing.cancel')}
-                accessibilityHint={t('pairing.cancelReconnectHint')}
+      <ResponsiveContent style={styles.contentArea}>
+        <FlatList
+          data={devices}
+          renderItem={renderDeviceItem}
+          keyExtractor={(item) => item.id}
+          ListHeaderComponent={
+            <View style={styles.heroSection}>
+              {/* Status indicator badge / state text */}
+              <Text
+                style={styles.statusText}
+                accessibilityRole="header"
+                accessibilityLiveRegion="polite"
               >
-                <Text style={styles.buttonSecondaryText}>
-                  {t('pairing.cancel')}
-                </Text>
-              </Pressable>
-            )}
+                {getStatusText()}
+              </Text>
 
-            {/* Paired Device Card */}
-            {pairedDevice && (
-              <View style={styles.pairedCard}>
-                {/* Header row with status indicator */}
-                <View style={styles.pairedHeader}>
-                  <View
-                    style={[
-                      styles.statusDot,
-                      isPairedDeviceConnected
-                        ? styles.statusDotConnected
-                        : styles.statusDotDisconnected,
-                    ]}
+              {/* Glowing Central Pairing Avatar Circle */}
+              <View style={styles.circleOuterGlow}>
+                <View style={styles.circleAvatar}>
+                  <Feather
+                    name={isScanning ? 'radio' : 'bluetooth'}
+                    size={36}
+                    color={
+                      isConnected
+                        ? colors.primaryContainer
+                        : isScanning
+                          ? colors.surfaceTint
+                          : colors.onSurface
+                    }
                   />
-                  <Text style={styles.pairedLabel}>
-                    {t('pairing.pairedDeviceLabel')}
+                </View>
+              </View>
+
+              {/* Hero Subtitle */}
+              <Text style={styles.heroStatusCaps}>{getHeroStatusLabel()}</Text>
+              <Text style={styles.heroDescription}>
+                {t('pairing.heroDescription')}
+              </Text>
+
+              {/* Cancel button during auto-reconnect */}
+              {isAutoReconnecting && (
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.button,
+                    styles.buttonSecondary,
+                    styles.cancelReconnectButton,
+                    pressed && styles.buttonPressed,
+                  ]}
+                  onPress={cancelReconnect}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('pairing.cancel')}
+                  accessibilityHint={t('pairing.cancelReconnectHint')}
+                >
+                  <Text style={styles.buttonSecondaryText}>
+                    {t('pairing.cancel')}
                   </Text>
-                </View>
+                </Pressable>
+              )}
 
-                {/* Device Info with dynamic category avatar icon */}
-                <View style={styles.pairedDeviceRow}>
-                  <View style={styles.pairedIconAvatar}>
-                    {pairedIconName === 'heart-pulse' ? (
-                      <MaterialCommunityIcons
-                        name="heart-pulse"
-                        size={22}
-                        color={colors.primaryContainer}
-                      />
-                    ) : pairedIconName === 'watch' ? (
-                      <Ionicons
-                        name="watch-outline"
-                        size={22}
-                        color={colors.primaryContainer}
-                      />
+              {/* Paired Device Card */}
+              {pairedDevice && (
+                <View style={styles.pairedCard}>
+                  {/* Header row with status indicator */}
+                  <View style={styles.pairedHeader}>
+                    <View
+                      style={[
+                        styles.statusDot,
+                        isPairedDeviceConnected
+                          ? styles.statusDotConnected
+                          : styles.statusDotDisconnected,
+                      ]}
+                    />
+                    <Text style={styles.pairedLabel}>
+                      {t('pairing.pairedDeviceLabel')}
+                    </Text>
+                  </View>
+
+                  {/* Device Info with dynamic category avatar icon */}
+                  <View style={styles.pairedDeviceRow}>
+                    <View style={styles.pairedIconAvatar}>
+                      {pairedIconName === 'heart-pulse' ? (
+                        <MaterialCommunityIcons
+                          name="heart-pulse"
+                          size={22}
+                          color={colors.primaryContainer}
+                        />
+                      ) : pairedIconName === 'watch' ? (
+                        <Ionicons
+                          name="watch-outline"
+                          size={22}
+                          color={colors.primaryContainer}
+                        />
+                      ) : (
+                        <MaterialCommunityIcons
+                          name="dumbbell"
+                          size={22}
+                          color={colors.primaryContainer}
+                        />
+                      )}
+                    </View>
+                    <View style={styles.pairedMetaInfo}>
+                      <Text style={styles.pairedName} numberOfLines={1}>
+                        {pairedDevice.name ?? t('pairing.unknownDevice')}
+                      </Text>
+                      <Text style={styles.pairedId} numberOfLines={1}>
+                        {pairedDevice.id}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Compact, refined action buttons */}
+                  <View style={styles.pairedActions}>
+                    {isPairedDeviceConnected ? (
+                      <Pressable
+                        style={({ pressed }) => [
+                          styles.compactButton,
+                          styles.buttonSecondary,
+                          pressed && styles.buttonPressed,
+                        ]}
+                        onPress={disconnect}
+                        accessibilityRole="button"
+                        accessibilityLabel={`${t('pairing.disconnect')} ${
+                          pairedDevice.name ?? t('pairing.unknownDevice')
+                        }`}
+                        accessibilityHint={t('pairing.disconnectHint')}
+                      >
+                        <Text style={styles.buttonSecondaryText}>
+                          {t('pairing.disconnect')}
+                        </Text>
+                      </Pressable>
                     ) : (
-                      <MaterialCommunityIcons
-                        name="dumbbell"
-                        size={22}
-                        color={colors.primaryContainer}
-                      />
+                      <Pressable
+                        style={({ pressed }) => [
+                          styles.compactButton,
+                          styles.buttonPrimary,
+                          (isConnecting || isConnected) &&
+                            styles.buttonDisabled,
+                          pressed &&
+                            !isConnecting &&
+                            !isConnected &&
+                            styles.buttonPressed,
+                        ]}
+                        onPress={() => connectToDevice(pairedDevice.id)}
+                        disabled={isConnecting || isConnected}
+                        accessibilityRole="button"
+                        accessibilityLabel={`${t('pairing.connect')} ${
+                          pairedDevice.name ?? t('pairing.unknownDevice')
+                        }`}
+                        accessibilityHint={t('pairing.connectHint')}
+                        accessibilityState={{
+                          disabled: isConnecting || isConnected,
+                        }}
+                      >
+                        <Text style={styles.buttonPrimaryText}>
+                          {t('pairing.connect')}
+                        </Text>
+                      </Pressable>
                     )}
-                  </View>
-                  <View style={styles.pairedMetaInfo}>
-                    <Text style={styles.pairedName} numberOfLines={1}>
-                      {pairedDevice.name ?? t('pairing.unknownDevice')}
-                    </Text>
-                    <Text style={styles.pairedId} numberOfLines={1}>
-                      {pairedDevice.id}
-                    </Text>
-                  </View>
-                </View>
 
-                {/* Compact, refined action buttons */}
-                <View style={styles.pairedActions}>
-                  {isPairedDeviceConnected ? (
+                    {/* Refined Unpair Button (Soft text style instead of heavy solid red block) */}
                     <Pressable
                       style={({ pressed }) => [
                         styles.compactButton,
-                        styles.buttonSecondary,
+                        styles.buttonGhostDanger,
                         pressed && styles.buttonPressed,
                       ]}
-                      onPress={disconnect}
+                      onPress={unpair}
                       accessibilityRole="button"
-                      accessibilityLabel={`${t('pairing.disconnect')} ${
+                      accessibilityLabel={`${t('pairing.unpair')} ${
                         pairedDevice.name ?? t('pairing.unknownDevice')
                       }`}
-                      accessibilityHint={t('pairing.disconnectHint')}
+                      accessibilityHint={t('pairing.unpairHint')}
                     >
-                      <Text style={styles.buttonSecondaryText}>
-                        {t('pairing.disconnect')}
+                      <Text style={styles.buttonGhostDangerText}>
+                        {t('pairing.unpair')}
                       </Text>
                     </Pressable>
-                  ) : (
-                    <Pressable
-                      style={({ pressed }) => [
-                        styles.compactButton,
-                        styles.buttonPrimary,
-                        (isConnecting || isConnected) && styles.buttonDisabled,
-                        pressed &&
-                          !isConnecting &&
-                          !isConnected &&
-                          styles.buttonPressed,
-                      ]}
-                      onPress={() => connectToDevice(pairedDevice.id)}
-                      disabled={isConnecting || isConnected}
-                      accessibilityRole="button"
-                      accessibilityLabel={`${t('pairing.connect')} ${
-                        pairedDevice.name ?? t('pairing.unknownDevice')
-                      }`}
-                      accessibilityHint={t('pairing.connectHint')}
-                      accessibilityState={{
-                        disabled: isConnecting || isConnected,
-                      }}
-                    >
-                      <Text style={styles.buttonPrimaryText}>
-                        {t('pairing.connect')}
-                      </Text>
-                    </Pressable>
-                  )}
-
-                  {/* Refined Unpair Button (Soft text style instead of heavy solid red block) */}
-                  <Pressable
-                    style={({ pressed }) => [
-                      styles.compactButton,
-                      styles.buttonGhostDanger,
-                      pressed && styles.buttonPressed,
-                    ]}
-                    onPress={unpair}
-                    accessibilityRole="button"
-                    accessibilityLabel={`${t('pairing.unpair')} ${
-                      pairedDevice.name ?? t('pairing.unknownDevice')
-                    }`}
-                    accessibilityHint={t('pairing.unpairHint')}
-                  >
-                    <Text style={styles.buttonGhostDangerText}>
-                      {t('pairing.unpair')}
-                    </Text>
-                  </Pressable>
+                  </View>
                 </View>
-              </View>
-            )}
+              )}
 
-            {/* Section Title */}
-            {devices.length > 0 && (
-              <Text style={styles.sectionTitle} accessibilityRole="header">
-                {t('pairing.availableDevices')}
-              </Text>
-            )}
-          </View>
-        }
-        ListFooterComponent={
-          <View style={styles.footerSection}>
-            {/* Scan / Stop Scan button pill */}
-            <Pressable
-              style={({ pressed }) => [
-                styles.scanPillButton,
-                (isConnecting || isConnected) && styles.buttonDisabled,
-                pressed &&
-                  !isConnecting &&
-                  !isConnected &&
-                  styles.buttonPressed,
-              ]}
-              onPress={isScanning ? stopScan : scan}
-              disabled={isConnecting || isConnected}
-              accessibilityRole="button"
-              accessibilityLabel={
-                isScanning ? t('pairing.stopScan') : t('pairing.scan')
-              }
-              accessibilityHint={
-                isScanning ? t('pairing.stopScanHint') : t('pairing.scanHint')
-              }
-              accessibilityState={{ disabled: isConnecting || isConnected }}
-            >
-              <Text style={styles.scanPillButtonText}>
-                {isScanning ? t('pairing.stopScan') : t('pairing.scan')}
-              </Text>
-            </Pressable>
-          </View>
-        }
-        ListEmptyComponent={renderEmptyList}
-        style={styles.list}
-        contentContainerStyle={styles.listContent}
-      />
+              {/* Section Title */}
+              {devices.length > 0 && (
+                <Text style={styles.sectionTitle} accessibilityRole="header">
+                  {t('pairing.availableDevices')}
+                </Text>
+              )}
+            </View>
+          }
+          ListFooterComponent={
+            <View style={styles.footerSection}>
+              {/* Scan / Stop Scan button pill */}
+              <Pressable
+                style={({ pressed }) => [
+                  styles.scanPillButton,
+                  (isConnecting || isConnected) && styles.buttonDisabled,
+                  pressed &&
+                    !isConnecting &&
+                    !isConnected &&
+                    styles.buttonPressed,
+                ]}
+                onPress={isScanning ? stopScan : scan}
+                disabled={isConnecting || isConnected}
+                accessibilityRole="button"
+                accessibilityLabel={
+                  isScanning ? t('pairing.stopScan') : t('pairing.scan')
+                }
+                accessibilityHint={
+                  isScanning ? t('pairing.stopScanHint') : t('pairing.scanHint')
+                }
+                accessibilityState={{ disabled: isConnecting || isConnected }}
+              >
+                <Text style={styles.scanPillButtonText}>
+                  {isScanning ? t('pairing.stopScan') : t('pairing.scan')}
+                </Text>
+              </Pressable>
+            </View>
+          }
+          ListEmptyComponent={renderEmptyList}
+          style={styles.list}
+          contentContainerStyle={styles.listContent}
+        />
+      </ResponsiveContent>
     </View>
   );
 }
@@ -347,8 +351,10 @@ const styles = StyleSheet.create({
   list: {
     flex: 1,
   },
+  contentArea: {
+    flex: 1,
+  },
   listContent: {
-    paddingHorizontal: space.containerPadding,
     paddingTop: space.unit * 4,
     paddingBottom: space.unit * 4,
   },

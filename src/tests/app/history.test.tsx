@@ -1,4 +1,5 @@
 import React from 'react';
+import type { ResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import { act, fireEvent, render } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 import { createMMKV } from 'react-native-mmkv';
@@ -12,6 +13,52 @@ import {
 import { useSettingsStore } from '@/store/settingsStore';
 
 const mockPush = jest.fn();
+
+// Screens read layout only through this hook, so a phone/tablet window is one mock.
+const phoneLayout: ResponsiveLayout = {
+  width: 411,
+  height: 891,
+  sizeClass: 'phone',
+  orientation: 'portrait',
+  isTablet: false,
+  isTwoPane: false,
+  contentMaxWidth: null,
+  containerPadding: 20,
+  statColumns: 2,
+  bpmFontSize: 64,
+  bpmIconSize: 36,
+  masterPaneWidth: null,
+};
+
+const tabletLayout: ResponsiveLayout = {
+  width: 1280,
+  height: 800,
+  sizeClass: 'tablet',
+  orientation: 'landscape',
+  isTablet: true,
+  isTwoPane: true,
+  contentMaxWidth: 640,
+  containerPadding: 32,
+  statColumns: 4,
+  bpmFontSize: 88,
+  bpmIconSize: 48,
+  masterPaneWidth: 320,
+};
+
+let mockLayout: ResponsiveLayout = phoneLayout;
+
+jest.mock('@/hooks/useResponsiveLayout', () => ({
+  useResponsiveLayout: () => mockLayout,
+}));
+
+jest.mock('@/hooks/useHealthConnectSessionSync', () => ({
+  useHealthConnectSessionSync: () => ({
+    state: 'synced',
+    reason: null,
+    syncedAt: null,
+    retry: jest.fn(),
+  }),
+}));
 
 jest.mock('expo-router', () => {
   return {
@@ -88,6 +135,7 @@ describe('HistoryScreen', () => {
     createMMKV().clearAll();
     useSettingsStore.setState({ language: 'en', units: 'metric' });
     setLocale('en');
+    mockLayout = phoneLayout;
     alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
   });
 
@@ -205,5 +253,34 @@ describe('HistoryScreen', () => {
     const remaining = getSessionIndex();
     expect(remaining.length).toBe(1);
     expect(remaining[0]?.id).toBe('1700000000000');
+  });
+  it('renders the selected summary inline on a two-pane width without pushing', async () => {
+    saveSession(mockSessionOlder);
+    saveSession(mockSessionNewer);
+    mockLayout = tabletLayout;
+
+    const { getByText, queryByText } = await render(<HistoryScreen />);
+
+    // Newest entry is auto-selected into the right pane.
+    expect(getByText('Workout Complete')).toBeTruthy();
+    expect(queryByText('Select a Session')).toBeNull();
+    expect(mockPush).not.toHaveBeenCalled();
+
+    await act(async () => {
+      fireEvent.press(getByText('130 BPM'));
+    });
+
+    expect(mockPush).not.toHaveBeenCalled();
+    // Older session's stats now fill the detail pane.
+    expect(getByText('150')).toBeTruthy();
+  });
+
+  it('shows the placeholder in the detail pane when there are no sessions', async () => {
+    mockLayout = tabletLayout;
+
+    const { getByText } = await render(<HistoryScreen />);
+
+    expect(getByText('No Sessions Yet')).toBeTruthy();
+    expect(getByText('Select a Session')).toBeTruthy();
   });
 });

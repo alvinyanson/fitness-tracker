@@ -1,6 +1,14 @@
 import React from 'react';
+import { StyleSheet } from 'react-native';
 import { render, fireEvent } from '@testing-library/react-native';
 import { HeaderBar } from '@/components/HeaderBar';
+
+let mockInsets = { top: 0, right: 0, bottom: 0, left: 0 };
+
+jest.mock('react-native-safe-area-context', () => ({
+  __esModule: true,
+  useSafeAreaInsets: () => mockInsets,
+}));
 
 const mockNavigate = jest.fn();
 jest.mock('expo-router', () => ({
@@ -13,6 +21,7 @@ jest.mock('expo-router', () => ({
 describe('HeaderBar', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockInsets = { top: 0, right: 0, bottom: 0, left: 0 };
   });
 
   it('renders title with header accessibility role', async () => {
@@ -58,5 +67,15 @@ describe('HeaderBar', () => {
     );
 
     expect(getByText('POLAR H10')).toBeTruthy();
+  });
+  it('pads for landscape cutout insets on both sides', async () => {
+    mockInsets = { top: 24, right: 44, bottom: 0, left: 44 };
+
+    const { getByTestId } = await render(<HeaderBar title="Live Workout" />);
+
+    const style = StyleSheet.flatten(getByTestId('header-bar').props.style);
+    expect(style.paddingLeft).toBe(44);
+    expect(style.paddingRight).toBe(44);
+    expect(style.paddingTop).toBe(24);
   });
 });
