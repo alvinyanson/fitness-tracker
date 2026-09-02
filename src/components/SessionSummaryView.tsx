@@ -11,6 +11,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { HeaderBar } from '@/components/HeaderBar';
 import { HealthConnectSyncBadge } from '@/components/HealthConnectSyncBadge';
+import { HrTrendChart } from '@/components/HrTrendChart';
 import { ResponsiveContent } from '@/components/ResponsiveContent';
 import { StatCard } from '@/components/StatCard';
 import { useHealthConnectSessionSync } from '@/hooks/useHealthConnectSessionSync';
@@ -204,6 +205,13 @@ export function SessionSummaryView({
               />
             </View>
           </View>
+
+          {/* HR Trend Chart — renders nothing when no sample is plottable */}
+          <HrTrendChart
+            samples={session.samples}
+            startedAt={session.startedAt}
+            stats={session.stats}
+          />
 
           {/* Explicit No HR Recorded Notice */}
           {session.stats.avgHr === null && (
