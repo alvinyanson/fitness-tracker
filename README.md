@@ -92,6 +92,14 @@ disconnected | error`) that stays stable across drops and failed scans.
   three fields, reconciled on sign-in by whichever side was written last. Guests are
   excluded on both sides - the client skips them and `firestore.rules` rejects the
   `anonymous` provider. See [Firestore rules](#firestore-rules) for the deploy step.
+- **Heart-rate trend chart**: ✅ Implemented - the session summary draws the recorded HR
+  series over elapsed time, with avg and max as reference lines and 5 minute-marked x-axis
+  ticks. Pauses and BLE disconnects render as real breaks in the trace rather than
+  interpolated straight lines, and long sessions are downsampled (Largest-Triangle-Three-
+  Buckets, 240 points) so peaks survive without the polyline getting heavy. A session with
+  no usable HR samples shows no chart card at all. Built on a domain-neutral `LineChart`
+  over `react-native-svg` primitives - no chart library - which Milestone 3's altitude
+  profile and weight history reuse as-is.
 - **Tablet and landscape layouts**: ✅ Implemented - the app rotates freely, and every
   screen adapts to the window size through one `useResponsiveLayout` hook over the
   600dp / 840dp size classes. History becomes a master/detail two-pane view at 720dp and
@@ -108,8 +116,9 @@ disconnected | error`) that stays stable across drops and failed scans.
 - GPS route tracking with a map polyline redraw.
 - Step counting via Health Connect.
 - MET + HR-adjusted calorie estimation.
-- Weight tracking with history/chart.
-- GPS-derived altitude profile.
+- Weight tracking with history/chart - the `LineChart` component it needs already exists,
+  built for the Milestone 2 HR chart.
+- GPS-derived altitude profile - likewise reuses `LineChart`, with `x` as distance.
 
 ## Tech Stack
 
@@ -154,6 +163,11 @@ packages below are specified but not yet installed - noted inline.
   for the online/offline status behind the offline banner and sign-in gating.
 - **Units**: `expo-localization` for the device measurement system, with the conversion and
   locale-aware formatting layer in `src/services/units/`.
+- **Charts**: [`react-native-svg`](https://github.com/software-mansion/react-native-svg)
+  primitives (`Polyline` / `Line` / `Circle` / `Text`) behind a reusable `LineChart`
+  component, with the gap-splitting, downsampling, and scaling maths as pure functions in
+  `src/services/chart/`. No charting library - `recharts`, as named in `docs/specs.md`, is
+  web-only. It is a native module, so it needs a rebuild rather than an OTA update.
 - **Icons**: `@expo/vector-icons` (Ionicons).
 - **Fonts**: `expo-font` is installed and its plugin registered, but the three custom
   faces (Hanken Grotesk, Inter, JetBrains Mono) are not loaded yet - `src/theme/typography.ts`
@@ -170,10 +184,6 @@ packages below are specified but not yet installed - noted inline.
 - **Linting & Code Quality**: [Oxlint](https://oxc.rs/docs/guide/usage/linter.html),
   Prettier, Husky, lint-staged, enforced on every push and PR by
   `.github/workflows/ci.yml` (lint → typecheck → test).
-
-Deferred, rest of Milestone 2:
-
-- `react-native-svg` for the HR chart.
 
 Deferred to Milestone 3 / stretch:
 

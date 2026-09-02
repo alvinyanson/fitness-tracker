@@ -144,6 +144,42 @@ describe('SessionSummaryView', () => {
     expect(onDeleted).toHaveBeenCalledWith('1700000000000');
   });
 
+  it('renders the HR trend card for a session that has samples', async () => {
+    saveSession({
+      ...mockSession,
+      id: '1900000000000',
+      startedAt: 1900000000000,
+      samples: Array.from({ length: 60 }, (_, i) => ({
+        bpm: 120 + (i % 20),
+        sensorContact: 'contactDetected' as const,
+        timestamp: 1900000000000 + i * 10_000,
+      })),
+    });
+
+    const { getByText, getByTestId } = await render(
+      <SessionSummaryView sessionId="1900000000000" />,
+    );
+
+    expect(getByText('HEART RATE TREND')).toBeTruthy();
+
+    await fireEvent(getByTestId('hr-trend-plot'), 'layout', {
+      nativeEvent: { layout: { width: 320, height: 160 } },
+    });
+
+    expect(getByTestId('hr-trend-chart')).toBeTruthy();
+  });
+
+  it('renders no chart card for a session with no samples', async () => {
+    saveSession(mockSession);
+
+    const { queryByText, queryByTestId } = await render(
+      <SessionSummaryView sessionId="1700000000000" />,
+    );
+
+    expect(queryByText('HEART RATE TREND')).toBeNull();
+    expect(queryByTestId('hr-trend-chart')).toBeNull();
+  });
+
   it('shows the no-heart-rate notice for a session without HR samples', async () => {
     saveSession({
       ...mockSession,
