@@ -22,7 +22,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useWorkoutSession } from '@/hooks/useWorkoutSession';
 import { formatDuration } from '@/services/formatDuration';
 import { useWorkoutSessionStore } from '@/store/workoutSessionStore';
-import { colors, radii, space, type as typeStyles } from '@/theme';
+import { colors, radii, space, textStyle } from '@/theme';
 
 export default function WorkoutScreen() {
   const { t } = useTranslation();
@@ -420,17 +420,13 @@ const styles = StyleSheet.create({
   },
   durationCaps: {
     color: colors.onSurfaceVariant,
-    fontSize: typeStyles.labelCaps.fontSize,
-    fontWeight: typeStyles.labelCaps.fontWeight,
-    lineHeight: typeStyles.labelCaps.lineHeight,
-    letterSpacing: typeStyles.labelCaps.letterSpacing,
+    ...textStyle('labelCaps'),
     marginBottom: 4,
   },
   timerText: {
     color: colors.onSurface,
-    fontSize: typeStyles.headlineLg.fontSize,
+    ...textStyle('headlineLg'),
     fontWeight: '700',
-    lineHeight: typeStyles.headlineLg.lineHeight,
     letterSpacing: 0.5,
   },
   heartSection: {
@@ -449,8 +445,7 @@ const styles = StyleSheet.create({
   },
   rollingAvgLabelText: {
     color: colors.onSurfaceVariant,
-    fontSize: typeStyles.labelSm.fontSize,
-    fontWeight: typeStyles.labelSm.fontWeight,
+    ...textStyle('labelSm'),
     marginBottom: space.unit * 4,
   },
   controlsContainer: {
@@ -479,7 +474,7 @@ const styles = StyleSheet.create({
   },
   primaryPillButtonText: {
     color: colors.onPrimaryContainer,
-    fontSize: typeStyles.bodyLg.fontSize,
+    ...textStyle('bodyLg'),
     fontWeight: '700',
   },
   secondaryPillButton: {
@@ -495,7 +490,7 @@ const styles = StyleSheet.create({
   },
   secondaryPillButtonText: {
     color: colors.onSurface,
-    fontSize: typeStyles.bodyLg.fontSize,
+    ...textStyle('bodyLg'),
     fontWeight: '600',
   },
   dangerPillButton: {
@@ -509,7 +504,7 @@ const styles = StyleSheet.create({
   },
   dangerPillButtonText: {
     color: colors.onErrorContainer,
-    fontSize: typeStyles.bodyLg.fontSize,
+    ...textStyle('bodyLg'),
     fontWeight: '700',
   },
   buttonPressed: {
@@ -520,7 +515,7 @@ const styles = StyleSheet.create({
   },
   linkText: {
     color: colors.primary,
-    fontSize: typeStyles.bodyMd.fontSize,
+    ...textStyle('bodyMd'),
     fontWeight: '500',
   },
 });

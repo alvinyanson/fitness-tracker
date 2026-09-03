@@ -19,7 +19,7 @@ import { useSessionDetail } from '@/hooks/useSessionDetail';
 import { useTranslation } from '@/hooks/useTranslation';
 import { formatDuration } from '@/services/formatDuration';
 import { useSettingsStore } from '@/store/settingsStore';
-import { colors, radii, space, type as typeStyles } from '@/theme';
+import { colors, radii, space, textStyle } from '@/theme';
 import { formatDate } from '@/utils/formatDate';
 
 export interface SessionSummaryViewProps {
@@ -281,16 +281,14 @@ const styles = StyleSheet.create({
   },
   messageTitle: {
     color: colors.onSurface,
-    fontSize: typeStyles.headlineLg.fontSize,
+    ...textStyle('headlineLg'),
     fontWeight: '700',
-    lineHeight: typeStyles.headlineLg.lineHeight,
     marginBottom: space.stackGap,
     textAlign: 'center',
   },
   messageText: {
     color: colors.onSurfaceVariant,
-    fontSize: typeStyles.bodyMd.fontSize,
-    lineHeight: typeStyles.bodyMd.lineHeight,
+    ...textStyle('bodyMd'),
     textAlign: 'center',
     marginBottom: space.unit * 4,
   },
@@ -327,14 +325,13 @@ const styles = StyleSheet.create({
   },
   heroTitle: {
     color: colors.onSurface,
-    fontSize: typeStyles.headlineLgMobile.fontSize,
+    ...textStyle('headlineLgMobile'),
     fontWeight: '700',
-    lineHeight: typeStyles.headlineLgMobile.lineHeight,
     marginBottom: 4,
   },
   dateText: {
     color: colors.onSurfaceVariant,
-    fontSize: typeStyles.labelSm.fontSize,
+    ...textStyle('labelSm'),
     fontWeight: '500',
   },
   durationSection: {
@@ -344,17 +341,13 @@ const styles = StyleSheet.create({
   },
   durationCaps: {
     color: colors.onSurfaceVariant,
-    fontSize: typeStyles.labelCaps.fontSize,
-    fontWeight: typeStyles.labelCaps.fontWeight,
-    lineHeight: typeStyles.labelCaps.lineHeight,
-    letterSpacing: typeStyles.labelCaps.letterSpacing,
+    ...textStyle('labelCaps'),
     marginTop: 4,
   },
   timerText: {
     color: colors.onSurface,
-    fontSize: typeStyles.headlineLg.fontSize,
+    ...textStyle('headlineLg'),
     fontWeight: '700',
-    lineHeight: typeStyles.headlineLg.lineHeight,
     letterSpacing: 0.5,
   },
   statsGrid: {
@@ -377,8 +370,7 @@ const styles = StyleSheet.create({
   },
   noHrText: {
     color: colors.onSurfaceVariant,
-    fontSize: typeStyles.labelSm.fontSize,
-    lineHeight: typeStyles.labelSm.lineHeight,
+    ...textStyle('labelSm'),
     flex: 1,
   },
   actionContainer: {
@@ -399,7 +391,7 @@ const styles = StyleSheet.create({
   },
   deleteButtonText: {
     color: colors.error,
-    fontSize: typeStyles.bodyLg.fontSize,
+    ...textStyle('bodyLg'),
     fontWeight: '600',
   },
   buttonPressed: {
@@ -410,7 +402,7 @@ const styles = StyleSheet.create({
   },
   linkText: {
     color: colors.primary,
-    fontSize: typeStyles.bodyMd.fontSize,
+    ...textStyle('bodyMd'),
     fontWeight: '500',
   },
 });

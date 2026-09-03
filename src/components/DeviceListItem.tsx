@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import type { DiscoveredDevice } from '@/interfaces/ble';
 import { useTranslation } from '@/hooks/useTranslation';
-import { colors, radii, space, type as typeStyles } from '@/theme';
+import { colors, radii, space, textStyle } from '@/theme';
 
 export interface DeviceListItemProps {
   device: DiscoveredDevice;
@@ -150,15 +150,12 @@ const styles = StyleSheet.create({
   },
   name: {
     color: colors.onSurface,
-    fontSize: typeStyles.bodyLg.fontSize,
+    ...textStyle('bodyLg'),
     fontWeight: '600',
-    lineHeight: typeStyles.bodyLg.lineHeight,
   },
   subtitle: {
     color: colors.onSurfaceVariant,
-    fontSize: typeStyles.labelSm.fontSize,
-    fontWeight: typeStyles.labelSm.fontWeight,
-    lineHeight: typeStyles.labelSm.lineHeight,
+    ...textStyle('labelSm'),
   },
   id: {
     color: colors.outline,
@@ -173,7 +170,7 @@ const styles = StyleSheet.create({
   },
   rssi: {
     color: colors.primaryContainer,
-    fontSize: typeStyles.labelSm.fontSize,
+    ...textStyle('labelSm'),
     fontWeight: '500',
   },
   rssiUnavailable: {

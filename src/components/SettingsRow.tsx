@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radii, space, type as typeStyles } from '@/theme';
+import { colors, radii, space, textStyle } from '@/theme';
 
 export interface SettingsRowProps {
   icon: keyof typeof Ionicons.glyphMap;
@@ -37,9 +37,8 @@ const styles = StyleSheet.create({
   label: {
     flex: 1,
     color: colors.onSurface,
-    fontSize: typeStyles.bodyMd.fontSize,
+    ...textStyle('bodyMd'),
     fontWeight: '500',
-    lineHeight: typeStyles.bodyMd.lineHeight,
   },
   control: {
     flexShrink: 0,

@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, usePathname } from 'expo-router';
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from '@/hooks/useTranslation';
-import { colors, space, type as typeStyles } from '@/theme';
+import { colors, space, textStyle } from '@/theme';
 
 /** Mirrors the bottom nav bar's icon vocabulary so header and tab agree. */
 export type HeaderIcon =
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
   },
   titleText: {
     color: colors.onSurface,
-    fontSize: typeStyles.labelCaps.fontSize,
+    ...textStyle('labelCaps'),
     fontWeight: '700',
     letterSpacing: 1,
     textTransform: 'uppercase',

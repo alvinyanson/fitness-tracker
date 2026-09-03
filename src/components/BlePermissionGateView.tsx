@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { BleGateStatus } from '@/interfaces/ble';
-import { colors, radii, space, type as typeStyles } from '@/theme';
+import { colors, radii, space, textStyle } from '@/theme';
 
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -106,16 +106,12 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.onSurface,
-    fontSize: typeStyles.headlineMd.fontSize,
-    fontWeight: typeStyles.headlineMd.fontWeight,
-    lineHeight: typeStyles.headlineMd.lineHeight,
+    ...textStyle('headlineMd'),
     textAlign: 'center',
   },
   description: {
     color: colors.onSurfaceVariant,
-    fontSize: typeStyles.bodyMd.fontSize,
-    fontWeight: typeStyles.bodyMd.fontWeight,
-    lineHeight: typeStyles.bodyMd.lineHeight,
+    ...textStyle('bodyMd'),
     textAlign: 'center',
   },
   button: {
@@ -136,8 +132,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: colors.onPrimaryContainer,
-    fontSize: typeStyles.bodyMd.fontSize,
+    ...textStyle('bodyMd'),
     fontWeight: '600',
-    lineHeight: typeStyles.bodyMd.lineHeight,
   },
 });

@@ -4,7 +4,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useTranslation } from '@/hooks/useTranslation';
-import { colors, radii, space, type as typeStyles } from '@/theme';
+import { colors, radii, space, textStyle } from '@/theme';
 
 const BANNER_HEIGHT = space.unit * 9;
 const BANNER_ANIMATION_MS = 300;
@@ -55,8 +55,6 @@ const styles = StyleSheet.create({
   },
   text: {
     color: colors.onErrorContainer,
-    fontSize: typeStyles.labelSm.fontSize,
-    fontWeight: typeStyles.labelSm.fontWeight,
-    lineHeight: typeStyles.labelSm.lineHeight,
+    ...textStyle('labelSm'),
   },
 });

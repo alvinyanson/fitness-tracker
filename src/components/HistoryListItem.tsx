@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from '@/hooks/useTranslation';
-import { colors, radii, space, type as typeStyles } from '@/theme';
+import { colors, radii, space, textStyle } from '@/theme';
 
 export interface HistoryListItemProps {
   id: string;
@@ -108,17 +108,13 @@ const styles = StyleSheet.create({
   },
   dateLabel: {
     color: colors.onSurfaceVariant,
-    fontSize: typeStyles.labelCaps.fontSize,
-    fontWeight: typeStyles.labelCaps.fontWeight,
-    lineHeight: typeStyles.labelCaps.lineHeight,
-    letterSpacing: typeStyles.labelCaps.letterSpacing,
+    ...textStyle('labelCaps'),
     textTransform: 'uppercase',
   },
   title: {
     color: colors.onSurface,
-    fontSize: typeStyles.bodyLg.fontSize,
+    ...textStyle('bodyLg'),
     fontWeight: '600',
-    lineHeight: typeStyles.bodyLg.lineHeight,
   },
   statsRow: {
     flexDirection: 'row',
@@ -133,7 +129,7 @@ const styles = StyleSheet.create({
   },
   statText: {
     color: colors.onSurfaceVariant,
-    fontSize: typeStyles.labelSm.fontSize,
+    ...textStyle('labelSm'),
     fontWeight: '500',
   },
 });

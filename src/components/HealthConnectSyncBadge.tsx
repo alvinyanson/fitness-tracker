@@ -7,7 +7,7 @@ import type {
 } from '@/interfaces/healthConnect';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useSettingsStore } from '@/store/settingsStore';
-import { colors, radii, space, type as typeStyles } from '@/theme';
+import { colors, radii, space, textStyle } from '@/theme';
 import { formatDate } from '@/utils/formatDate';
 
 export interface HealthConnectSyncBadgeProps {
@@ -187,15 +187,12 @@ const styles = StyleSheet.create({
   },
   statusText: {
     color: colors.onSurface,
-    fontSize: typeStyles.bodyMd.fontSize,
+    ...textStyle('bodyMd'),
     fontWeight: '600',
-    lineHeight: typeStyles.bodyMd.lineHeight,
   },
   descriptionText: {
     color: colors.onSurfaceVariant,
-    fontSize: typeStyles.labelSm.fontSize,
-    fontWeight: typeStyles.labelSm.fontWeight,
-    lineHeight: typeStyles.labelSm.lineHeight,
+    ...textStyle('labelSm'),
     marginTop: 2,
   },
   actionRow: {
@@ -214,9 +211,8 @@ const styles = StyleSheet.create({
   },
   retryButtonText: {
     color: colors.onSurface,
-    fontSize: typeStyles.labelSm.fontSize,
+    ...textStyle('labelSm'),
     fontWeight: '600',
-    lineHeight: typeStyles.labelSm.lineHeight,
   },
   buttonPressed: {
     opacity: 0.8,

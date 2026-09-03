@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { type Href, router, usePathname } from 'expo-router';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from '@/hooks/useTranslation';
-import { colors, space, type as typeStyles } from '@/theme';
+import { colors, space, textStyle } from '@/theme';
 
 export interface BottomNavBarProps {
   currentRoute?: 'pairing' | 'workout' | 'history' | 'settings';
@@ -202,9 +202,7 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     color: colors.onSurfaceVariant,
-    fontSize: typeStyles.labelSm.fontSize,
-    fontWeight: typeStyles.labelSm.fontWeight,
-    lineHeight: typeStyles.labelSm.lineHeight,
+    ...textStyle('labelSm'),
   },
   tabLabelActive: {
     color: colors.onSurface,

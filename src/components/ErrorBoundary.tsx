@@ -3,7 +3,7 @@ import { Button, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from '@/hooks/useTranslation';
 import { reportError } from '@/services/crashService';
-import { colors, space, type as typeStyles } from '@/theme';
+import { colors, space, textStyle } from '@/theme';
 
 export interface ErrorBoundaryProps {
   error: Error;
@@ -34,7 +34,7 @@ export function ErrorBoundaryView({
         accessibilityRole="header"
         style={{
           color: colors.onSurface,
-          fontSize: typeStyles.headlineMd.fontSize,
+          ...textStyle('headlineMd'),
           fontWeight: 'bold',
           marginBottom: space.unit * 2,
         }}
@@ -44,7 +44,7 @@ export function ErrorBoundaryView({
       <Text
         style={{
           color: colors.onSurfaceVariant,
-          fontSize: typeStyles.bodyMd.fontSize,
+          ...textStyle('bodyMd'),
           textAlign: 'center',
           paddingHorizontal: space.unit * 4,
           marginBottom: space.unit * 4,
@@ -55,7 +55,7 @@ export function ErrorBoundaryView({
       <Text
         style={{
           color: colors.error,
-          fontSize: typeStyles.labelSm.fontSize,
+          ...textStyle('labelSm'),
           textAlign: 'center',
           paddingHorizontal: space.unit * 4,
           marginBottom: space.unit * 6,

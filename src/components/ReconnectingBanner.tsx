@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from '@/hooks/useTranslation';
-import { colors, radii, space, type as typeStyles } from '@/theme';
+import { colors, radii, space, textStyle } from '@/theme';
 
 export interface ReconnectingBannerProps {
   visible: boolean;
@@ -38,8 +38,6 @@ const styles = StyleSheet.create({
   },
   text: {
     color: colors.onSurfaceVariant,
-    fontSize: typeStyles.labelSm.fontSize,
-    fontWeight: typeStyles.labelSm.fontWeight,
-    lineHeight: typeStyles.labelSm.lineHeight,
+    ...textStyle('labelSm'),
   },
 });

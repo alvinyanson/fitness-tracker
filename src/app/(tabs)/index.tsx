@@ -1,7 +1,7 @@
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from '@/hooks/useTranslation';
-import { colors, radii, space, type as typeStyles } from '@/theme';
+import { colors, radii, space, textStyle } from '@/theme';
 import { BlePermissionGateView } from '@/components/BlePermissionGateView';
 import { DeviceListItem } from '@/components/DeviceListItem';
 import { HeaderBar } from '@/components/HeaderBar';
@@ -364,9 +364,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     color: colors.onSurface,
-    fontSize: typeStyles.headlineMd.fontSize,
-    fontWeight: typeStyles.headlineMd.fontWeight,
-    lineHeight: typeStyles.headlineMd.lineHeight,
+    ...textStyle('headlineMd'),
     textAlign: 'center',
     marginBottom: space.unit * 4,
   },
@@ -393,18 +391,13 @@ const styles = StyleSheet.create({
   },
   heroStatusCaps: {
     color: colors.onSurface,
-    fontSize: typeStyles.labelCaps.fontSize,
-    fontWeight: typeStyles.labelCaps.fontWeight,
-    lineHeight: typeStyles.labelCaps.lineHeight,
-    letterSpacing: typeStyles.labelCaps.letterSpacing,
+    ...textStyle('labelCaps'),
     marginBottom: space.unit,
     textAlign: 'center',
   },
   heroDescription: {
     color: colors.onSurfaceVariant,
-    fontSize: typeStyles.bodyMd.fontSize,
-    fontWeight: typeStyles.bodyMd.fontWeight,
-    lineHeight: typeStyles.bodyMd.lineHeight,
+    ...textStyle('bodyMd'),
     textAlign: 'center',
     marginBottom: space.stackGap,
   },
@@ -439,10 +432,7 @@ const styles = StyleSheet.create({
   },
   pairedLabel: {
     color: colors.onSurfaceVariant,
-    fontSize: typeStyles.labelCaps.fontSize,
-    fontWeight: typeStyles.labelCaps.fontWeight,
-    lineHeight: typeStyles.labelCaps.lineHeight,
-    letterSpacing: typeStyles.labelCaps.letterSpacing,
+    ...textStyle('labelCaps'),
     textTransform: 'uppercase',
   },
   pairedDeviceRow: {
@@ -464,15 +454,12 @@ const styles = StyleSheet.create({
   },
   pairedName: {
     color: colors.onSurface,
-    fontSize: typeStyles.bodyLg.fontSize,
+    ...textStyle('bodyLg'),
     fontWeight: '600',
-    lineHeight: typeStyles.bodyLg.lineHeight,
   },
   pairedId: {
     color: colors.onSurfaceVariant,
-    fontSize: typeStyles.labelSm.fontSize,
-    fontWeight: typeStyles.labelSm.fontWeight,
-    lineHeight: typeStyles.labelSm.lineHeight,
+    ...textStyle('labelSm'),
   },
   pairedActions: {
     flexDirection: 'row',
@@ -481,9 +468,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     alignSelf: 'flex-start',
     color: colors.onSurfaceVariant,
-    fontSize: typeStyles.labelCaps.fontSize,
-    fontWeight: typeStyles.labelCaps.fontWeight,
-    letterSpacing: typeStyles.labelCaps.letterSpacing,
+    ...textStyle('labelCaps'),
     textTransform: 'uppercase',
     marginTop: space.unit * 2,
     marginBottom: space.unit * 3,
@@ -525,17 +510,17 @@ const styles = StyleSheet.create({
   },
   buttonPrimaryText: {
     color: colors.onPrimaryContainer,
-    fontSize: typeStyles.bodyMd.fontSize,
+    ...textStyle('bodyMd'),
     fontWeight: '600',
   },
   buttonSecondaryText: {
     color: colors.onSurface,
-    fontSize: typeStyles.bodyMd.fontSize,
+    ...textStyle('bodyMd'),
     fontWeight: '600',
   },
   buttonGhostDangerText: {
     color: colors.error,
-    fontSize: typeStyles.bodyMd.fontSize,
+    ...textStyle('bodyMd'),
     fontWeight: '600',
   },
   footerSection: {
@@ -556,7 +541,7 @@ const styles = StyleSheet.create({
   },
   scanPillButtonText: {
     color: colors.onSurface,
-    fontSize: typeStyles.bodyLg.fontSize,
+    ...textStyle('bodyLg'),
     fontWeight: '600',
   },
   emptyContainer: {
@@ -565,8 +550,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     color: colors.onSurfaceVariant,
-    fontSize: typeStyles.bodyMd.fontSize,
-    fontWeight: typeStyles.bodyMd.fontWeight,
+    ...textStyle('bodyMd'),
     textAlign: 'center',
   },
 });

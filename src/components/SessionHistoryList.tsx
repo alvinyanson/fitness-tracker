@@ -5,7 +5,7 @@ import { HistoryListItem } from '@/components/HistoryListItem';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { SessionIndexEntry } from '@/interfaces/session';
 import { formatDuration } from '@/services/formatDuration';
-import { colors, radii, space, type as typeStyles } from '@/theme';
+import { colors, radii, space, textStyle } from '@/theme';
 import { formatRelativeDate } from '@/utils/formatRelativeDate';
 
 export interface SessionHistoryListProps {
@@ -109,16 +109,14 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     color: colors.onSurface,
-    fontSize: typeStyles.headlineLg.fontSize,
+    ...textStyle('headlineLg'),
     fontWeight: '700',
-    lineHeight: typeStyles.headlineLg.lineHeight,
     marginBottom: space.stackGap,
     textAlign: 'center',
   },
   emptyMessage: {
     color: colors.onSurfaceVariant,
-    fontSize: typeStyles.bodyMd.fontSize,
-    lineHeight: typeStyles.bodyMd.lineHeight,
+    ...textStyle('bodyMd'),
     textAlign: 'center',
   },
 });
