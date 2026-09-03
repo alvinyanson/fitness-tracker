@@ -41,6 +41,154 @@ const ERROR_KEY_MAP: Record<AuthErrorReason, string> = {
 
 const AVATAR_SIZE = 40;
 
+/** Auth state still resolving — one line of copy, no controls. */
+function CheckingCard(): JSX.Element {
+  const { t } = useTranslation();
+
+  return (
+    <Card style={styles.card}>
+      <Text style={styles.secondaryLine}>{t('auth.checking')}</Text>
+    </Card>
+  );
+}
+
+interface IdentityCardProps {
+  user: AuthUser;
+  onSignOut: () => void;
+}
+
+/** Signed in, Google or guest — avatar, name/subtitle, sign-out. */
+function IdentityCard({ user, onSignOut }: IdentityCardProps): JSX.Element {
+  const { t } = useTranslation();
+  const isGuest = user.isAnonymous === true;
+
+  return (
+    <Card style={[styles.card, styles.identityRow]}>
+      {user.photoURL ? (
+        <Image
+          source={{ uri: user.photoURL }}
+          style={styles.avatar}
+          accessibilityIgnoresInvertColors
+        />
+      ) : (
+        <View style={styles.avatarFallback}>
+          <Ionicons
+            name={isGuest ? 'person-outline' : 'person-circle-outline'}
+            size={24}
+            color={colors.onSurfaceVariant}
+          />
+        </View>
+      )}
+
+      <View style={styles.identityText}>
+        <Text style={styles.displayName} numberOfLines={1}>
+          {isGuest
+            ? t('auth.guestName')
+            : (user.displayName ?? t('auth.signedInFallbackName'))}
+        </Text>
+        {/* The one line that tells the two providers apart at a glance. */}
+        <Text style={styles.secondaryLine} numberOfLines={1}>
+          {isGuest ? t('auth.guestSubtitle') : (user.email ?? '')}
+        </Text>
+      </View>
+
+      <Pressable
+        style={({ pressed }) => [
+          styles.signOutButton,
+          pressed && styles.pressed,
+        ]}
+        onPress={onSignOut}
+        accessibilityRole="button"
+        accessibilityLabel={t('auth.signOut')}
+        accessibilityHint={t('auth.signOutHint')}
+      >
+        <Ionicons name="log-out-outline" size={20} color={colors.error} />
+      </Pressable>
+    </Card>
+  );
+}
+
+interface SignInCardProps {
+  isDisabled: boolean;
+  pendingProvider: AuthProvider | null;
+  isGoogleSignInAvailable: boolean;
+  helperKey: string | null;
+  onSignIn: () => void;
+  onSignInAsGuest: () => void;
+}
+
+/** Signed out or errored — the two sign-in buttons plus helper copy. */
+function SignInCard({
+  isDisabled,
+  pendingProvider,
+  isGoogleSignInAvailable,
+  helperKey,
+  onSignIn,
+  onSignInAsGuest,
+}: SignInCardProps): JSX.Element {
+  const { t } = useTranslation();
+
+  return (
+    <Card style={styles.card}>
+      <View style={styles.buttonRow}>
+        {isGoogleSignInAvailable ? (
+          <ActionButton
+            label={t('auth.signInWithGoogle')}
+            onPress={onSignIn}
+            disabled={isDisabled}
+            busy={pendingProvider === 'google'}
+            icon={
+              pendingProvider === 'google' ? (
+                <ActivityIndicator
+                  size="small"
+                  color={colors.onPrimaryContainer}
+                />
+              ) : (
+                <Ionicons
+                  name="logo-google"
+                  size={18}
+                  color={colors.onPrimaryContainer}
+                />
+              )
+            }
+            accessibilityLabel={t('auth.signInWithGoogle')}
+            accessibilityHint={t('auth.signInHint')}
+            style={styles.primaryButton}
+            labelStyle={styles.buttonLabel}
+            labelNumberOfLines={1}
+          />
+        ) : null}
+
+        <ActionButton
+          variant="secondary"
+          label={t('auth.guestName')}
+          onPress={onSignInAsGuest}
+          disabled={isDisabled}
+          busy={pendingProvider === 'guest'}
+          icon={
+            pendingProvider === 'guest' ? (
+              <ActivityIndicator size="small" color={colors.onSurface} />
+            ) : (
+              <Ionicons
+                name="person-outline"
+                size={18}
+                color={colors.onSurface}
+              />
+            )
+          }
+          accessibilityLabel={t('auth.continueAsGuest')}
+          accessibilityHint={t('auth.continueAsGuestHint')}
+          style={styles.secondaryButton}
+          labelStyle={styles.buttonLabel}
+          labelNumberOfLines={1}
+        />
+      </View>
+
+      {helperKey ? <Text style={styles.helperText}>{t(helperKey)}</Text> : null}
+    </Card>
+  );
+}
+
 export function AccountCard({
   status,
   user,
@@ -54,9 +202,6 @@ export function AccountCard({
 }: AccountCardProps): JSX.Element {
   const { t } = useTranslation();
 
-  const isBusy = status === 'signing-in';
-  const isDisabled = isBusy || isOffline;
-  const isGuest = user?.isAnonymous === true;
   // Offline copy wins: it explains why the buttons are unavailable right now.
   const helperKey = isOffline
     ? 'auth.errorNetwork'
@@ -71,112 +216,18 @@ export function AccountCard({
       </Text>
 
       {status === 'unknown' ? (
-        <Card style={styles.card}>
-          <Text style={styles.secondaryLine}>{t('auth.checking')}</Text>
-        </Card>
+        <CheckingCard />
       ) : status === 'signed-in' && user ? (
-        <Card style={[styles.card, styles.identityRow]}>
-          {user.photoURL ? (
-            <Image
-              source={{ uri: user.photoURL }}
-              style={styles.avatar}
-              accessibilityIgnoresInvertColors
-            />
-          ) : (
-            <View style={styles.avatarFallback}>
-              <Ionicons
-                name={isGuest ? 'person-outline' : 'person-circle-outline'}
-                size={24}
-                color={colors.onSurfaceVariant}
-              />
-            </View>
-          )}
-
-          <View style={styles.identityText}>
-            <Text style={styles.displayName} numberOfLines={1}>
-              {isGuest
-                ? t('auth.guestName')
-                : (user.displayName ?? t('auth.signedInFallbackName'))}
-            </Text>
-            {/* The one line that tells the two providers apart at a glance. */}
-            <Text style={styles.secondaryLine} numberOfLines={1}>
-              {isGuest ? t('auth.guestSubtitle') : (user.email ?? '')}
-            </Text>
-          </View>
-
-          <Pressable
-            style={({ pressed }) => [
-              styles.signOutButton,
-              pressed && styles.pressed,
-            ]}
-            onPress={onSignOut}
-            accessibilityRole="button"
-            accessibilityLabel={t('auth.signOut')}
-            accessibilityHint={t('auth.signOutHint')}
-          >
-            <Ionicons name="log-out-outline" size={20} color={colors.error} />
-          </Pressable>
-        </Card>
+        <IdentityCard user={user} onSignOut={onSignOut} />
       ) : (
-        <Card style={styles.card}>
-          <View style={styles.buttonRow}>
-            {isGoogleSignInAvailable ? (
-              <ActionButton
-                label={t('auth.signInWithGoogle')}
-                onPress={onSignIn}
-                disabled={isDisabled}
-                busy={pendingProvider === 'google'}
-                icon={
-                  pendingProvider === 'google' ? (
-                    <ActivityIndicator
-                      size="small"
-                      color={colors.onPrimaryContainer}
-                    />
-                  ) : (
-                    <Ionicons
-                      name="logo-google"
-                      size={18}
-                      color={colors.onPrimaryContainer}
-                    />
-                  )
-                }
-                accessibilityLabel={t('auth.signInWithGoogle')}
-                accessibilityHint={t('auth.signInHint')}
-                style={styles.primaryButton}
-                labelStyle={styles.buttonLabel}
-                labelNumberOfLines={1}
-              />
-            ) : null}
-
-            <ActionButton
-              variant="secondary"
-              label={t('auth.guestName')}
-              onPress={onSignInAsGuest}
-              disabled={isDisabled}
-              busy={pendingProvider === 'guest'}
-              icon={
-                pendingProvider === 'guest' ? (
-                  <ActivityIndicator size="small" color={colors.onSurface} />
-                ) : (
-                  <Ionicons
-                    name="person-outline"
-                    size={18}
-                    color={colors.onSurface}
-                  />
-                )
-              }
-              accessibilityLabel={t('auth.continueAsGuest')}
-              accessibilityHint={t('auth.continueAsGuestHint')}
-              style={styles.secondaryButton}
-              labelStyle={styles.buttonLabel}
-              labelNumberOfLines={1}
-            />
-          </View>
-
-          {helperKey ? (
-            <Text style={styles.helperText}>{t(helperKey)}</Text>
-          ) : null}
-        </Card>
+        <SignInCard
+          isDisabled={status === 'signing-in' || isOffline}
+          pendingProvider={pendingProvider}
+          isGoogleSignInAvailable={isGoogleSignInAvailable}
+          helperKey={helperKey}
+          onSignIn={onSignIn}
+          onSignInAsGuest={onSignInAsGuest}
+        />
       )}
     </View>
   );
