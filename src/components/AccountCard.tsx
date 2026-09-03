@@ -16,6 +16,8 @@ import type {
 } from '@/interfaces/auth';
 import { useTranslation } from '@/hooks/useTranslation';
 import { colors, radii, space, textStyle } from '@/theme';
+import { ActionButton } from '@/components/ActionButton';
+import { Card } from '@/components/Card';
 
 export interface AccountCardProps {
   status: AuthStatus;
@@ -69,11 +71,11 @@ export function AccountCard({
       </Text>
 
       {status === 'unknown' ? (
-        <View style={styles.card}>
+        <Card style={styles.card}>
           <Text style={styles.secondaryLine}>{t('auth.checking')}</Text>
-        </View>
+        </Card>
       ) : status === 'signed-in' && user ? (
-        <View style={[styles.card, styles.identityRow]}>
+        <Card style={[styles.card, styles.identityRow]}>
           {user.photoURL ? (
             <Image
               source={{ uri: user.photoURL }}
@@ -114,80 +116,67 @@ export function AccountCard({
           >
             <Ionicons name="log-out-outline" size={20} color={colors.error} />
           </Pressable>
-        </View>
+        </Card>
       ) : (
-        <View style={styles.card}>
+        <Card style={styles.card}>
           <View style={styles.buttonRow}>
             {isGoogleSignInAvailable ? (
-              <Pressable
-                style={({ pressed }) => [
-                  styles.primaryButton,
-                  isDisabled && styles.buttonDisabled,
-                  pressed && !isDisabled && styles.pressed,
-                ]}
+              <ActionButton
+                label={t('auth.signInWithGoogle')}
                 onPress={onSignIn}
                 disabled={isDisabled}
-                accessibilityRole="button"
+                busy={pendingProvider === 'google'}
+                icon={
+                  pendingProvider === 'google' ? (
+                    <ActivityIndicator
+                      size="small"
+                      color={colors.onPrimaryContainer}
+                    />
+                  ) : (
+                    <Ionicons
+                      name="logo-google"
+                      size={18}
+                      color={colors.onPrimaryContainer}
+                    />
+                  )
+                }
                 accessibilityLabel={t('auth.signInWithGoogle')}
                 accessibilityHint={t('auth.signInHint')}
-                accessibilityState={{
-                  disabled: isDisabled,
-                  busy: pendingProvider === 'google',
-                }}
-              >
-                {pendingProvider === 'google' ? (
-                  <ActivityIndicator
-                    size="small"
-                    color={colors.onPrimaryContainer}
-                  />
-                ) : (
-                  <Ionicons
-                    name="logo-google"
-                    size={18}
-                    color={colors.onPrimaryContainer}
-                  />
-                )}
-                <Text style={styles.primaryButtonText} numberOfLines={1}>
-                  {t('auth.signInWithGoogle')}
-                </Text>
-              </Pressable>
+                style={styles.primaryButton}
+                labelStyle={styles.buttonLabel}
+                labelNumberOfLines={1}
+              />
             ) : null}
 
-            <Pressable
-              style={({ pressed }) => [
-                styles.secondaryButton,
-                isDisabled && styles.buttonDisabled,
-                pressed && !isDisabled && styles.pressed,
-              ]}
+            <ActionButton
+              variant="secondary"
+              label={t('auth.guestName')}
               onPress={onSignInAsGuest}
               disabled={isDisabled}
-              accessibilityRole="button"
+              busy={pendingProvider === 'guest'}
+              icon={
+                pendingProvider === 'guest' ? (
+                  <ActivityIndicator size="small" color={colors.onSurface} />
+                ) : (
+                  <Ionicons
+                    name="person-outline"
+                    size={18}
+                    color={colors.onSurface}
+                  />
+                )
+              }
               accessibilityLabel={t('auth.continueAsGuest')}
               accessibilityHint={t('auth.continueAsGuestHint')}
-              accessibilityState={{
-                disabled: isDisabled,
-                busy: pendingProvider === 'guest',
-              }}
-            >
-              {pendingProvider === 'guest' ? (
-                <ActivityIndicator size="small" color={colors.onSurface} />
-              ) : (
-                <Ionicons
-                  name="person-outline"
-                  size={18}
-                  color={colors.onSurface}
-                />
-              )}
-              <Text style={styles.secondaryButtonText} numberOfLines={1}>
-                {t('auth.guestName')}
-              </Text>
-            </Pressable>
+              style={styles.secondaryButton}
+              labelStyle={styles.buttonLabel}
+              labelNumberOfLines={1}
+            />
           </View>
 
           {helperKey ? (
             <Text style={styles.helperText}>{t(helperKey)}</Text>
           ) : null}
-        </View>
+        </Card>
       )}
     </View>
   );
@@ -202,11 +191,7 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: colors.surfaceContainerLow,
-    borderRadius: radii.md,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
     padding: space.unit * 3,
-    gap: space.unit * 2,
   },
   identityRow: {
     flexDirection: 'row',
@@ -254,43 +239,15 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: space.unit * 1.5,
-    backgroundColor: colors.primaryContainer,
-    borderRadius: radii.md,
-    paddingVertical: space.unit * 2.5,
     paddingHorizontal: space.unit * 2,
-    minHeight: 44,
-  },
-  primaryButtonText: {
-    flexShrink: 1,
-    color: colors.onPrimaryContainer,
-    ...textStyle('labelSm'),
-    fontWeight: '600',
   },
   secondaryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: space.unit * 1.5,
-    backgroundColor: colors.surfaceContainerHighest,
-    borderRadius: radii.md,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
-    paddingVertical: space.unit * 2.5,
     paddingHorizontal: space.unit * 3,
-    minHeight: 44,
   },
-  secondaryButtonText: {
+  buttonLabel: {
     flexShrink: 1,
-    color: colors.onSurface,
     ...textStyle('labelSm'),
     fontWeight: '600',
-  },
-  buttonDisabled: {
-    opacity: 0.5,
   },
   helperText: {
     color: colors.onSurfaceVariant,
