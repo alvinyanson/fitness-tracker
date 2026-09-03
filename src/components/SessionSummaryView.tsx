@@ -29,6 +29,48 @@ export interface SessionSummaryViewProps {
   onDeleted?: (id: string) => void;
 }
 
+interface MessageStateProps {
+  icon: keyof typeof Ionicons.glyphMap;
+  title: string;
+  message: string;
+  header: ReactNode;
+  /** Trailing content — the back link on the not-found branch. */
+  footer?: ReactNode;
+}
+
+/** Icon + title + body pane shared by the "nothing selected" and "not found" states. */
+function MessageState({
+  icon,
+  title,
+  message,
+  header,
+  footer,
+}: MessageStateProps): ReactNode {
+  return (
+    <View style={styles.container}>
+      {header}
+      <View style={styles.messageContent}>
+        <Ionicons
+          name={icon}
+          size={48}
+          color={colors.onSurfaceVariant}
+          style={styles.messageIcon}
+        />
+        <Text style={styles.messageTitle} accessibilityRole="header">
+          {title}
+        </Text>
+        <Text style={styles.messageText}>{message}</Text>
+        {footer}
+      </View>
+    </View>
+  );
+}
+
+/** A `null` HR stat shows an em dash and drops the unit. */
+function hrStat(value: number | null): { value: string; unit?: string } {
+  return value !== null ? { value: `${value}`, unit: 'bpm' } : { value: '—' };
+}
+
 export function SessionSummaryView({
   sessionId,
   variant = 'screen',
@@ -85,44 +127,24 @@ export function SessionSummaryView({
   // a not-found, not a placeholder.
   if (sessionId === null && isPane) {
     return (
-      <View style={styles.container}>
-        {header}
-        <View style={styles.messageContent}>
-          <Ionicons
-            name="list-outline"
-            size={48}
-            color={colors.onSurfaceVariant}
-            style={styles.messageIcon}
-          />
-          <Text style={styles.messageTitle} accessibilityRole="header">
-            {t('history.selectSessionTitle')}
-          </Text>
-          <Text style={styles.messageText}>
-            {t('history.selectSessionMessage')}
-          </Text>
-        </View>
-      </View>
+      <MessageState
+        icon="list-outline"
+        title={t('history.selectSessionTitle')}
+        message={t('history.selectSessionMessage')}
+        header={header}
+      />
     );
   }
 
   if (!session) {
     return (
-      <View style={styles.container}>
-        {header}
-        <View style={styles.messageContent}>
-          <Ionicons
-            name="alert-circle-outline"
-            size={48}
-            color={colors.onSurfaceVariant}
-            style={styles.messageIcon}
-          />
-          <Text style={styles.messageTitle} accessibilityRole="header">
-            {t('summary.notFoundTitle')}
-          </Text>
-          <Text style={styles.messageText}>{t('summary.notFoundMessage')}</Text>
-          {backLink}
-        </View>
-      </View>
+      <MessageState
+        icon="alert-circle-outline"
+        title={t('summary.notFoundTitle')}
+        message={t('summary.notFoundMessage')}
+        header={header}
+        footer={backLink}
+      />
     );
   }
 
@@ -134,12 +156,9 @@ export function SessionSummaryView({
   const elapsedSeconds = Math.floor(session.stats.durationMs / 1000);
   const formattedDuration = formatDuration(elapsedSeconds);
 
-  const avgHrDisplay =
-    session.stats.avgHr !== null ? `${session.stats.avgHr}` : '—';
-  const maxHrDisplay =
-    session.stats.maxHr !== null ? `${session.stats.maxHr}` : '—';
-  const minHrDisplay =
-    session.stats.minHr !== null ? `${session.stats.minHr}` : '—';
+  const avgHr = hrStat(session.stats.avgHr);
+  const maxHr = hrStat(session.stats.maxHr);
+  const minHr = hrStat(session.stats.minHr);
 
   return (
     <View style={styles.container}>
@@ -184,20 +203,20 @@ export function SessionSummaryView({
             <View style={styles.statsRow}>
               <StatCard
                 label={t('summary.avgHr')}
-                value={avgHrDisplay}
-                unit={session.stats.avgHr !== null ? 'bpm' : undefined}
+                value={avgHr.value}
+                unit={avgHr.unit}
               />
               <StatCard
                 label={t('summary.maxHr')}
-                value={maxHrDisplay}
-                unit={session.stats.maxHr !== null ? 'bpm' : undefined}
+                value={maxHr.value}
+                unit={maxHr.unit}
               />
             </View>
             <View style={styles.statsRow}>
               <StatCard
                 label={t('summary.minHr')}
-                value={minHrDisplay}
-                unit={session.stats.minHr !== null ? 'bpm' : undefined}
+                value={minHr.value}
+                unit={minHr.unit}
               />
               <StatCard
                 label={t('summary.samples')}
@@ -220,7 +239,7 @@ export function SessionSummaryView({
                 name="heart-dislike-outline"
                 size={20}
                 color={colors.onSurfaceVariant}
-                style={{ marginRight: 8 }}
+                style={styles.noHrIcon}
               />
               <Text style={styles.noHrText}>{t('summary.noHeartRate')}</Text>
             </View>
@@ -250,7 +269,7 @@ export function SessionSummaryView({
                 name="trash-outline"
                 size={18}
                 color={colors.error}
-                style={{ marginRight: 6 }}
+                style={styles.deleteIcon}
               />
               <Text style={styles.deleteButtonText}>
                 {t('summary.deleteAction')}
@@ -368,6 +387,9 @@ const styles = StyleSheet.create({
     marginBottom: space.unit * 4,
     width: '100%',
   },
+  noHrIcon: {
+    marginRight: space.unit * 2,
+  },
   noHrText: {
     color: colors.onSurfaceVariant,
     ...textStyle('labelSm'),
@@ -388,6 +410,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  deleteIcon: {
+    marginRight: space.unit * 1.5,
   },
   deleteButtonText: {
     color: colors.error,
