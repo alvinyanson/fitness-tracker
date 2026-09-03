@@ -21,6 +21,7 @@ import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useWorkoutSession } from '@/hooks/useWorkoutSession';
 import { formatDuration } from '@/services/formatDuration';
+import { computeLiveWorkoutStats } from '@/services/session/liveWorkoutStats';
 import { useWorkoutSessionStore } from '@/store/workoutSessionStore';
 import { colors, radii, space, textStyle } from '@/theme';
 
@@ -86,39 +87,14 @@ export default function WorkoutScreen() {
   const formattedDuration = formatDuration(elapsedSeconds);
 
   // Calculate session statistics (Avg, Max, Calories)
-  const { avgBpmDisplay, maxBpmDisplay, caloriesDisplay } = useMemo(() => {
-    if (samples.length === 0) {
-      return {
-        avgBpmDisplay: '—',
-        maxBpmDisplay: '—',
-        caloriesDisplay: '0',
-      };
-    }
+  const { avgBpm, maxBpm, calories } = useMemo(
+    () => computeLiveWorkoutStats(samples, elapsedSeconds),
+    [samples, elapsedSeconds],
+  );
 
-    const sum = samples.reduce((acc, s) => acc + s.bpm, 0);
-    const avg = Math.round(sum / samples.length);
-    const max = Math.max(...samples.map((s) => s.bpm));
-
-    // Simple MET/HR calorie estimate (Assume standard 70kg user weight)
-    const minutes = elapsedSeconds / 60;
-    let calories = 0;
-    if (minutes > 0) {
-      if (avg > 0) {
-        // HR-adjusted estimation formula
-        const calPerMin = (avg * 0.2017 + 70 * 0.1988 - 55.0969) / 4.184;
-        calories = Math.max(0, Math.round(minutes * Math.max(0.5, calPerMin)));
-      } else {
-        // Pure MET estimation formula (MET = 6.0)
-        calories = Math.round(6.0 * 70 * (minutes / 60));
-      }
-    }
-
-    return {
-      avgBpmDisplay: `${avg}`,
-      maxBpmDisplay: `${max}`,
-      caloriesDisplay: `${calories}`,
-    };
-  }, [samples, elapsedSeconds]);
+  const avgBpmDisplay = avgBpm !== null ? `${avgBpm}` : '—';
+  const maxBpmDisplay = maxBpm !== null ? `${maxBpm}` : '—';
+  const caloriesDisplay = `${calories}`;
 
   const rollingAvgText =
     rollingAverageBpm !== null ? `${rollingAverageBpm}` : t('workout.noData');
