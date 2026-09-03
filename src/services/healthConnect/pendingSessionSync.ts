@@ -60,6 +60,35 @@ function classifySession(session: PersistedSession, now: number): SyncCategory {
   return nextEligibleAt(sync) <= now ? 'eligible' : 'backoff';
 }
 
+/**
+ * Loads each indexed session and hands it to `visit`. Missing sessions and
+ * per-entry throws are reported and skipped so one bad entry can't stop the walk.
+ */
+function forEachIndexedSession(
+  entries: readonly { id: string }[],
+  scope: string,
+  visit: (session: PersistedSession) => void,
+): void {
+  for (const entry of entries) {
+    try {
+      const session = getSession(entry.id);
+      if (!session) {
+        reportError(
+          new Error(`Session not found for index entry: ${entry.id}`),
+          {
+            scope,
+            sessionId: entry.id,
+          },
+        );
+        continue;
+      }
+      visit(session);
+    } catch (error) {
+      reportError(error, { scope, sessionId: entry.id });
+    }
+  }
+}
+
 export function selectPendingSessions(options?: {
   now?: number;
   ignoreBackoff?: boolean;
@@ -69,25 +98,14 @@ export function selectPendingSessions(options?: {
   const ignoreBackoff = options?.ignoreBackoff ?? false;
   const includeAbandoned = options?.includeAbandoned ?? false;
 
-  const indexEntries = getSessionIndex();
   // Oldest first: getSessionIndex() is newest-first, so reversing gives oldest-first
-  const oldestFirstEntries = [...indexEntries].reverse();
+  const oldestFirstEntries = [...getSessionIndex()].reverse();
   const pendingSessions: PersistedSession[] = [];
 
-  for (const entry of oldestFirstEntries) {
-    try {
-      const session = getSession(entry.id);
-      if (!session) {
-        reportError(
-          new Error(`Session not found for index entry: ${entry.id}`),
-          {
-            scope: 'pendingSessionSync.selectPendingSessions',
-            sessionId: entry.id,
-          },
-        );
-        continue;
-      }
-
+  forEachIndexedSession(
+    oldestFirstEntries,
+    'pendingSessionSync.selectPendingSessions',
+    (session) => {
       const category = classifySession(session, now);
       if (
         category === 'unsynced' ||
@@ -97,13 +115,8 @@ export function selectPendingSessions(options?: {
       ) {
         pendingSessions.push(session);
       }
-    } catch (error) {
-      reportError(error, {
-        scope: 'pendingSessionSync.selectPendingSessions',
-        sessionId: entry.id,
-      });
-    }
-  }
+    },
+  );
 
   return pendingSessions;
 }
@@ -112,27 +125,15 @@ export function getSyncQueueSummary(options?: {
   now?: number;
 }): HealthConnectSyncQueueSummary {
   const now = options?.now ?? Date.now();
-  const indexEntries = getSessionIndex();
   let pending = 0;
   let eligible = 0;
   let abandoned = 0;
 
-  for (const entry of indexEntries) {
-    try {
-      const session = getSession(entry.id);
-      if (!session) {
-        reportError(
-          new Error(`Session not found for index entry: ${entry.id}`),
-          {
-            scope: 'pendingSessionSync.getSyncQueueSummary',
-            sessionId: entry.id,
-          },
-        );
-        continue;
-      }
-
-      const category = classifySession(session, now);
-      switch (category) {
+  forEachIndexedSession(
+    getSessionIndex(),
+    'pendingSessionSync.getSyncQueueSummary',
+    (session) => {
+      switch (classifySession(session, now)) {
         case 'unsynced':
         case 'eligible':
           pending += 1;
@@ -147,13 +148,8 @@ export function getSyncQueueSummary(options?: {
         case 'synced':
           break;
       }
-    } catch (error) {
-      reportError(error, {
-        scope: 'pendingSessionSync.getSyncQueueSummary',
-        sessionId: entry.id,
-      });
-    }
-  }
+    },
+  );
 
   return { pending, eligible, abandoned };
 }
