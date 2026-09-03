@@ -1,5 +1,6 @@
 import type {
   HealthConnectFlushResult,
+  HealthConnectFlushSkipReason,
   HealthConnectSyncQueueSummary,
   SessionHealthConnectSync,
 } from '@/interfaces/healthConnect';
@@ -159,6 +160,22 @@ export function getSyncQueueSummary(options?: {
 
 let isFlushing = false;
 
+/** A flush pass that wrote nothing, with the reason it stopped (`null` on error). */
+function skippedResult(
+  reason: HealthConnectFlushSkipReason | null,
+  finishedAt: number,
+): HealthConnectFlushResult {
+  return {
+    attempted: 0,
+    synced: 0,
+    failed: 0,
+    abandoned: 0,
+    deferred: 0,
+    skipped: reason,
+    finishedAt,
+  };
+}
+
 export async function flushPendingSessions(options?: {
   title?: string;
   manual?: boolean;
@@ -168,15 +185,7 @@ export async function flushPendingSessions(options?: {
   const getNow = options?.now ?? Date.now;
 
   if (isFlushing) {
-    return {
-      attempted: 0,
-      synced: 0,
-      failed: 0,
-      abandoned: 0,
-      deferred: 0,
-      skipped: 'already-flushing',
-      finishedAt: getNow(),
-    };
+    return skippedResult('already-flushing', getNow());
   }
 
   isFlushing = true;
@@ -190,28 +199,12 @@ export async function flushPendingSessions(options?: {
     });
 
     if (pending.length === 0) {
-      return {
-        attempted: 0,
-        synced: 0,
-        failed: 0,
-        abandoned: 0,
-        deferred: 0,
-        skipped: 'nothing-pending',
-        finishedAt: getNow(),
-      };
+      return skippedResult('nothing-pending', getNow());
     }
 
     const availability = await getHealthConnectAvailability();
     if (availability !== 'available') {
-      return {
-        attempted: 0,
-        synced: 0,
-        failed: 0,
-        abandoned: 0,
-        deferred: 0,
-        skipped: 'unavailable',
-        finishedAt: getNow(),
-      };
+      return skippedResult('unavailable', getNow());
     }
 
     const hasPermissions = await hasHealthConnectPermissions(
@@ -219,31 +212,12 @@ export async function flushPendingSessions(options?: {
     );
 
     if (!hasPermissions) {
-      if (manual) {
-        const reqStatus = await requestHealthConnectPermissions(
-          SESSION_WRITE_PERMISSIONS,
-        );
-        if (reqStatus !== 'granted') {
-          return {
-            attempted: 0,
-            synced: 0,
-            failed: 0,
-            abandoned: 0,
-            deferred: 0,
-            skipped: 'permission-denied',
-            finishedAt: getNow(),
-          };
-        }
-      } else {
-        return {
-          attempted: 0,
-          synced: 0,
-          failed: 0,
-          abandoned: 0,
-          deferred: 0,
-          skipped: 'permission-denied',
-          finishedAt: getNow(),
-        };
+      // Only a manual flush may prompt; a background pass just defers.
+      const status = manual
+        ? await requestHealthConnectPermissions(SESSION_WRITE_PERMISSIONS)
+        : 'denied';
+      if (status !== 'granted') {
+        return skippedResult('permission-denied', getNow());
       }
     }
 
@@ -296,15 +270,7 @@ export async function flushPendingSessions(options?: {
     reportError(error, {
       scope: 'pendingSessionSync.flushPendingSessions',
     });
-    return {
-      attempted: 0,
-      synced: 0,
-      failed: 0,
-      abandoned: 0,
-      deferred: 0,
-      skipped: null,
-      finishedAt: getNow(),
-    };
+    return skippedResult(null, getNow());
   } finally {
     isFlushing = false;
   }
