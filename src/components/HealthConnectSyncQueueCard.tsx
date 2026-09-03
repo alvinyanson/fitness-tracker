@@ -1,11 +1,13 @@
 import type { JSX } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import type {
   HealthConnectFlushResult,
   HealthConnectSyncQueueSummary,
 } from '@/interfaces/healthConnect';
 import { useTranslation } from '@/hooks/useTranslation';
-import { colors, radii, space, textStyle } from '@/theme';
+import { colors, space, textStyle } from '@/theme';
+import { ActionButton } from '@/components/ActionButton';
+import { Card } from '@/components/Card';
 
 export interface HealthConnectSyncQueueCardProps {
   summary: HealthConnectSyncQueueSummary;
@@ -73,7 +75,7 @@ export function HealthConnectSyncQueueCard({
       <Text style={styles.sectionTitle} accessibilityRole="header">
         {t('healthConnect.queueTitle')}
       </Text>
-      <View style={styles.card}>
+      <Card>
         <Text style={styles.statusText}>{getPendingText()}</Text>
 
         {summary.abandoned > 0 && (
@@ -89,26 +91,16 @@ export function HealthConnectSyncQueueCard({
         )}
 
         <View style={styles.actionRow}>
-          <Pressable
-            style={({ pressed }) => [
-              styles.primaryButton,
-              isSyncDisabled && styles.buttonDisabled,
-              pressed && !isSyncDisabled && styles.buttonPressed,
-            ]}
+          <ActionButton
+            label={buttonLabel}
             onPress={onSyncNow}
             disabled={isSyncDisabled}
-            accessibilityRole="button"
+            busy={status === 'flushing'}
             accessibilityLabel={buttonLabel}
             accessibilityHint={t('healthConnect.queueSyncNowHint')}
-            accessibilityState={{
-              disabled: isSyncDisabled,
-              busy: status === 'flushing',
-            }}
-          >
-            <Text style={styles.primaryButtonText}>{buttonLabel}</Text>
-          </Pressable>
+          />
         </View>
-      </View>
+      </Card>
     </View>
   );
 }
@@ -121,14 +113,6 @@ const styles = StyleSheet.create({
     color: colors.onSurfaceVariant,
     ...textStyle('bodyLg'),
     marginBottom: space.unit * 2,
-  },
-  card: {
-    backgroundColor: colors.surfaceContainer,
-    borderRadius: radii.md,
-    padding: space.unit * 4,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
-    gap: space.unit * 2,
   },
   statusText: {
     color: colors.onSurface,
@@ -147,24 +131,5 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: space.unit * 2,
     marginTop: space.unit * 2,
-  },
-  primaryButton: {
-    backgroundColor: colors.primaryContainer,
-    borderRadius: radii.md,
-    paddingVertical: space.unit * 2.5,
-    paddingHorizontal: space.unit * 4,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  primaryButtonText: {
-    color: colors.onPrimaryContainer,
-    ...textStyle('bodyMd'),
-    fontWeight: '600',
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  buttonPressed: {
-    opacity: 0.8,
   },
 });

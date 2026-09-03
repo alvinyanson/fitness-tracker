@@ -1,8 +1,10 @@
 import type { JSX } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import type { HealthConnectAvailability } from '@/interfaces/healthConnect';
 import { useTranslation } from '@/hooks/useTranslation';
-import { colors, radii, space, textStyle } from '@/theme';
+import { colors, space, textStyle } from '@/theme';
+import { ActionButton } from '@/components/ActionButton';
+import { Card } from '@/components/Card';
 
 export interface HealthConnectStatusCardProps {
   availability: HealthConnectAvailability | 'checking';
@@ -59,42 +61,27 @@ export function HealthConnectStatusCard({
       <Text style={styles.sectionTitle} accessibilityRole="header">
         {t('healthConnect.title')}
       </Text>
-      <View style={styles.card}>
+      <Card>
         <Text style={styles.statusText}>{content.statusText}</Text>
         <Text style={styles.description}>{content.description}</Text>
         {content.showActions && (
           <View style={styles.actionRow}>
-            <Pressable
-              style={({ pressed }) => [
-                styles.primaryButton,
-                pressed && styles.buttonPressed,
-              ]}
+            <ActionButton
+              label={t('healthConnect.openPlayStore')}
               onPress={onOpenPlayStore}
-              accessibilityRole="button"
               accessibilityLabel={t('healthConnect.openPlayStore')}
               accessibilityHint={t('healthConnect.openPlayStoreHint')}
-            >
-              <Text style={styles.primaryButtonText}>
-                {t('healthConnect.openPlayStore')}
-              </Text>
-            </Pressable>
-            <Pressable
-              style={({ pressed }) => [
-                styles.secondaryButton,
-                pressed && styles.buttonPressed,
-              ]}
+            />
+            <ActionButton
+              variant="secondary"
+              label={t('healthConnect.retry')}
               onPress={onRetry}
-              accessibilityRole="button"
               accessibilityLabel={t('healthConnect.retry')}
               accessibilityHint={t('healthConnect.retryHint')}
-            >
-              <Text style={styles.secondaryButtonText}>
-                {t('healthConnect.retry')}
-              </Text>
-            </Pressable>
+            />
           </View>
         )}
-      </View>
+      </Card>
     </View>
   );
 }
@@ -107,14 +94,6 @@ const styles = StyleSheet.create({
     color: colors.onSurfaceVariant,
     ...textStyle('bodyLg'),
     marginBottom: space.unit * 2,
-  },
-  card: {
-    backgroundColor: colors.surfaceContainer,
-    borderRadius: radii.md,
-    padding: space.unit * 4,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
-    gap: space.unit * 2,
   },
   statusText: {
     color: colors.onSurface,
@@ -129,36 +108,5 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: space.unit * 2,
     marginTop: space.unit * 2,
-  },
-  primaryButton: {
-    backgroundColor: colors.primaryContainer,
-    borderRadius: radii.md,
-    paddingVertical: space.unit * 2.5,
-    paddingHorizontal: space.unit * 4,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  primaryButtonText: {
-    color: colors.onPrimaryContainer,
-    ...textStyle('bodyMd'),
-    fontWeight: '600',
-  },
-  secondaryButton: {
-    backgroundColor: colors.surfaceContainerHighest,
-    borderRadius: radii.md,
-    paddingVertical: space.unit * 2.5,
-    paddingHorizontal: space.unit * 4,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
-  },
-  secondaryButtonText: {
-    color: colors.onSurface,
-    ...textStyle('bodyMd'),
-    fontWeight: '600',
-  },
-  buttonPressed: {
-    opacity: 0.8,
   },
 });

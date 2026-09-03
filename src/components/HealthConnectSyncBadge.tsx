@@ -1,5 +1,5 @@
 import type { JSX } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type {
   HealthConnectSyncState,
@@ -7,8 +7,10 @@ import type {
 } from '@/interfaces/healthConnect';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useSettingsStore } from '@/store/settingsStore';
-import { colors, radii, space, textStyle } from '@/theme';
+import { colors, space, textStyle } from '@/theme';
 import { formatDate } from '@/utils/formatDate';
+import { ActionButton } from '@/components/ActionButton';
+import { Card } from '@/components/Card';
 
 export interface HealthConnectSyncBadgeProps {
   state: HealthConnectSyncState;
@@ -118,7 +120,7 @@ export function HealthConnectSyncBadge({
 
   return (
     <View style={styles.container}>
-      <View
+      <Card
         style={styles.card}
         accessible={true}
         accessibilityRole="text"
@@ -141,23 +143,18 @@ export function HealthConnectSyncBadge({
 
         {content.showRetry ? (
           <View style={styles.actionRow}>
-            <Pressable
-              style={({ pressed }) => [
-                styles.retryButton,
-                pressed && styles.buttonPressed,
-              ]}
+            <ActionButton
+              variant="secondary"
+              label={t('healthConnect.syncRetry')}
               onPress={onRetry}
-              accessibilityRole="button"
               accessibilityLabel={t('healthConnect.syncRetry')}
               accessibilityHint={t('healthConnect.syncRetryHint')}
-            >
-              <Text style={styles.retryButtonText}>
-                {t('healthConnect.syncRetry')}
-              </Text>
-            </Pressable>
+              style={styles.retryButton}
+              labelStyle={styles.retryButtonText}
+            />
           </View>
         ) : null}
-      </View>
+      </Card>
     </View>
   );
 }
@@ -168,11 +165,9 @@ const styles = StyleSheet.create({
     marginBottom: space.unit * 4,
   },
   card: {
-    backgroundColor: colors.surfaceContainer,
-    borderRadius: radii.md,
     padding: space.unit * 3.5,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
+    // The badge spaces its own rows with marginTop, not the Card stack gap.
+    gap: 0,
   },
   contentRow: {
     flexDirection: 'row',
@@ -200,21 +195,11 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   retryButton: {
-    backgroundColor: colors.surfaceContainerHighest,
-    borderRadius: radii.md,
     paddingVertical: space.unit * 2,
     paddingHorizontal: space.unit * 3.5,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   retryButtonText: {
-    color: colors.onSurface,
     ...textStyle('labelSm'),
     fontWeight: '600',
-  },
-  buttonPressed: {
-    opacity: 0.8,
   },
 });
