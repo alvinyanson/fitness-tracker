@@ -12,6 +12,38 @@ export interface HealthConnectStatusCardProps {
   onOpenPlayStore: () => void;
 }
 
+/** Copy and actions per availability state. */
+const STATUS_CONTENT: Record<
+  HealthConnectAvailability | 'checking',
+  { statusKey: string; descriptionKey: string; showActions: boolean }
+> = {
+  checking: {
+    statusKey: 'healthConnect.statusChecking',
+    descriptionKey: 'healthConnect.checkingDescription',
+    showActions: false,
+  },
+  available: {
+    statusKey: 'healthConnect.statusAvailable',
+    descriptionKey: 'healthConnect.availableDescription',
+    showActions: false,
+  },
+  'needs-install': {
+    statusKey: 'healthConnect.statusNeedsInstall',
+    descriptionKey: 'healthConnect.needsInstallDescription',
+    showActions: true,
+  },
+  'needs-update': {
+    statusKey: 'healthConnect.statusNeedsUpdate',
+    descriptionKey: 'healthConnect.needsUpdateDescription',
+    showActions: true,
+  },
+  unsupported: {
+    statusKey: 'healthConnect.statusUnsupported',
+    descriptionKey: 'healthConnect.unsupportedDescription',
+    showActions: false,
+  },
+};
+
 export function HealthConnectStatusCard({
   availability,
   onRetry,
@@ -19,42 +51,7 @@ export function HealthConnectStatusCard({
 }: HealthConnectStatusCardProps): JSX.Element {
   const { t } = useTranslation();
 
-  const getStatusContent = () => {
-    switch (availability) {
-      case 'checking':
-        return {
-          statusText: t('healthConnect.statusChecking'),
-          description: t('healthConnect.checkingDescription'),
-          showActions: false,
-        };
-      case 'available':
-        return {
-          statusText: t('healthConnect.statusAvailable'),
-          description: t('healthConnect.availableDescription'),
-          showActions: false,
-        };
-      case 'needs-install':
-        return {
-          statusText: t('healthConnect.statusNeedsInstall'),
-          description: t('healthConnect.needsInstallDescription'),
-          showActions: true,
-        };
-      case 'needs-update':
-        return {
-          statusText: t('healthConnect.statusNeedsUpdate'),
-          description: t('healthConnect.needsUpdateDescription'),
-          showActions: true,
-        };
-      case 'unsupported':
-        return {
-          statusText: t('healthConnect.statusUnsupported'),
-          description: t('healthConnect.unsupportedDescription'),
-          showActions: false,
-        };
-    }
-  };
-
-  const content = getStatusContent();
+  const content = STATUS_CONTENT[availability];
 
   return (
     <View style={styles.section}>
@@ -62,8 +59,8 @@ export function HealthConnectStatusCard({
         {t('healthConnect.title')}
       </Text>
       <Card>
-        <Text style={styles.statusText}>{content.statusText}</Text>
-        <Text style={styles.description}>{content.description}</Text>
+        <Text style={styles.statusText}>{t(content.statusKey)}</Text>
+        <Text style={styles.description}>{t(content.descriptionKey)}</Text>
         {content.showActions && (
           <View style={styles.actionRow}>
             <ActionButton
