@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { colors, radii, space, type as typeStyles } from '@/theme';
+import { colors, radii, space, textStyle } from '@/theme';
 
 export interface StatCardProps {
   label: string;
@@ -38,10 +38,7 @@ const styles = StyleSheet.create({
   },
   label: {
     color: colors.onSurfaceVariant,
-    fontSize: typeStyles.labelCaps.fontSize,
-    fontWeight: typeStyles.labelCaps.fontWeight,
-    lineHeight: typeStyles.labelCaps.lineHeight,
-    letterSpacing: typeStyles.labelCaps.letterSpacing,
+    ...textStyle('labelCaps'),
     textTransform: 'uppercase',
   },
   valueRow: {
@@ -52,14 +49,11 @@ const styles = StyleSheet.create({
   },
   value: {
     color: colors.onSurface,
-    fontSize: typeStyles.headlineLgMobile.fontSize,
+    ...textStyle('headlineLgMobile'),
     fontWeight: '700',
-    lineHeight: typeStyles.headlineLgMobile.lineHeight,
   },
   unit: {
     color: colors.onSurfaceVariant,
-    fontSize: typeStyles.labelSm.fontSize,
-    fontWeight: typeStyles.labelSm.fontWeight,
-    lineHeight: typeStyles.labelSm.lineHeight,
+    ...textStyle('labelSm'),
   },
 });

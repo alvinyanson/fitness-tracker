@@ -8,7 +8,7 @@ import type { HeartRateSample } from '@/interfaces/heartRate';
 import type { SessionStats } from '@/interfaces/session';
 import { buildXTicks, computeDomain } from '@/services/chart/chartSeries';
 import { buildHrChartSegments } from '@/services/session/hrChartSeries';
-import { colors, radii, space, type as typeStyles } from '@/theme';
+import { colors, radii, space, textStyle } from '@/theme';
 
 export interface HrTrendChartProps {
   samples: HeartRateSample[];
@@ -151,10 +151,7 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.onSurfaceVariant,
-    fontSize: typeStyles.labelCaps.fontSize,
-    fontWeight: typeStyles.labelCaps.fontWeight,
-    lineHeight: typeStyles.labelCaps.lineHeight,
-    letterSpacing: typeStyles.labelCaps.letterSpacing,
+    ...textStyle('labelCaps'),
   },
   legend: {
     flexDirection: 'row',
@@ -172,9 +169,7 @@ const styles = StyleSheet.create({
   },
   legendLabel: {
     color: colors.onSurfaceVariant,
-    fontSize: typeStyles.labelCaps.fontSize,
-    fontWeight: typeStyles.labelCaps.fontWeight,
-    letterSpacing: typeStyles.labelCaps.letterSpacing,
+    ...textStyle('labelCaps'),
   },
   plot: {
     width: '100%',

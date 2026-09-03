@@ -2,7 +2,7 @@ import type { JSX } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { HealthConnectAvailability } from '@/interfaces/healthConnect';
 import { useTranslation } from '@/hooks/useTranslation';
-import { colors, radii, space, type as typeStyles } from '@/theme';
+import { colors, radii, space, textStyle } from '@/theme';
 
 export interface HealthConnectStatusCardProps {
   availability: HealthConnectAvailability | 'checking';
@@ -105,9 +105,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: colors.onSurfaceVariant,
-    fontSize: typeStyles.bodyLg.fontSize,
-    fontWeight: typeStyles.bodyLg.fontWeight,
-    lineHeight: typeStyles.bodyLg.lineHeight,
+    ...textStyle('bodyLg'),
     marginBottom: space.unit * 2,
   },
   card: {
@@ -120,15 +118,11 @@ const styles = StyleSheet.create({
   },
   statusText: {
     color: colors.onSurface,
-    fontSize: typeStyles.headlineMd.fontSize,
-    fontWeight: typeStyles.headlineMd.fontWeight,
-    lineHeight: typeStyles.headlineMd.lineHeight,
+    ...textStyle('headlineMd'),
   },
   description: {
     color: colors.onSurfaceVariant,
-    fontSize: typeStyles.bodyMd.fontSize,
-    fontWeight: typeStyles.bodyMd.fontWeight,
-    lineHeight: typeStyles.bodyMd.lineHeight,
+    ...textStyle('bodyMd'),
   },
   actionRow: {
     flexDirection: 'row',
@@ -146,9 +140,8 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     color: colors.onPrimaryContainer,
-    fontSize: typeStyles.bodyMd.fontSize,
+    ...textStyle('bodyMd'),
     fontWeight: '600',
-    lineHeight: typeStyles.bodyMd.lineHeight,
   },
   secondaryButton: {
     backgroundColor: colors.surfaceContainerHighest,
@@ -162,9 +155,8 @@ const styles = StyleSheet.create({
   },
   secondaryButtonText: {
     color: colors.onSurface,
-    fontSize: typeStyles.bodyMd.fontSize,
+    ...textStyle('bodyMd'),
     fontWeight: '600',
-    lineHeight: typeStyles.bodyMd.lineHeight,
   },
   buttonPressed: {
     opacity: 0.8,

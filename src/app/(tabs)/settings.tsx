@@ -18,7 +18,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useUnitFormat } from '@/hooks/useUnitFormat';
 import { type LocaleCode, SUPPORTED_LOCALES } from '@/interfaces/i18n';
 import { SUPPORTED_UNIT_SYSTEMS, type UnitSystem } from '@/interfaces/units';
-import { colors, space, type as typeStyles } from '@/theme';
+import { colors, space, textStyle } from '@/theme';
 
 const LANGUAGE_KEY_MAP: Record<LocaleCode, string> = {
   en: 'settings.languageEnglish',
@@ -161,10 +161,7 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     color: colors.onSurfaceVariant,
-    fontSize: typeStyles.labelCaps.fontSize,
-    fontWeight: typeStyles.labelCaps.fontWeight,
-    lineHeight: typeStyles.labelCaps.lineHeight,
-    letterSpacing: typeStyles.labelCaps.letterSpacing,
+    ...textStyle('labelCaps'),
     textTransform: 'uppercase',
     marginBottom: space.unit * 2,
   },

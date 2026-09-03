@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors, radii, space, type as typeStyles } from '@/theme';
+import { colors, radii, space, textStyle } from '@/theme';
 
 export interface SegmentOption<T extends string> {
   value: T;
@@ -67,9 +67,8 @@ const styles = StyleSheet.create({
   },
   segmentText: {
     color: colors.onSurfaceVariant,
-    fontSize: typeStyles.labelSm.fontSize,
+    ...textStyle('labelSm'),
     fontWeight: '600',
-    lineHeight: typeStyles.labelSm.lineHeight,
   },
   segmentTextActive: {
     color: colors.onPrimaryContainer,

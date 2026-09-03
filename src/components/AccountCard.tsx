@@ -15,7 +15,7 @@ import type {
   AuthUser,
 } from '@/interfaces/auth';
 import { useTranslation } from '@/hooks/useTranslation';
-import { colors, radii, space, type as typeStyles } from '@/theme';
+import { colors, radii, space, textStyle } from '@/theme';
 
 export interface AccountCardProps {
   status: AuthStatus;
@@ -196,10 +196,7 @@ export function AccountCard({
 const styles = StyleSheet.create({
   sectionLabel: {
     color: colors.onSurfaceVariant,
-    fontSize: typeStyles.labelCaps.fontSize,
-    fontWeight: typeStyles.labelCaps.fontWeight,
-    lineHeight: typeStyles.labelCaps.lineHeight,
-    letterSpacing: typeStyles.labelCaps.letterSpacing,
+    ...textStyle('labelCaps'),
     textTransform: 'uppercase',
     marginBottom: space.unit * 2,
   },
@@ -237,15 +234,12 @@ const styles = StyleSheet.create({
   },
   displayName: {
     color: colors.onSurface,
-    fontSize: typeStyles.bodyMd.fontSize,
+    ...textStyle('bodyMd'),
     fontWeight: '600',
-    lineHeight: typeStyles.bodyMd.lineHeight,
   },
   secondaryLine: {
     color: colors.onSurfaceVariant,
-    fontSize: typeStyles.labelSm.fontSize,
-    fontWeight: typeStyles.labelSm.fontWeight,
-    lineHeight: typeStyles.labelSm.lineHeight,
+    ...textStyle('labelSm'),
   },
   signOutButton: {
     width: 40,
@@ -273,9 +267,8 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     flexShrink: 1,
     color: colors.onPrimaryContainer,
-    fontSize: typeStyles.labelSm.fontSize,
+    ...textStyle('labelSm'),
     fontWeight: '600',
-    lineHeight: typeStyles.labelSm.lineHeight,
   },
   secondaryButton: {
     flexDirection: 'row',
@@ -293,18 +286,15 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     flexShrink: 1,
     color: colors.onSurface,
-    fontSize: typeStyles.labelSm.fontSize,
+    ...textStyle('labelSm'),
     fontWeight: '600',
-    lineHeight: typeStyles.labelSm.lineHeight,
   },
   buttonDisabled: {
     opacity: 0.5,
   },
   helperText: {
     color: colors.onSurfaceVariant,
-    fontSize: typeStyles.labelSm.fontSize,
-    fontWeight: typeStyles.labelSm.fontWeight,
-    lineHeight: typeStyles.labelSm.lineHeight,
+    ...textStyle('labelSm'),
   },
   pressed: {
     opacity: 0.8,

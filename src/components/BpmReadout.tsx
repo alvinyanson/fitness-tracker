@@ -8,7 +8,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from '@/hooks/useTranslation';
-import { colors, responsive, space, type as typeStyles } from '@/theme';
+import { colors, responsive, space, textStyle } from '@/theme';
 
 export interface BpmReadoutProps {
   bpm: number | null;
@@ -96,9 +96,7 @@ const styles = StyleSheet.create({
   },
   bpmUnit: {
     color: colors.onSurfaceVariant,
-    fontSize: typeStyles.labelCaps.fontSize,
-    fontWeight: typeStyles.labelCaps.fontWeight,
-    letterSpacing: typeStyles.labelCaps.letterSpacing,
+    ...textStyle('labelCaps'),
     marginTop: space.unit,
   },
 });

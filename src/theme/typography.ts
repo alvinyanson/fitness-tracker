@@ -63,3 +63,13 @@ export const type = {
 } as const satisfies Record<string, TypeStyle>;
 
 export type TypeToken = keyof typeof type;
+
+/**
+ * A type token minus `fontFamily` — the custom fonts are not loaded yet, so
+ * `fontFamily` must stay out of every `Text` style until that lands. Spread it
+ * into a stylesheet: `...textStyle('bodyMd')`.
+ */
+export function textStyle(token: TypeToken): Omit<TypeStyle, 'fontFamily'> {
+  const { fontFamily: _fontFamily, ...rest } = type[token];
+  return rest;
+}
