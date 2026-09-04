@@ -17,9 +17,6 @@
   "pairing": {
     "title": "ペアリング",
     "headerTitle": "デバイスペアリング",
-    "goToWorkout": "ワークアウトへ移動",
-    "goToHistory": "履歴へ移動",
-    "goToSettings": "設定へ移動",
     "scan": "スキャン",
     "stopScan": "スキャン停止",
     "scanning": "スキャン中…",
@@ -109,7 +106,6 @@
     }
   },
   "summary": {
-    "title": "セッション概要",
     "workoutComplete": "ワークアウト完了",
     "totalDuration": "合計時間",
     "notFoundTitle": "セッションが見つかりません",
@@ -135,7 +131,6 @@
     "headerTitle": "セッション概要"
   },
   "settings": {
-    "title": "設定",
     "languageLabel": "言語",
     "languageEnglish": "英語",
     "languageJapanese": "日本語",
@@ -163,7 +158,6 @@
     "openPlayStoreHint": "Google Play ストアを開いてHealth Connectをインストールまたは更新します",
     "retry": "再試行",
     "retryHint": "Health Connectの利用可能性の確認を再試行します",
-    "syncTitle": "Health Connect",
     "syncStatusUnsynced": "未同期",
     "syncStatusSyncing": "Health Connect に同期中…",
     "syncStatusSynced": "Health Connect に同期済み",

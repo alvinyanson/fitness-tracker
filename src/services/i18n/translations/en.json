@@ -17,9 +17,6 @@
   "pairing": {
     "title": "Pairing",
     "headerTitle": "Device Pairing",
-    "goToWorkout": "Go to Workout",
-    "goToHistory": "Go to History",
-    "goToSettings": "Go to Settings",
     "scan": "Scan",
     "stopScan": "Stop Scan",
     "scanning": "Scanning…",
@@ -109,7 +106,6 @@
     }
   },
   "summary": {
-    "title": "Session Summary",
     "workoutComplete": "Workout Complete",
     "totalDuration": "TOTAL DURATION",
     "notFoundTitle": "Session Not Found",
@@ -135,7 +131,6 @@
     "headerTitle": "Session Summary"
   },
   "settings": {
-    "title": "Settings",
     "languageLabel": "Language",
     "languageEnglish": "English",
     "languageJapanese": "Japanese",
@@ -163,7 +158,6 @@
     "openPlayStoreHint": "Opens Google Play Store to install or update Health Connect",
     "retry": "Retry",
     "retryHint": "Retries Health Connect availability check",
-    "syncTitle": "Health Connect",
     "syncStatusUnsynced": "Not synced",
     "syncStatusSyncing": "Syncing to Health Connect…",
     "syncStatusSynced": "Synced to Health Connect",
