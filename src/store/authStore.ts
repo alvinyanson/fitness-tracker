@@ -12,7 +12,6 @@ export interface AuthState {
   errorReason: AuthErrorReason | null;
   /** Which button is busy while `status === 'signing-in'`. */
   pendingProvider: AuthProvider | null;
-  setStatus: (status: AuthStatus) => void;
   setUser: (user: AuthUser | null) => void;
   /**
    * `status` defaults to `'error'`. A user cancel passes `'signed-out'` instead: it carries
@@ -27,9 +26,6 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   errorReason: null,
   pendingProvider: null,
-  setStatus: (status) => {
-    set({ status });
-  },
   // The listener's single write: status is derived, so the two cannot disagree.
   setUser: (user) => {
     set({

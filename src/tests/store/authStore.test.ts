@@ -49,14 +49,6 @@ describe('authStore', () => {
     expect(useAuthStore.getState().status).toBe('signed-out');
     expect(useAuthStore.getState().errorReason).toBe('cancelled');
   });
-
-  it('setStatus leaves the user and reason untouched', () => {
-    useAuthStore.getState().setUser(SIGNED_IN);
-    useAuthStore.getState().setStatus('signing-in');
-
-    expect(useAuthStore.getState().status).toBe('signing-in');
-    expect(useAuthStore.getState().user).toEqual(SIGNED_IN);
-  });
 });
 
 describe('authStore pendingProvider', () => {
