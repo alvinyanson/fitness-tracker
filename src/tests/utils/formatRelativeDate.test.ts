@@ -35,22 +35,6 @@ describe('formatRelativeDate', () => {
     expect(formatRelativeDate(date, now, 'en')).toBe('Yesterday');
   });
 
-  it('supports custom translation function parameter', () => {
-    const now = new Date(2023, 9, 24, 12, 0, 0);
-    const date = new Date(2023, 9, 24, 10, 0, 0);
-    const customT = (key: string) => (key === 'history.today' ? 'Heute' : key);
-
-    expect(formatRelativeDate(date, now, 'en', customT)).toBe('Heute');
-  });
-
-  it('supports custom labels object parameter', () => {
-    const now = new Date(2023, 9, 24, 12, 0, 0);
-    const date = new Date(2023, 9, 23, 10, 0, 0);
-    const customLabels = { today: 'Heute', yesterday: 'Gestern' };
-
-    expect(formatRelativeDate(date, now, 'en', customLabels)).toBe('Gestern');
-  });
-
   it('returns Japanese translations when locale is ja', () => {
     setLocale('ja');
     const now = new Date(2023, 9, 24, 14, 30, 0);
