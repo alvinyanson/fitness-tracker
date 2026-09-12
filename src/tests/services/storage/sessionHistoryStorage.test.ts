@@ -1,17 +1,24 @@
-import { createMMKV } from 'react-native-mmkv';
 import {
-  saveSession,
+  deleteSession,
+  getHrSampleCount,
+  getHrSamples,
   getSession,
   getSessionIndex,
-  deleteSession,
+  getSessionRecord,
+  saveSession,
   updateSessionHealthConnect,
 } from '@/services/storage/sessionHistoryStorage';
+import { resetDatabaseForTests } from '@/services/storage/sqliteDatabase';
 import { PersistedSession, SESSION_SCHEMA_VERSION } from '@/interfaces/session';
 import type { SessionHealthConnectSync } from '@/interfaces/healthConnect';
 
 describe('sessionHistoryStorage', () => {
   beforeEach(() => {
-    createMMKV().clearAll();
+    resetDatabaseForTests();
+  });
+
+  afterEach(() => {
+    resetDatabaseForTests();
   });
 
   const mockSession1: PersistedSession = {
@@ -51,6 +58,7 @@ describe('sessionHistoryStorage', () => {
 
   it('returns null when getting a missing session id', () => {
     expect(getSession('non-existent')).toBeNull();
+    expect(getSessionRecord('non-existent')).toBeNull();
   });
 
   it('returns empty array when session index is empty', () => {
@@ -60,6 +68,30 @@ describe('sessionHistoryStorage', () => {
   it('saves and retrieves a session by id', () => {
     saveSession(mockSession1);
     expect(getSession('1000')).toEqual(mockSession1);
+  });
+
+  it('retrieves session record without samples via getSessionRecord', () => {
+    saveSession(mockSession1);
+    const { samples: _samples, ...expectedRecord } = mockSession1;
+    expect(getSessionRecord('1000')).toEqual(expectedRecord);
+  });
+
+  it('preserves optional rrIntervals and energyExpended on save and read round-trip', () => {
+    const sessionWithExtras: PersistedSession = {
+      ...mockSession1,
+      id: 'extras-1',
+      samples: [
+        {
+          timestamp: 1000,
+          bpm: 125,
+          sensorContact: 'contactDetected',
+          energyExpended: 12.5,
+          rrIntervals: [820, 830],
+        },
+      ],
+    };
+    saveSession(sessionWithExtras);
+    expect(getSession('extras-1')).toEqual(sessionWithExtras);
   });
 
   it('indexes saved sessions ordered newest-first', () => {
@@ -84,27 +116,38 @@ describe('sessionHistoryStorage', () => {
     });
   });
 
-  it('overwrites existing session entry gracefully if saved again', () => {
+  it('overwrites existing session entry and replaces samples series when saved again', () => {
     saveSession(mockSession1);
+    expect(getHrSampleCount('1000')).toBe(2);
+
     const updatedSession1: PersistedSession = {
       ...mockSession1,
       stats: { ...mockSession1.stats, avgHr: 145 },
+      samples: [
+        { timestamp: 1000, bpm: 145, sensorContact: 'contactDetected' },
+      ],
     };
     saveSession(updatedSession1);
 
     expect(getSession('1000')).toEqual(updatedSession1);
+    expect(getHrSampleCount('1000')).toBe(1);
+
     const index = getSessionIndex();
     expect(index).toHaveLength(1);
     expect(index[0]?.avgHr).toBe(145);
   });
 
-  it('deletes a session and removes it from index', () => {
+  it('deletes a session, removes it from index, and cascades sample deletion', () => {
     saveSession(mockSession1);
     saveSession(mockSession2);
+    expect(getHrSampleCount('1000')).toBe(2);
 
     deleteSession('1000');
 
     expect(getSession('1000')).toBeNull();
+    expect(getSessionRecord('1000')).toBeNull();
+    expect(getHrSampleCount('1000')).toBe(0);
+    expect(getHrSamples('1000')).toEqual([]);
     expect(getSession('2000')).toEqual(mockSession2);
 
     const index = getSessionIndex();
@@ -129,9 +172,8 @@ describe('sessionHistoryStorage', () => {
       expect(result).toBeNull();
     });
 
-    it('updates healthConnect field on stored session and leaves index untouched', () => {
+    it('updates healthConnect field on stored session and reflects on index and record reads', () => {
       saveSession(mockSession1);
-      const indexBefore = getSessionIndex();
 
       const sync: SessionHealthConnectSync = {
         state: 'synced',
@@ -142,8 +184,9 @@ describe('sessionHistoryStorage', () => {
 
       const result = updateSessionHealthConnect('1000', sync);
 
+      const { samples: _samples, ...expectedRecord } = mockSession1;
       expect(result).toEqual({
-        ...mockSession1,
+        ...expectedRecord,
         healthConnect: sync,
       });
 
@@ -152,8 +195,13 @@ describe('sessionHistoryStorage', () => {
         healthConnect: sync,
       });
 
+      expect(getSessionRecord('1000')).toEqual({
+        ...expectedRecord,
+        healthConnect: sync,
+      });
+
       const indexAfter = getSessionIndex();
-      expect(indexAfter).toEqual(indexBefore);
+      expect(indexAfter[0]?.healthConnect).toEqual(sync);
     });
   });
 });

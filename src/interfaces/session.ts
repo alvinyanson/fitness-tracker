@@ -53,6 +53,9 @@ export interface PersistedSession {
   healthConnect?: SessionHealthConnectSync;
 }
 
+/** One persisted workout's metadata — everything but the sample series. */
+export type SessionRecord = Omit<PersistedSession, 'samples'>;
+
 /** Lightweight per-session summary for a future history list — no sample series. */
 export interface SessionIndexEntry {
   id: string;
@@ -60,4 +63,6 @@ export interface SessionIndexEntry {
   endedAt: number;
   durationMs: number;
   avgHr: number | null;
+  /** Absent until a Health Connect write has been attempted. */
+  healthConnect?: SessionHealthConnectSync;
 }

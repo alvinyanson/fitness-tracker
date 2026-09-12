@@ -46,8 +46,11 @@ export function nextEligibleAt(
 type SyncCategory =
   'unsynced' | 'eligible' | 'backoff' | 'abandoned' | 'synced';
 
-function classifySession(session: PersistedSession, now: number): SyncCategory {
-  const sync = session.healthConnect;
+function classifySession(
+  entry: { healthConnect?: SessionHealthConnectSync },
+  now: number,
+): SyncCategory {
+  const sync = entry.healthConnect;
   if (!sync) {
     return 'unsynced';
   }
@@ -58,35 +61,6 @@ function classifySession(session: PersistedSession, now: number): SyncCategory {
     return 'abandoned';
   }
   return nextEligibleAt(sync) <= now ? 'eligible' : 'backoff';
-}
-
-/**
- * Loads each indexed session and hands it to `visit`. Missing sessions and
- * per-entry throws are reported and skipped so one bad entry can't stop the walk.
- */
-function forEachIndexedSession(
-  entries: readonly { id: string }[],
-  scope: string,
-  visit: (session: PersistedSession) => void,
-): void {
-  for (const entry of entries) {
-    try {
-      const session = getSession(entry.id);
-      if (!session) {
-        reportError(
-          new Error(`Session not found for index entry: ${entry.id}`),
-          {
-            scope,
-            sessionId: entry.id,
-          },
-        );
-        continue;
-      }
-      visit(session);
-    } catch (error) {
-      reportError(error, { scope, sessionId: entry.id });
-    }
-  }
 }
 
 export function selectPendingSessions(options?: {
@@ -102,21 +76,36 @@ export function selectPendingSessions(options?: {
   const oldestFirstEntries = [...getSessionIndex()].reverse();
   const pendingSessions: PersistedSession[] = [];
 
-  forEachIndexedSession(
-    oldestFirstEntries,
-    'pendingSessionSync.selectPendingSessions',
-    (session) => {
-      const category = classifySession(session, now);
-      if (
+  for (const entry of oldestFirstEntries) {
+    try {
+      const category = classifySession(entry, now);
+      const isPending =
         category === 'unsynced' ||
         category === 'eligible' ||
         (category === 'backoff' && ignoreBackoff) ||
-        (category === 'abandoned' && includeAbandoned)
-      ) {
+        (category === 'abandoned' && includeAbandoned);
+
+      if (isPending) {
+        const session = getSession(entry.id);
+        if (!session) {
+          reportError(
+            new Error(`Session not found for index entry: ${entry.id}`),
+            {
+              scope: 'pendingSessionSync.selectPendingSessions',
+              sessionId: entry.id,
+            },
+          );
+          continue;
+        }
         pendingSessions.push(session);
       }
-    },
-  );
+    } catch (error) {
+      reportError(error, {
+        scope: 'pendingSessionSync.selectPendingSessions',
+        sessionId: entry.id,
+      });
+    }
+  }
 
   return pendingSessions;
 }
@@ -129,11 +118,9 @@ export function getSyncQueueSummary(options?: {
   let eligible = 0;
   let abandoned = 0;
 
-  forEachIndexedSession(
-    getSessionIndex(),
-    'pendingSessionSync.getSyncQueueSummary',
-    (session) => {
-      switch (classifySession(session, now)) {
+  for (const entry of getSessionIndex()) {
+    try {
+      switch (classifySession(entry, now)) {
         case 'unsynced':
         case 'eligible':
           pending += 1;
@@ -148,8 +135,13 @@ export function getSyncQueueSummary(options?: {
         case 'synced':
           break;
       }
-    },
-  );
+    } catch (error) {
+      reportError(error, {
+        scope: 'pendingSessionSync.getSyncQueueSummary',
+        sessionId: entry.id,
+      });
+    }
+  }
 
   return { pending, eligible, abandoned };
 }

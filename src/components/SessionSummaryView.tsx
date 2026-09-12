@@ -78,7 +78,7 @@ export function SessionSummaryView({
 }: SessionSummaryViewProps): ReactNode {
   const { t } = useTranslation();
   const language = useSettingsStore((state) => state.language);
-  const { session, remove } = useSessionDetail(sessionId);
+  const { record, chartSamples, remove } = useSessionDetail(sessionId);
   const isPane = variant === 'pane';
 
   const {
@@ -86,7 +86,7 @@ export function SessionSummaryView({
     reason: syncReason,
     syncedAt,
     retry: handleRetrySync,
-  } = useHealthConnectSessionSync(session, {
+  } = useHealthConnectSessionSync(record, {
     title: t('healthConnect.syncSessionTitle'),
   });
 
@@ -136,7 +136,7 @@ export function SessionSummaryView({
     );
   }
 
-  if (!session) {
+  if (!record) {
     return (
       <MessageState
         icon="alert-circle-outline"
@@ -148,17 +148,17 @@ export function SessionSummaryView({
     );
   }
 
-  const startDate = new Date(session.startedAt);
+  const startDate = new Date(record.startedAt);
   const formattedDate = formatDate(startDate, language, {
     dateStyle: 'medium',
     timeStyle: 'short',
   });
-  const elapsedSeconds = Math.floor(session.stats.durationMs / 1000);
+  const elapsedSeconds = Math.floor(record.stats.durationMs / 1000);
   const formattedDuration = formatDuration(elapsedSeconds);
 
-  const avgHr = hrStat(session.stats.avgHr);
-  const maxHr = hrStat(session.stats.maxHr);
-  const minHr = hrStat(session.stats.minHr);
+  const avgHr = hrStat(record.stats.avgHr);
+  const maxHr = hrStat(record.stats.maxHr);
+  const minHr = hrStat(record.stats.minHr);
 
   return (
     <View style={styles.container}>
@@ -220,20 +220,20 @@ export function SessionSummaryView({
               />
               <StatCard
                 label={t('summary.samples')}
-                value={`${session.stats.sampleCount}`}
+                value={`${record.stats.sampleCount}`}
               />
             </View>
           </View>
 
           {/* HR Trend Chart — renders nothing when no sample is plottable */}
           <HrTrendChart
-            samples={session.samples}
-            startedAt={session.startedAt}
-            stats={session.stats}
+            samples={chartSamples}
+            startedAt={record.startedAt}
+            stats={record.stats}
           />
 
           {/* Explicit No HR Recorded Notice */}
-          {session.stats.avgHr === null && (
+          {record.stats.avgHr === null && (
             <View style={styles.noHrContainer}>
               <Ionicons
                 name="heart-dislike-outline"

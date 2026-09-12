@@ -3,7 +3,8 @@ import type {
   HealthConnectSyncState,
   HealthConnectWriteFailureReason,
 } from '@/interfaces/healthConnect';
-import type { PersistedSession } from '@/interfaces/session';
+import type { PersistedSession, SessionRecord } from '@/interfaces/session';
+import { getSession } from '@/services/storage/sessionHistoryStorage';
 import { writeSessionToHealthConnect } from '@/services/healthConnect/writeSessionToHealthConnect';
 
 interface SyncInfo {
@@ -12,7 +13,9 @@ interface SyncInfo {
   syncedAt: number | null;
 }
 
-function deriveInitialState(session: PersistedSession | null): SyncInfo {
+function deriveInitialState(
+  session: SessionRecord | PersistedSession | null,
+): SyncInfo {
   if (session?.healthConnect?.state === 'synced') {
     return {
       state: 'synced',
@@ -42,7 +45,7 @@ function deriveInitialState(session: PersistedSession | null): SyncInfo {
 }
 
 export function useHealthConnectSessionSync(
-  session: PersistedSession | null,
+  session: SessionRecord | PersistedSession | null,
   options?: { title?: string },
 ): {
   state: HealthConnectSyncState;
@@ -62,16 +65,34 @@ export function useHealthConnectSessionSync(
 
   const performSync = useCallback(
     async (
-      targetSession: PersistedSession,
+      targetSession: SessionRecord | PersistedSession,
       syncOptions?: { manual?: boolean },
     ) => {
+      let fullSession: PersistedSession | null = null;
+      if (
+        'samples' in targetSession &&
+        Array.isArray((targetSession as PersistedSession).samples)
+      ) {
+        fullSession = targetSession as PersistedSession;
+      } else {
+        try {
+          fullSession = getSession(targetSession.id);
+        } catch {
+          fullSession = null;
+        }
+      }
+
+      if (!fullSession) {
+        return;
+      }
+
       setSyncInfo({
         state: 'syncing',
         reason: null,
         syncedAt: null,
       });
 
-      const result = await writeSessionToHealthConnect(targetSession, {
+      const result = await writeSessionToHealthConnect(fullSession, {
         title: options?.title,
         manual: syncOptions?.manual,
       });

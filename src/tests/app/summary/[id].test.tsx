@@ -230,8 +230,9 @@ describe('SummaryScreen', () => {
 
       expect(getByText('Synced to Health Connect')).toBeTruthy();
       expect(getByText(/Synced at/)).toBeTruthy();
+      const { samples: _samples, ...expectedRecord } = mockSession;
       expect(useHealthConnectSessionSync).toHaveBeenCalledWith(
-        mockSession,
+        expectedRecord,
         expect.objectContaining({ title: 'Heart rate workout' }),
       );
     });

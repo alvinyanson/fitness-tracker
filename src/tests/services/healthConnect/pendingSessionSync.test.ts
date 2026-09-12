@@ -24,6 +24,7 @@ import {
   selectPendingSessions,
   SYNC_BACKOFF_MS,
 } from '@/services/healthConnect/pendingSessionSync';
+import * as storage from '@/services/storage/sessionHistoryStorage';
 import {
   getSession,
   saveSession,
@@ -262,19 +263,68 @@ describe('pendingSessionSync', () => {
       ).toEqual(['session-recent-failure']);
     });
 
-    it('skips missing session blob and reports error', () => {
+    it('classifies from session index entries and reads no hr_samples rows in getSyncQueueSummary', () => {
+      const session1 = createMockSession('session-1', 1000000);
+      const sessionSynced = createMockSession('session-synced', 1100000, {
+        state: 'synced',
+        attemptedAt: 1150000,
+        syncedAt: 1150000,
+        exerciseRecordId: 'rec-1',
+      });
+      saveSession(session1);
+      saveSession(sessionSynced);
+
+      const getHrSamplesSpy = jest.spyOn(storage, 'getHrSamples');
+
+      const summary = getSyncQueueSummary({ now: 2000000 });
+      expect(summary).toEqual({ pending: 1, eligible: 1, abandoned: 0 });
+      expect(getHrSamplesSpy).not.toHaveBeenCalled();
+
+      getHrSamplesSpy.mockRestore();
+    });
+
+    it('loads full sessions only for entries that pass the pending filter', () => {
+      const session1 = createMockSession('session-1', 1000000);
+      const sessionSynced = createMockSession('session-synced', 1100000, {
+        state: 'synced',
+        attemptedAt: 1150000,
+        syncedAt: 1150000,
+        exerciseRecordId: 'rec-1',
+      });
+      saveSession(session1);
+      saveSession(sessionSynced);
+
+      const getSessionSpy = jest.spyOn(storage, 'getSession');
+
+      const pending = selectPendingSessions({ now: 2000000 });
+      expect(pending.map((s) => s.id)).toEqual(['session-1']);
+
+      // getSession should only have been called for session-1, never for session-synced
+      expect(getSessionSpy).toHaveBeenCalledWith('session-1');
+      expect(getSessionSpy).not.toHaveBeenCalledWith('session-synced');
+
+      getSessionSpy.mockRestore();
+    });
+
+    it('skips missing session and reports error during pending selection', () => {
       const session1 = createMockSession('session-1', 1000000);
       saveSession(session1);
 
-      // Corrupt the session blob in MMKV while leaving index
-      createMMKV().remove('@fitness_tracker/session/session-1');
+      const getSessionSpy = jest
+        .spyOn(storage, 'getSession')
+        .mockReturnValueOnce(null);
 
       const pending = selectPendingSessions({ now: 2000000 });
       expect(pending).toEqual([]);
-      expect(reportErrorSpy).toHaveBeenCalled();
+      expect(reportErrorSpy).toHaveBeenCalledWith(
+        expect.any(Error),
+        expect.objectContaining({
+          scope: 'pendingSessionSync.selectPendingSessions',
+          sessionId: 'session-1',
+        }),
+      );
 
-      const summary = getSyncQueueSummary({ now: 2000000 });
-      expect(summary).toEqual({ pending: 0, eligible: 0, abandoned: 0 });
+      getSessionSpy.mockRestore();
     });
   });
 

@@ -1,27 +1,36 @@
 import { useCallback, useMemo } from 'react';
-import type { PersistedSession } from '@/interfaces/session';
+import type { HeartRateSample } from '@/interfaces/heartRate';
+import type { SessionRecord } from '@/interfaces/session';
 import { reportError } from '@/services/crashService';
+import { HR_CHART_MAX_POINTS } from '@/services/session/hrChartSeries';
 import {
   deleteSession,
-  getSession,
+  getHrSamples,
+  getSessionRecord,
 } from '@/services/storage/sessionHistoryStorage';
 
 export interface SessionDetail {
-  session: PersistedSession | null;
+  record: SessionRecord | null;
+  chartSamples: HeartRateSample[];
   remove: () => void;
 }
 
 /** Single-session read/delete, so the summary body can live in `components/`. */
 export function useSessionDetail(id: string | null): SessionDetail {
-  const session = useMemo(() => {
+  const { record, chartSamples } = useMemo(() => {
     if (!id) {
-      return null;
+      return { record: null, chartSamples: [] };
     }
     try {
-      return getSession(id);
+      const rec = getSessionRecord(id);
+      if (!rec) {
+        return { record: null, chartSamples: [] };
+      }
+      const samples = getHrSamples(id, { limit: HR_CHART_MAX_POINTS * 2 });
+      return { record: rec, chartSamples: samples };
     } catch (error) {
-      reportError(error, { scope: 'useSessionDetail.getSession', id });
-      return null;
+      reportError(error, { scope: 'useSessionDetail.getSessionRecord', id });
+      return { record: null, chartSamples: [] };
     }
   }, [id]);
 
@@ -36,5 +45,5 @@ export function useSessionDetail(id: string | null): SessionDetail {
     }
   }, [id]);
 
-  return { session, remove };
+  return { record, chartSamples, remove };
 }
