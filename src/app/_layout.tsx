@@ -13,6 +13,7 @@ import { usePreferencesSync } from '@/hooks/usePreferencesSync';
 import { useTranslation } from '@/hooks/useTranslation';
 import { resetBleService } from '@/services/ble/bleService';
 import { reportError } from '@/services/crashService';
+import { migrateSessionsToSqlite } from '@/services/storage/sessionMigration';
 import { colors } from '@/theme';
 
 const defaultErrorHandler = ErrorUtils.getGlobalHandler();
@@ -31,6 +32,12 @@ export function ErrorBoundary(props: ErrorBoundaryProps) {
 }
 
 export default function RootLayout() {
+  try {
+    migrateSessionsToSqlite();
+  } catch (error) {
+    reportError(error, { scope: 'RootLayout.sessionMigration' });
+  }
+
   const { t } = useTranslation();
   useHealthConnectSyncQueue({
     autoFlushOnForeground: true,

@@ -19,3 +19,11 @@ jest.mock('@react-native-firebase/crashlytics', () => {
     getCrashlytics,
   };
 });
+
+const {
+  resetDatabaseForTests,
+} = require('./src/services/storage/sqliteDatabase');
+
+beforeEach(() => {
+  resetDatabaseForTests();
+});
