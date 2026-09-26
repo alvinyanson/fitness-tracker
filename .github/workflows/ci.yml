@@ -45,7 +45,7 @@ jobs:
         run: pnpm exec tsc --noEmit
 
       - name: Run tests
-        run: pnpm run test -- --ci
+        run: pnpm test --ci
 
       # --- EAS Update PR Preview ---
       # Only publish a preview when app-affecting files changed, not for
