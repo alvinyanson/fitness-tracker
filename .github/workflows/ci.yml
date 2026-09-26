@@ -14,22 +14,22 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    # Explicitly restrict GITHUB_TOKEN permissions
+    timeout-minutes: 15
     permissions:
       contents: read
+      pull-requests: write # Required for the EAS preview comment on PRs
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # Setup pnpm BEFORE Node so that setup-node can execute `pnpm store path` to locate the cache
+      # Version is read automatically from package.json "packageManager" field
       - name: Setup pnpm
         uses: pnpm/action-setup@v3
-        with:
-          version: 11
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '24'
           cache: 'pnpm' # Caches the pnpm global store to drastically speed up installations
@@ -45,4 +45,43 @@ jobs:
         run: pnpm exec tsc --noEmit
 
       - name: Run tests
-        run: pnpm run test
+        run: pnpm test --ci
+
+      # --- EAS Update PR Preview ---
+      # Only publish a preview when app-affecting files changed, not for
+      # config-only PRs (CI workflows, docs, README, etc.)
+      # Docs: https://docs.expo.dev/eas-update/github-actions/
+      - name: Check for app changes
+        if: github.event_name == 'pull_request'
+        id: app_changes
+        run: |
+          CHANGES=$(git diff --name-only origin/main...HEAD -- \
+            src/ plugins/ assets/ app.json eas.json package.json \
+            | head -1)
+          if [ -n "$CHANGES" ]; then
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping preview — no app source changes detected."
+          fi
+
+      - name: Check for EXPO_TOKEN
+        if: github.event_name == 'pull_request' && steps.app_changes.outputs.has_changes == 'true'
+        run: |
+          if [ -z "${{ secrets.EXPO_TOKEN }}" ]; then
+            echo "You must provide an EXPO_TOKEN secret linked to this project's Expo account in this repo's secrets. Learn more: https://docs.expo.dev/eas-update/github-actions"
+            exit 1
+          fi
+
+      - name: Setup EAS
+        if: github.event_name == 'pull_request' && steps.app_changes.outputs.has_changes == 'true'
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Create preview
+        if: github.event_name == 'pull_request' && steps.app_changes.outputs.has_changes == 'true'
+        uses: expo/expo-github-action/preview@v8
+        with:
+          command: eas update --auto
