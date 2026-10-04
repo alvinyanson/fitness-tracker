@@ -2,6 +2,8 @@ import {
   deleteSession,
   getHrSampleCount,
   getHrSamples,
+  getRoutePointCount,
+  getRoutePoints,
   getSession,
   getSessionIndex,
   getSessionRecord,
@@ -11,6 +13,7 @@ import {
 import { resetDatabaseForTests } from '@/services/storage/sqliteDatabase';
 import { PersistedSession, SESSION_SCHEMA_VERSION } from '@/interfaces/session';
 import type { SessionHealthConnectSync } from '@/interfaces/healthConnect';
+import type { RoutePoint } from '@/interfaces/location';
 
 describe('sessionHistoryStorage', () => {
   beforeEach(() => {
@@ -33,6 +36,7 @@ describe('sessionHistoryStorage', () => {
       minHr: 120,
       sampleCount: 60,
       rawSampleCount: 60,
+      distanceMeters: null,
     },
     samples: [
       { timestamp: 1000, bpm: 120, sensorContact: 'contactDetected' },
@@ -52,6 +56,7 @@ describe('sessionHistoryStorage', () => {
       minHr: 130,
       sampleCount: 120,
       rawSampleCount: 120,
+      distanceMeters: null,
     },
     samples: [],
   };
@@ -202,6 +207,110 @@ describe('sessionHistoryStorage', () => {
 
       const indexAfter = getSessionIndex();
       expect(indexAfter[0]?.healthConnect).toEqual(sync);
+    });
+  });
+
+  describe('route points persistence and querying', () => {
+    const mockRoutePoints: RoutePoint[] = [
+      {
+        timestamp: 1000,
+        latitude: 37.7749,
+        longitude: -122.4194,
+        altitude: 12.3,
+        accuracy: 4.5,
+      },
+      {
+        timestamp: 3000,
+        latitude: 37.7752,
+        longitude: -122.4188,
+        altitude: 13.0,
+        accuracy: 5.0,
+      },
+      {
+        timestamp: 5000,
+        latitude: 37.7755,
+        longitude: -122.4182,
+        altitude: null,
+        accuracy: null,
+      },
+    ];
+
+    const sessionWithRoute: PersistedSession = {
+      ...mockSession1,
+      id: 'session-with-route',
+      stats: {
+        ...mockSession1.stats,
+        distanceMeters: 250.5,
+      },
+      routePoints: mockRoutePoints,
+    };
+
+    it('saves and retrieves route points in seq order via getRoutePoints', () => {
+      saveSession(sessionWithRoute);
+
+      expect(getRoutePointCount('session-with-route')).toBe(3);
+      const points = getRoutePoints('session-with-route');
+      expect(points).toEqual(mockRoutePoints);
+    });
+
+    it('returns empty array and 0 count for session with no route points', () => {
+      saveSession(mockSession1);
+
+      expect(getRoutePointCount('1000')).toBe(0);
+      expect(getRoutePoints('1000')).toEqual([]);
+    });
+
+    it('attaches route points to full session returned by getSession', () => {
+      saveSession(sessionWithRoute);
+
+      const retrieved = getSession('session-with-route');
+      expect(retrieved?.routePoints).toEqual(mockRoutePoints);
+      expect(retrieved?.stats.distanceMeters).toBe(250.5);
+    });
+
+    it('includes distanceMeters on getSessionRecord and getSessionIndex', () => {
+      saveSession(sessionWithRoute);
+
+      const record = getSessionRecord('session-with-route');
+      expect(record?.stats.distanceMeters).toBe(250.5);
+
+      const index = getSessionIndex();
+      const entry = index.find((e) => e.id === 'session-with-route');
+      expect(entry?.distanceMeters).toBe(250.5);
+    });
+
+    it('replaces existing route points on subsequent saveSession call', () => {
+      saveSession(sessionWithRoute);
+      expect(getRoutePointCount('session-with-route')).toBe(3);
+
+      const updatedPoints: RoutePoint[] = [
+        {
+          timestamp: 10000,
+          latitude: 37.78,
+          longitude: -122.41,
+          altitude: 15,
+          accuracy: 3,
+        },
+      ];
+
+      saveSession({
+        ...sessionWithRoute,
+        routePoints: updatedPoints,
+      });
+
+      expect(getRoutePointCount('session-with-route')).toBe(1);
+      expect(getRoutePoints('session-with-route')).toEqual(updatedPoints);
+    });
+
+    it('cascades deletion of route points when session is deleted', () => {
+      saveSession(sessionWithRoute);
+      expect(getRoutePointCount('session-with-route')).toBe(3);
+
+      deleteSession('session-with-route');
+
+      expect(getSession('session-with-route')).toBeNull();
+      expect(getRoutePoints('session-with-route')).toEqual([]);
+      expect(getRoutePointCount('session-with-route')).toBe(0);
     });
   });
 });

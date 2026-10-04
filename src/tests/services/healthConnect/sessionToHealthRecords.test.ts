@@ -22,6 +22,7 @@ describe('sessionToHealthRecords', () => {
       minHr: 120,
       sampleCount: 2,
       rawSampleCount: 2,
+      distanceMeters: null,
     },
     samples: [
       {

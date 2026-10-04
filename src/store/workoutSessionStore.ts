@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { WorkoutSessionSnapshot } from '@/interfaces/session';
 import type { HeartRateSample } from '@/interfaces/heartRate';
+import type { RoutePoint } from '@/interfaces/location';
 import { getElapsedMs } from '@/services/session/sessionElapsed';
 
 export interface WorkoutSessionState extends WorkoutSessionSnapshot {
@@ -14,6 +15,8 @@ export interface WorkoutSessionState extends WorkoutSessionSnapshot {
   stop(): void;
   /** Appends only while `active`. */
   addSample(sample: HeartRateSample): void;
+  /** Appends only while `active`. */
+  addRoutePoint(point: RoutePoint): void;
   /** No-op while idle/stopped. */
   setReconnecting(reconnecting: boolean): void;
   /** Forwards to `getElapsedMs(this, now)`. */
@@ -28,6 +31,7 @@ const initialState: WorkoutSessionSnapshot = {
   totalPausedMs: 0,
   stoppedElapsedMs: null,
   samples: [],
+  routePoints: [],
 };
 
 export const useWorkoutSessionStore = create<WorkoutSessionState>()(
@@ -47,6 +51,7 @@ export const useWorkoutSessionStore = create<WorkoutSessionState>()(
         totalPausedMs: 0,
         stoppedElapsedMs: null,
         samples: [],
+        routePoints: [],
       });
     },
 
@@ -96,6 +101,16 @@ export const useWorkoutSessionStore = create<WorkoutSessionState>()(
       }
       set({
         samples: [...samples, sample],
+      });
+    },
+
+    addRoutePoint: (point: RoutePoint) => {
+      const { status, routePoints } = get();
+      if (status !== 'active') {
+        return;
+      }
+      set({
+        routePoints: [...routePoints, point],
       });
     },
 

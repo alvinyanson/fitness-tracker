@@ -53,6 +53,7 @@ function makeSession(id: string, startedAt: number): PersistedSession {
       minHr: 100,
       sampleCount: 60,
       rawSampleCount: 60,
+      distanceMeters: null,
     },
     samples: [],
   };

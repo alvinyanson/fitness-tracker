@@ -82,6 +82,9 @@ jest.mock('@/hooks/useWorkoutSession', () => {
         (state: any) => state.reconnecting,
       );
       const samples = useWorkoutSessionStore((state: any) => state.samples);
+      const routePoints = useWorkoutSessionStore(
+        (state: any) => state.routePoints,
+      );
       const start = useWorkoutSessionStore((state: any) => state.start);
       const pause = useWorkoutSessionStore((state: any) => state.pause);
       const resume = useWorkoutSessionStore((state: any) => state.resume);
@@ -109,6 +112,13 @@ jest.mock('@/hooks/useWorkoutSession', () => {
       const currentBpm =
         samples.length > 0 ? samples[samples.length - 1].bpm : null;
       const rollingAverageBpm = getRollingAverageBpm(samples, Date.now());
+      const {
+        calculateRouteDistance,
+      } = require('@/services/location/distanceMath');
+      const distanceMeters =
+        routePoints && routePoints.length > 0
+          ? calculateRouteDistance(routePoints)
+          : null;
 
       return {
         status,
@@ -117,6 +127,7 @@ jest.mock('@/hooks/useWorkoutSession', () => {
         sampleCount: samples.length,
         currentBpm,
         rollingAverageBpm,
+        distanceMeters,
         lastCompletedSessionId,
         start,
         pause,
@@ -178,6 +189,7 @@ describe('WorkoutScreen', () => {
       totalPausedMs: 0,
       stoppedElapsedMs: null,
       samples: [],
+      routePoints: [],
     });
   };
 
@@ -478,5 +490,66 @@ describe('WorkoutScreen', () => {
     expect(getByText('00:08')).toBeTruthy();
     expect(useWorkoutSessionStore.getState().status).toBe('active');
     expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  it('does not display distance stat card when there are no route points', async () => {
+    const { queryByText } = await render(<WorkoutScreen />);
+
+    expect(queryByText('DISTANCE')).toBeNull();
+  });
+
+  it('displays distance stat card with metric km when route points exist', async () => {
+    useWorkoutSessionStore.setState({
+      routePoints: [
+        {
+          latitude: 0,
+          longitude: 0,
+          accuracy: 5,
+          altitude: 0,
+          timestamp: 1000,
+        },
+        {
+          latitude: 0,
+          longitude: 0.01,
+          accuracy: 5,
+          altitude: 0,
+          timestamp: 2000,
+        },
+      ],
+    });
+
+    const { getByText } = await render(<WorkoutScreen />);
+
+    expect(getByText('DISTANCE')).toBeTruthy();
+    expect(getByText('1.1')).toBeTruthy();
+    expect(getByText('km')).toBeTruthy();
+  });
+
+  it('displays distance stat card with imperial mi when unit system is imperial', async () => {
+    useSettingsStore.setState({ language: 'en', units: 'imperial' });
+    useWorkoutSessionStore.setState({
+      routePoints: [
+        {
+          latitude: 0,
+          longitude: 0,
+          accuracy: 5,
+          altitude: 0,
+          timestamp: 1000,
+        },
+        {
+          latitude: 0,
+          longitude: 0.01,
+          accuracy: 5,
+          altitude: 0,
+          timestamp: 2000,
+        },
+      ],
+    });
+
+    const { getByText } = await render(<WorkoutScreen />);
+
+    expect(getByText('DISTANCE')).toBeTruthy();
+    expect(getByText('0.7')).toBeTruthy();
+    expect(getByText('mi')).toBeTruthy();
   });
 });

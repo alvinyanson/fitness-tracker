@@ -23,6 +23,7 @@ describe('healthConnectSyncStore', () => {
         minHr: 120,
         sampleCount: 1,
         rawSampleCount: 1,
+        distanceMeters: null,
       },
       samples: [],
     };

@@ -23,6 +23,7 @@ describe('computeSessionStats', () => {
     totalPausedMs: 0,
     stoppedElapsedMs: 600_000,
     samples: [],
+    routePoints: [],
     ...overrides,
   });
 
@@ -48,6 +49,7 @@ describe('computeSessionStats', () => {
       minHr: 120,
       sampleCount: 4,
       rawSampleCount: 4,
+      distanceMeters: null,
     });
   });
 
@@ -66,6 +68,7 @@ describe('computeSessionStats', () => {
       minHr: null,
       sampleCount: 0,
       rawSampleCount: 0,
+      distanceMeters: null,
     });
   });
 

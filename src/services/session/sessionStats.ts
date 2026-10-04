@@ -45,5 +45,6 @@ export function computeSessionStats(
     minHr,
     sampleCount,
     rawSampleCount,
+    distanceMeters: null,
   };
 }

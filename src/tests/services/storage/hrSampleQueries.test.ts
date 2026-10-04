@@ -40,6 +40,7 @@ describe('hrSampleQueries', () => {
         minHr: 100,
         sampleCount,
         rawSampleCount: sampleCount,
+        distanceMeters: null,
       },
       samples,
     };

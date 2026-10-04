@@ -22,6 +22,7 @@ const mockSession: PersistedSession = {
     minHr: 110,
     sampleCount: 3600,
     rawSampleCount: 3600,
+    distanceMeters: null,
   },
   samples: [
     { timestamp: 1700000000000, bpm: 120, sensorContact: 'contactDetected' },

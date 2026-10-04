@@ -3,6 +3,7 @@ import type {
   WorkoutSessionSnapshot,
 } from '@/interfaces/session';
 import { SESSION_SCHEMA_VERSION } from '@/interfaces/session';
+import { calculateRouteDistance } from '@/services/location/distanceMath';
 import { computeSessionStats } from '@/services/session/sessionStats';
 import { saveSession } from '@/services/storage/sessionHistoryStorage';
 
@@ -12,14 +13,24 @@ export function persistCompletedSession(
 ): PersistedSession {
   const stats = computeSessionStats(session);
   const startedAt = session.startedAt!;
+  const distanceMeters =
+    session.routePoints && session.routePoints.length > 0
+      ? calculateRouteDistance(session.routePoints)
+      : null;
 
   const record: PersistedSession = {
     schemaVersion: SESSION_SCHEMA_VERSION,
     id: String(startedAt),
     startedAt,
     endedAt: startedAt + stats.durationMs,
-    stats,
+    stats: {
+      ...stats,
+      distanceMeters,
+    },
     samples: session.samples,
+    ...(session.routePoints && session.routePoints.length > 0
+      ? { routePoints: session.routePoints }
+      : {}),
   };
 
   saveSession(record);

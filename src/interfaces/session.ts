@@ -1,5 +1,6 @@
 import type { SessionHealthConnectSync } from './healthConnect';
 import type { HeartRateSample } from './heartRate';
+import type { RoutePoint } from './location';
 
 /** Explicit union per CLAUDE.md's domain convention. */
 export type WorkoutSessionStatus = 'idle' | 'active' | 'paused' | 'stopped';
@@ -19,6 +20,8 @@ export interface WorkoutSessionSnapshot {
   stoppedElapsedMs: number | null;
   /** Appended only while `active`. */
   samples: HeartRateSample[];
+  /** Appended only while `active`. */
+  routePoints: RoutePoint[];
 }
 
 /** Pure reduction of a session's timing + HR samples. */
@@ -35,6 +38,8 @@ export interface SessionStats {
   sampleCount: number;
   /** Buffer length before filtering. */
   rawSampleCount: number;
+  /** Cumulative distance in meters; null if no GPS data recorded. */
+  distanceMeters: number | null;
 }
 
 /** Schema version of the persisted shape; bump only on a breaking change. */
@@ -49,12 +54,14 @@ export interface PersistedSession {
   endedAt: number;
   stats: SessionStats;
   samples: HeartRateSample[];
+  /** Optional GPS route series; omitted or empty for indoor/non-GPS workouts. */
+  routePoints?: RoutePoint[];
   /** Absent until a Health Connect write has been attempted. */
   healthConnect?: SessionHealthConnectSync;
 }
 
 /** One persisted workout's metadata — everything but the sample series. */
-export type SessionRecord = Omit<PersistedSession, 'samples'>;
+export type SessionRecord = Omit<PersistedSession, 'samples' | 'routePoints'>;
 
 /** Lightweight per-session summary for a future history list — no sample series. */
 export interface SessionIndexEntry {
@@ -63,6 +70,8 @@ export interface SessionIndexEntry {
   endedAt: number;
   durationMs: number;
   avgHr: number | null;
+  /** Cumulative distance in meters; null if no GPS data recorded. */
+  distanceMeters?: number | null;
   /** Absent until a Health Connect write has been attempted. */
   healthConnect?: SessionHealthConnectSync;
 }

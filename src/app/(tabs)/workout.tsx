@@ -19,6 +19,7 @@ import { StatCard } from '@/components/StatCard';
 import { useDevicePairing } from '@/hooks/useDevicePairing';
 import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useUnitFormat } from '@/hooks/useUnitFormat';
 import { useWorkoutSession } from '@/hooks/useWorkoutSession';
 import { formatDuration } from '@/services/formatDuration';
 import { computeLiveWorkoutStats } from '@/services/session/liveWorkoutStats';
@@ -27,6 +28,7 @@ import { colors, radii, space, textStyle } from '@/theme';
 
 export default function WorkoutScreen() {
   const { t } = useTranslation();
+  const { formatDistance } = useUnitFormat();
   const { pairedDevice, connection } = useDevicePairing();
   const { isTablet, statColumns, bpmFontSize, bpmIconSize } =
     useResponsiveLayout();
@@ -36,6 +38,7 @@ export default function WorkoutScreen() {
     elapsedMs,
     currentBpm,
     rollingAverageBpm,
+    distanceMeters,
     lastCompletedSessionId,
     start,
     pause,
@@ -131,6 +134,9 @@ export default function WorkoutScreen() {
     </View>
   );
 
+  const distanceFormatted =
+    distanceMeters !== null ? formatDistance(distanceMeters) : null;
+
   // Cards are laid out in `statColumns`-wide rows: 2×2 on a phone, one row of
   // four on a tablet.
   const statCards = [
@@ -158,6 +164,16 @@ export default function WorkoutScreen() {
       value={rollingAvgText === t('workout.noData') ? '—' : rollingAvgText}
       unit={rollingAvgText !== t('workout.noData') ? 'bpm' : undefined}
     />,
+    ...(distanceFormatted
+      ? [
+          <StatCard
+            key="distance"
+            label={t('workout.distance')}
+            value={distanceFormatted.value}
+            unit={distanceFormatted.unit}
+          />,
+        ]
+      : []),
   ];
 
   const statRows: (typeof statCards)[] = [];

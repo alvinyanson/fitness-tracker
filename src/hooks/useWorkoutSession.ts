@@ -3,6 +3,9 @@ import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import type { WorkoutSessionStatus } from '@/interfaces/session';
 import { useBleConnection } from '@/hooks/useBleConnection';
 import { subscribeToHeartRate } from '@/services/ble/heartRateMonitor';
+import { reportError } from '@/services/crashService';
+import { calculateRouteDistance } from '@/services/location/distanceMath';
+import { startRouteTracking } from '@/services/location/routeTracking';
 import { getRollingAverageBpm } from '@/services/session/rollingAverageBpm';
 import { persistCompletedSession } from '@/services/session/persistSession';
 import { useWorkoutSessionStore } from '@/store/workoutSessionStore';
@@ -14,6 +17,7 @@ export interface UseWorkoutSessionResult {
   sampleCount: number;
   currentBpm: number | null;
   rollingAverageBpm: number | null;
+  distanceMeters: number | null;
   /** The id just written by the most recent stop() call; null until the first stop. */
   lastCompletedSessionId: string | null;
   start(): void;
@@ -27,10 +31,12 @@ export function useWorkoutSession(): UseWorkoutSessionResult {
   const reconnecting = useWorkoutSessionStore((state) => state.reconnecting);
   const sampleCount = useWorkoutSessionStore((state) => state.samples.length);
   const samples = useWorkoutSessionStore((state) => state.samples);
+  const routePoints = useWorkoutSessionStore((state) => state.routePoints);
   const start = useWorkoutSessionStore((state) => state.start);
   const pause = useWorkoutSessionStore((state) => state.pause);
   const resume = useWorkoutSessionStore((state) => state.resume);
   const addSample = useWorkoutSessionStore((state) => state.addSample);
+  const addRoutePoint = useWorkoutSessionStore((state) => state.addRoutePoint);
   const setReconnecting = useWorkoutSessionStore(
     (state) => state.setReconnecting,
   );
@@ -112,10 +118,43 @@ export function useWorkoutSession(): UseWorkoutSessionResult {
     };
   }, [status, isConnected, addSample]);
 
+  // Route tracking effect while active
+  useEffect(() => {
+    if (status !== 'active') {
+      return;
+    }
+
+    let isCancelled = false;
+    let unsubscribe: (() => void) | null = null;
+
+    startRouteTracking((point) => {
+      addRoutePoint(point);
+    })
+      .then((cleanup) => {
+        if (isCancelled) {
+          cleanup();
+        } else {
+          unsubscribe = cleanup;
+        }
+      })
+      .catch((err) => {
+        reportError(err, { scope: 'useWorkoutSession.routeTracking' });
+      });
+
+    return () => {
+      isCancelled = true;
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [status, addRoutePoint]);
+
   const elapsedMs = getElapsedMs();
   const currentBpm =
     samples.length > 0 ? (samples[samples.length - 1]?.bpm ?? null) : null;
   const rollingAverageBpm = getRollingAverageBpm(samples, Date.now());
+  const distanceMeters =
+    routePoints.length > 0 ? calculateRouteDistance(routePoints) : null;
 
   return {
     status,
@@ -124,6 +163,7 @@ export function useWorkoutSession(): UseWorkoutSessionResult {
     sampleCount,
     currentBpm,
     rollingAverageBpm,
+    distanceMeters,
     lastCompletedSessionId,
     start,
     pause,

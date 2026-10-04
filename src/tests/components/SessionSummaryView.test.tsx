@@ -39,6 +39,7 @@ const mockSession: PersistedSession = {
     minHr: 110,
     sampleCount: 3600,
     rawSampleCount: 3600,
+    distanceMeters: null,
   },
   samples: [],
 };
@@ -201,5 +202,62 @@ describe('SessionSummaryView', () => {
     expect(
       getByText('No heart rate data was recorded during this session.'),
     ).toBeTruthy();
+  });
+
+  it('renders distance card when distanceMeters is present (metric)', async () => {
+    saveSession({
+      ...mockSession,
+      id: '2000000000000',
+      stats: {
+        ...mockSession.stats,
+        distanceMeters: 5200,
+      },
+    });
+
+    const { getByText } = await render(
+      <SessionSummaryView sessionId="2000000000000" />,
+    );
+
+    expect(getByText('DISTANCE')).toBeTruthy();
+    expect(getByText('5.2')).toBeTruthy();
+    expect(getByText('km')).toBeTruthy();
+  });
+
+  it('renders distance card in imperial units when imperial setting is chosen', async () => {
+    useSettingsStore.setState({ language: 'en', units: 'imperial' });
+
+    saveSession({
+      ...mockSession,
+      id: '2100000000000',
+      stats: {
+        ...mockSession.stats,
+        distanceMeters: 5200,
+      },
+    });
+
+    const { getByText } = await render(
+      <SessionSummaryView sessionId="2100000000000" />,
+    );
+
+    expect(getByText('DISTANCE')).toBeTruthy();
+    expect(getByText('3.2')).toBeTruthy();
+    expect(getByText('mi')).toBeTruthy();
+  });
+
+  it('does not render distance card when distanceMeters is null', async () => {
+    saveSession({
+      ...mockSession,
+      id: '2200000000000',
+      stats: {
+        ...mockSession.stats,
+        distanceMeters: null,
+      },
+    });
+
+    const { queryByText } = await render(
+      <SessionSummaryView sessionId="2200000000000" />,
+    );
+
+    expect(queryByText('DISTANCE')).toBeNull();
   });
 });

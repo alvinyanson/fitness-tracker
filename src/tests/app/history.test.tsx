@@ -94,6 +94,7 @@ describe('HistoryScreen', () => {
       minHr: 120,
       sampleCount: 3600,
       rawSampleCount: 3600,
+      distanceMeters: null,
     },
     samples: [],
   };
@@ -110,6 +111,7 @@ describe('HistoryScreen', () => {
       minHr: 100,
       sampleCount: 1800,
       rawSampleCount: 1800,
+      distanceMeters: null,
     },
     samples: [],
   };
@@ -126,6 +128,7 @@ describe('HistoryScreen', () => {
       minHr: null,
       sampleCount: 0,
       rawSampleCount: 0,
+      distanceMeters: null,
     },
     samples: [],
   };
