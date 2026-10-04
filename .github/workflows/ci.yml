@@ -22,6 +22,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       # Setup pnpm BEFORE Node so that setup-node can execute `pnpm store path` to locate the cache
       # Version is read automatically from package.json "packageManager" field
