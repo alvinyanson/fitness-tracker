@@ -23,6 +23,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
         with:
+          # On PRs, check out the branch by name (not the detached merge commit) so
+          # `eas update --auto` names the EAS branch after the PR branch instead of "HEAD".
+          # head_ref is empty on push events, which falls back to the default ref.
+          ref: ${{ github.head_ref }}
           fetch-depth: 0
 
       # Setup pnpm BEFORE Node so that setup-node can execute `pnpm store path` to locate the cache
@@ -86,4 +90,4 @@ jobs:
         if: github.event_name == 'pull_request' && steps.app_changes.outputs.has_changes == 'true'
         uses: expo/expo-github-action/preview@v8
         with:
-          command: eas update --auto --branch ${{ github.head_ref }}
+          command: eas update --auto
