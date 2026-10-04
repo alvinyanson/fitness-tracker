@@ -42,6 +42,7 @@ describe('sessionMigration', () => {
       minHr: 120,
       sampleCount: 2,
       rawSampleCount: 2,
+      distanceMeters: null,
     },
     samples: [
       { timestamp: 1000, bpm: 120, sensorContact: 'contactDetected' },
@@ -61,6 +62,7 @@ describe('sessionMigration', () => {
       minHr: 130,
       sampleCount: 1,
       rawSampleCount: 1,
+      distanceMeters: null,
     },
     samples: [{ timestamp: 2000, bpm: 150, sensorContact: 'contactDetected' }],
   };

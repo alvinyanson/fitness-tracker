@@ -35,6 +35,7 @@ const stats: SessionStats = {
   minHr: 120,
   sampleCount: samples.length,
   rawSampleCount: samples.length,
+  distanceMeters: null,
 };
 
 function renderChart(

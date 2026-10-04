@@ -10,6 +10,7 @@ describe('getElapsedMs', () => {
     totalPausedMs: 0,
     stoppedElapsedMs: null,
     samples: [],
+    routePoints: [],
   };
 
   it('returns 0 when status is idle', () => {

@@ -24,6 +24,7 @@ describe('persistCompletedSession', () => {
         { timestamp: 130000, bpm: 140, sensorContact: 'contactDetected' },
         { timestamp: 160000, bpm: 160, sensorContact: 'contactDetected' },
       ],
+      routePoints: [],
     };
 
     const record = persistCompletedSession(snapshot);
@@ -40,6 +41,7 @@ describe('persistCompletedSession', () => {
         minHr: 120,
         sampleCount: 3,
         rawSampleCount: 3,
+        distanceMeters: null,
       },
       samples: snapshot.samples,
     });
@@ -59,6 +61,7 @@ describe('persistCompletedSession', () => {
       totalPausedMs: 0,
       stoppedElapsedMs: 45000,
       samples: [],
+      routePoints: [],
     };
 
     const record = persistCompletedSession(snapshot);
@@ -69,9 +72,48 @@ describe('persistCompletedSession', () => {
     expect(record.stats.minHr).toBeNull();
     expect(record.stats.sampleCount).toBe(0);
     expect(record.stats.durationMs).toBe(45000);
+    expect(record.stats.distanceMeters).toBeNull();
     expect(record.endedAt).toBe(245000);
 
     const stored = getSession('200000');
+    expect(stored).toEqual(record);
+  });
+
+  it('persists a completed session with route points and computes distanceMeters', () => {
+    const snapshot: WorkoutSessionSnapshot = {
+      status: 'stopped',
+      reconnecting: false,
+      startedAt: 300000,
+      pausedAt: null,
+      totalPausedMs: 0,
+      stoppedElapsedMs: 120000,
+      samples: [],
+      routePoints: [
+        {
+          timestamp: 300000,
+          latitude: 0,
+          longitude: 0,
+          altitude: null,
+          accuracy: 5,
+        },
+        {
+          timestamp: 305000,
+          latitude: 0,
+          longitude: 0.01,
+          altitude: null,
+          accuracy: 5,
+        },
+      ],
+    };
+
+    const record = persistCompletedSession(snapshot);
+
+    expect(record.id).toBe('300000');
+    expect(record.stats.distanceMeters).toBeGreaterThan(1100);
+    expect(record.stats.distanceMeters).toBeLessThan(1120);
+    expect(record.routePoints).toEqual(snapshot.routePoints);
+
+    const stored = getSession('300000');
     expect(stored).toEqual(record);
   });
 });

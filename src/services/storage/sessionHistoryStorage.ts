@@ -1,5 +1,6 @@
 import type { SessionHealthConnectSync } from '@/interfaces/healthConnect';
 import type { HeartRateSample } from '@/interfaces/heartRate';
+import type { RoutePoint } from '@/interfaces/location';
 import type {
   PersistedSession,
   SessionIndexEntry,
@@ -30,6 +31,7 @@ interface SessionRow {
   sample_count: number;
   raw_sample_count: number;
   health_connect: string | null;
+  distance_meters: number | null;
 }
 
 interface HrSampleRow {
@@ -57,8 +59,9 @@ export function saveSession(session: PersistedSession): void {
       db.runSync(
         `INSERT OR REPLACE INTO sessions (
           id, schema_version, started_at, ended_at, duration_ms,
-          avg_hr, max_hr, min_hr, sample_count, raw_sample_count, health_connect
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          avg_hr, max_hr, min_hr, sample_count, raw_sample_count, health_connect,
+          distance_meters
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           session.id,
           session.schemaVersion,
@@ -71,6 +74,7 @@ export function saveSession(session: PersistedSession): void {
           session.stats.sampleCount,
           session.stats.rawSampleCount,
           session.healthConnect ? JSON.stringify(session.healthConnect) : null,
+          session.stats.distanceMeters ?? null,
         ],
       );
 
@@ -99,6 +103,32 @@ export function saveSession(session: PersistedSession): void {
           stmt.finalizeSync();
         }
       }
+
+      db.runSync('DELETE FROM route_points WHERE session_id = ?', [session.id]);
+
+      if (session.routePoints && session.routePoints.length > 0) {
+        const stmt = db.prepareSync(
+          `INSERT INTO route_points (
+            session_id, seq, timestamp, latitude, longitude, altitude, accuracy
+          ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        );
+        try {
+          for (let seq = 0; seq < session.routePoints.length; seq++) {
+            const point = session.routePoints[seq]!;
+            stmt.executeSync(
+              session.id,
+              seq,
+              point.timestamp,
+              point.latitude,
+              point.longitude,
+              point.altitude ?? null,
+              point.accuracy ?? null,
+            );
+          }
+        } finally {
+          stmt.finalizeSync();
+        }
+      }
     });
   } catch (error) {
     reportError(error, {
@@ -114,7 +144,8 @@ export function getSessionRecord(id: string): SessionRecord | null {
     const db = getDatabase();
     const row = db.getFirstSync<SessionRow>(
       `SELECT id, schema_version, started_at, ended_at, duration_ms,
-              avg_hr, max_hr, min_hr, sample_count, raw_sample_count, health_connect
+              avg_hr, max_hr, min_hr, sample_count, raw_sample_count, health_connect,
+              distance_meters
        FROM sessions WHERE id = ?`,
       [id],
     );
@@ -134,6 +165,7 @@ export function getSessionRecord(id: string): SessionRecord | null {
         minHr: row.min_hr,
         sampleCount: row.sample_count,
         rawSampleCount: row.raw_sample_count,
+        distanceMeters: row.distance_meters ?? null,
       },
     };
 
@@ -164,9 +196,11 @@ export function getSession(id: string): PersistedSession | null {
       return null;
     }
     const samples = getHrSamples(id);
+    const routePoints = getRoutePoints(id);
     return {
       ...record,
       samples,
+      ...(routePoints.length > 0 ? { routePoints } : {}),
     };
   } catch (error) {
     reportError(error, { scope: 'sessionHistoryStorage.getSession', id });
@@ -186,9 +220,10 @@ export function getSessionIndex(): SessionIndexEntry[] {
         | 'duration_ms'
         | 'avg_hr'
         | 'health_connect'
+        | 'distance_meters'
       >
     >(
-      `SELECT id, started_at, ended_at, duration_ms, avg_hr, health_connect
+      `SELECT id, started_at, ended_at, duration_ms, avg_hr, health_connect, distance_meters
        FROM sessions
        ORDER BY started_at DESC`,
     );
@@ -214,11 +249,64 @@ export function getSessionIndex(): SessionIndexEntry[] {
         endedAt: row.ended_at,
         durationMs: row.duration_ms,
         avgHr: row.avg_hr,
+        ...(row.distance_meters !== null && row.distance_meters !== undefined
+          ? { distanceMeters: row.distance_meters }
+          : {}),
         ...(healthConnect ? { healthConnect } : {}),
       };
     });
   } catch (error) {
     reportError(error, { scope: 'sessionHistoryStorage.getSessionIndex' });
+    return [];
+  }
+}
+
+export function getRoutePointCount(sessionId: string): number {
+  try {
+    const db = getDatabase();
+    const row = db.getFirstSync<{ count: number }>(
+      'SELECT COUNT(*) as count FROM route_points WHERE session_id = ?',
+      [sessionId],
+    );
+    return row?.count ?? 0;
+  } catch (error) {
+    reportError(error, {
+      scope: 'sessionHistoryStorage.getRoutePointCount',
+      sessionId,
+    });
+    return 0;
+  }
+}
+
+export function getRoutePoints(sessionId: string): RoutePoint[] {
+  try {
+    const db = getDatabase();
+    const rows = db.getAllSync<{
+      timestamp: number;
+      latitude: number;
+      longitude: number;
+      altitude: number | null;
+      accuracy: number | null;
+    }>(
+      `SELECT timestamp, latitude, longitude, altitude, accuracy
+       FROM route_points
+       WHERE session_id = ?
+       ORDER BY seq ASC`,
+      [sessionId],
+    );
+
+    return rows.map((row) => ({
+      timestamp: row.timestamp,
+      latitude: row.latitude,
+      longitude: row.longitude,
+      altitude: row.altitude ?? null,
+      accuracy: row.accuracy ?? null,
+    }));
+  } catch (error) {
+    reportError(error, {
+      scope: 'sessionHistoryStorage.getRoutePoints',
+      sessionId,
+    });
     return [];
   }
 }

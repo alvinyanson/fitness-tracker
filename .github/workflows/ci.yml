@@ -22,6 +22,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       # Setup pnpm BEFORE Node so that setup-node can execute `pnpm store path` to locate the cache
       # Version is read automatically from package.json "packageManager" field
@@ -80,8 +82,14 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
+      # Attach the PR branch name to the merge commit so `eas update --auto`
+      # publishes under the feature branch name in the EAS dashboard instead of "HEAD".
+      - name: Attach PR branch name for EAS
+        if: github.event_name == 'pull_request' && steps.app_changes.outputs.has_changes == 'true'
+        run: git checkout -B ${{ github.head_ref }}
+
       - name: Create preview
         if: github.event_name == 'pull_request' && steps.app_changes.outputs.has_changes == 'true'
         uses: expo/expo-github-action/preview@v8
         with:
-          command: eas update --auto
+          command: eas update --platform android --auto

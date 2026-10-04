@@ -21,13 +21,14 @@ describe('sqliteDatabase', () => {
     resetDatabaseForTests();
   });
 
-  it('fresh open creates all three tables, indexes, and sets user_version = 1', () => {
+  it('fresh open creates all three tables, indexes, distance_meters column, and sets user_version = 2', () => {
     const db = getDatabase();
 
     const versionRow = db.getFirstSync<{ user_version: number }>(
       'PRAGMA user_version',
     );
     expect(versionRow?.user_version).toBe(SCHEMA_VERSION);
+    expect(SCHEMA_VERSION).toBe(2);
 
     const tables = db
       .getAllSync<{ name: string }>(
@@ -48,6 +49,11 @@ describe('sqliteDatabase', () => {
     expect(indexes).toContain('idx_sessions_started_at');
     expect(indexes).toContain('idx_hr_samples_session_time');
     expect(indexes).toContain('idx_route_points_session_time');
+
+    const columns = db
+      .getAllSync<{ name: string }>('PRAGMA table_info(sessions)')
+      .map((c) => c.name);
+    expect(columns).toContain('distance_meters');
   });
 
   it('second open is a no-op and returns the same memoized database handle', () => {
@@ -56,10 +62,65 @@ describe('sqliteDatabase', () => {
     expect(db2).toBe(db1);
   });
 
+  it('migrates an existing version 1 database to version 2 without losing data', () => {
+    // 1. Manually set up a v1 database
+    const rawDb = openDatabaseSync(DATABASE_NAME);
+    rawDb.execSync(`
+      CREATE TABLE IF NOT EXISTS sessions (
+        id             TEXT PRIMARY KEY NOT NULL,
+        schema_version INTEGER NOT NULL,
+        started_at     INTEGER NOT NULL,
+        ended_at       INTEGER NOT NULL,
+        duration_ms    INTEGER NOT NULL,
+        avg_hr         INTEGER,
+        max_hr         INTEGER,
+        min_hr         INTEGER,
+        sample_count     INTEGER NOT NULL,
+        raw_sample_count INTEGER NOT NULL,
+        health_connect TEXT
+      );
+      PRAGMA user_version = 1;
+    `);
+
+    rawDb.runSync(
+      `INSERT INTO sessions (
+        id, schema_version, started_at, ended_at, duration_ms,
+        avg_hr, max_hr, min_hr, sample_count, raw_sample_count, health_connect
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ['v1_session_1', 1, 1000, 2000, 1000, 140, 160, 120, 10, 10, null],
+    );
+
+    // 2. Open via getDatabase() which triggers migrateDatabase
+    const db = getDatabase();
+
+    const versionRow = db.getFirstSync<{ user_version: number }>(
+      'PRAGMA user_version',
+    );
+    expect(versionRow?.user_version).toBe(2);
+
+    const columns = db
+      .getAllSync<{ name: string }>('PRAGMA table_info(sessions)')
+      .map((c) => c.name);
+    expect(columns).toContain('distance_meters');
+
+    const session = db.getFirstSync<{
+      id: string;
+      avg_hr: number;
+      distance_meters: number | null;
+    }>('SELECT id, avg_hr, distance_meters FROM sessions WHERE id = ?', [
+      'v1_session_1',
+    ]);
+    expect(session).toEqual({
+      id: 'v1_session_1',
+      avg_hr: 140,
+      distance_meters: null,
+    });
+  });
+
   it('reports and leaves schema untouched when user_version is higher than SCHEMA_VERSION', () => {
     // Directly pre-set user_version higher than SCHEMA_VERSION
     const rawDb = openDatabaseSync(DATABASE_NAME);
-    rawDb.execSync('PRAGMA user_version = 2');
+    rawDb.execSync('PRAGMA user_version = 3');
 
     const db = getDatabase();
 
@@ -67,7 +128,7 @@ describe('sqliteDatabase', () => {
       expect.any(Error),
       expect.objectContaining({
         scope: 'sqliteDatabase.migration',
-        currentVersion: '2',
+        currentVersion: '3',
         schemaVersion: String(SCHEMA_VERSION),
       }),
     );
@@ -75,7 +136,7 @@ describe('sqliteDatabase', () => {
     const versionRow = db.getFirstSync<{ user_version: number }>(
       'PRAGMA user_version',
     );
-    expect(versionRow?.user_version).toBe(2);
+    expect(versionRow?.user_version).toBe(3);
 
     // Schema tables should NOT have been created by migration
     const tables = db

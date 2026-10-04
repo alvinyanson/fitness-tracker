@@ -17,6 +17,7 @@ import { StatCard } from '@/components/StatCard';
 import { useHealthConnectSessionSync } from '@/hooks/useHealthConnectSessionSync';
 import { useSessionDetail } from '@/hooks/useSessionDetail';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useUnitFormat } from '@/hooks/useUnitFormat';
 import { formatDuration } from '@/services/formatDuration';
 import { useSettingsStore } from '@/store/settingsStore';
 import { colors, radii, space, textStyle } from '@/theme';
@@ -77,6 +78,7 @@ export function SessionSummaryView({
   onDeleted,
 }: SessionSummaryViewProps): ReactNode {
   const { t } = useTranslation();
+  const { formatDistance } = useUnitFormat();
   const language = useSettingsStore((state) => state.language);
   const { record, chartSamples, remove } = useSessionDetail(sessionId);
   const isPane = variant === 'pane';
@@ -159,6 +161,11 @@ export function SessionSummaryView({
   const avgHr = hrStat(record.stats.avgHr);
   const maxHr = hrStat(record.stats.maxHr);
   const minHr = hrStat(record.stats.minHr);
+  const distanceFormatted =
+    record.stats.distanceMeters !== null &&
+    record.stats.distanceMeters !== undefined
+      ? formatDistance(record.stats.distanceMeters)
+      : null;
 
   return (
     <View style={styles.container}>
@@ -198,7 +205,7 @@ export function SessionSummaryView({
             </Text>
           </View>
 
-          {/* 2x2 Stats Grid */}
+          {/* Stats Grid */}
           <View style={styles.statsGrid}>
             <View style={styles.statsRow}>
               <StatCard
@@ -223,6 +230,15 @@ export function SessionSummaryView({
                 value={`${record.stats.sampleCount}`}
               />
             </View>
+            {distanceFormatted && (
+              <View style={styles.statsRow}>
+                <StatCard
+                  label={t('summary.distance')}
+                  value={distanceFormatted.value}
+                  unit={distanceFormatted.unit}
+                />
+              </View>
+            )}
           </View>
 
           {/* HR Trend Chart — renders nothing when no sample is plottable */}

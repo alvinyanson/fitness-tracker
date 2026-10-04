@@ -2,7 +2,7 @@ import { openDatabaseSync, type SQLiteDatabase } from 'expo-sqlite';
 import { reportError } from '@/services/crashService';
 
 export const DATABASE_NAME = 'fitness-tracker.db';
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 let dbHandle: SQLiteDatabase | null = null;
 
@@ -69,8 +69,13 @@ function migrateDatabase(db: SQLiteDatabase): void {
 
   if (currentVersion < 1) {
     db.execSync(MIGRATION_1_DDL);
-    db.execSync(`PRAGMA user_version = ${SCHEMA_VERSION}`);
   }
+
+  if (currentVersion < 2) {
+    db.execSync('ALTER TABLE sessions ADD COLUMN distance_meters REAL;');
+  }
+
+  db.execSync(`PRAGMA user_version = ${SCHEMA_VERSION}`);
 }
 
 /** Opens (once), applies pragmas, migrates to SCHEMA_VERSION, returns the handle. */

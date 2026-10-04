@@ -20,6 +20,7 @@ describe('useWorkoutSessionStore', () => {
       totalPausedMs: 0,
       stoppedElapsedMs: null,
       samples: [],
+      routePoints: [],
     });
   };
 
@@ -44,6 +45,7 @@ describe('useWorkoutSessionStore', () => {
       expect(state.totalPausedMs).toBe(0);
       expect(state.stoppedElapsedMs).toBeNull();
       expect(state.samples).toEqual([]);
+      expect(state.routePoints).toEqual([]);
     });
 
     it('starts a fresh session from stopped and resets previous session data', () => {
@@ -56,6 +58,15 @@ describe('useWorkoutSessionStore', () => {
         totalPausedMs: 5000,
         stoppedElapsedMs: 45000,
         samples: [mockSample],
+        routePoints: [
+          {
+            timestamp: 50000,
+            latitude: 1,
+            longitude: 1,
+            altitude: null,
+            accuracy: null,
+          },
+        ],
       });
 
       currentTime = 200000;
@@ -68,6 +79,7 @@ describe('useWorkoutSessionStore', () => {
       expect(state.totalPausedMs).toBe(0);
       expect(state.stoppedElapsedMs).toBeNull();
       expect(state.samples).toEqual([]);
+      expect(state.routePoints).toEqual([]);
     });
 
     it('no-ops when active or paused', () => {
@@ -214,6 +226,49 @@ describe('useWorkoutSessionStore', () => {
       useWorkoutSessionStore.getState().stop();
       useWorkoutSessionStore.getState().addSample({ ...mockSample, bpm: 140 });
       expect(useWorkoutSessionStore.getState().samples).toHaveLength(1);
+    });
+  });
+
+  describe('addRoutePoint', () => {
+    const mockPoint = {
+      timestamp: 1000,
+      latitude: 37.7749,
+      longitude: -122.4194,
+      altitude: 10,
+      accuracy: 5,
+    };
+
+    it('appends route point only while active', () => {
+      useWorkoutSessionStore.getState().start();
+      useWorkoutSessionStore.getState().addRoutePoint(mockPoint);
+
+      expect(useWorkoutSessionStore.getState().routePoints).toEqual([
+        mockPoint,
+      ]);
+    });
+
+    it('silently drops route points when idle, paused, or stopped', () => {
+      // Idle
+      useWorkoutSessionStore.getState().addRoutePoint(mockPoint);
+      expect(useWorkoutSessionStore.getState().routePoints).toEqual([]);
+
+      // Paused
+      useWorkoutSessionStore.getState().start();
+      useWorkoutSessionStore.getState().addRoutePoint(mockPoint);
+      useWorkoutSessionStore.getState().pause();
+      useWorkoutSessionStore.getState().addRoutePoint({
+        ...mockPoint,
+        latitude: 38,
+      });
+      expect(useWorkoutSessionStore.getState().routePoints).toHaveLength(1);
+
+      // Stopped
+      useWorkoutSessionStore.getState().stop();
+      useWorkoutSessionStore.getState().addRoutePoint({
+        ...mockPoint,
+        latitude: 39,
+      });
+      expect(useWorkoutSessionStore.getState().routePoints).toHaveLength(1);
     });
   });
 

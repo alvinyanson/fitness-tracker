@@ -9,6 +9,12 @@ import {
   getSession,
   getSessionIndex,
 } from '@/services/storage/sessionHistoryStorage';
+import {
+  __emitLocation,
+  __getActiveWatcherCount,
+  __resetMocks as __resetLocationMocks,
+  __setPermissionStatus as __setLocationPermissionStatus,
+} from 'expo-location';
 import { useWorkoutSessionStore } from '@/store/workoutSessionStore';
 
 jest.mock('expo-keep-awake', () => ({
@@ -29,11 +35,13 @@ describe('useWorkoutSession', () => {
       totalPausedMs: 0,
       stoppedElapsedMs: null,
       samples: [],
+      routePoints: [],
     });
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
+    __resetLocationMocks();
     resetStore();
     resetBleService();
     managerInstance = (getBleService() as any).manager;
@@ -371,6 +379,151 @@ describe('useWorkoutSession', () => {
       expect(result.current.status).toBe('idle');
       expect(result.current.lastCompletedSessionId).toBeNull();
       expect(getSessionIndex()).toEqual([]);
+
+      await act(async () => {
+        await unmount();
+      });
+    });
+  });
+
+  describe('route tracking lifecycle and distance derivation', () => {
+    it('starts position watcher on active, calculates live distance on emitted points, and pauses/resumes tracking', async () => {
+      __setLocationPermissionStatus('granted');
+      const { result, unmount } = await renderHook(() => useWorkoutSession());
+
+      expect(result.current.distanceMeters).toBeNull();
+      expect(__getActiveWatcherCount()).toBe(0);
+
+      // 1. Start workout -> active -> watcher starts
+      await act(async () => {
+        result.current.start();
+      });
+
+      // Allow promise to resolve
+      await act(async () => {});
+
+      expect(result.current.status).toBe('active');
+      expect(__getActiveWatcherCount()).toBe(1);
+      expect(result.current.distanceMeters).toBeNull();
+
+      // 2. Emit first point
+      await act(async () => {
+        __emitLocation({
+          coords: {
+            latitude: 0,
+            longitude: 0,
+            altitude: null,
+            accuracy: 5,
+            altitudeAccuracy: null,
+            heading: null,
+            speed: null,
+          },
+          timestamp: 1000,
+        });
+      });
+
+      // 1 point -> distance is 0
+      expect(result.current.distanceMeters).toBe(0);
+
+      // 3. Emit second point (0.01 deg lon ~ 1112m)
+      await act(async () => {
+        __emitLocation({
+          coords: {
+            latitude: 0,
+            longitude: 0.01,
+            altitude: null,
+            accuracy: 5,
+            altitudeAccuracy: null,
+            heading: null,
+            speed: null,
+          },
+          timestamp: 3000,
+        });
+      });
+
+      expect(result.current.distanceMeters).toBeGreaterThan(1100);
+      expect(result.current.distanceMeters).toBeLessThan(1120);
+
+      // 4. Pause -> unsubscribes watcher to save battery
+      await act(async () => {
+        result.current.pause();
+      });
+
+      expect(result.current.status).toBe('paused');
+      expect(__getActiveWatcherCount()).toBe(0);
+
+      // Emitted location while paused is ignored
+      await act(async () => {
+        __emitLocation({
+          coords: {
+            latitude: 10,
+            longitude: 10,
+            altitude: null,
+            accuracy: 5,
+            altitudeAccuracy: null,
+            heading: null,
+            speed: null,
+          },
+          timestamp: 4000,
+        });
+      });
+
+      expect(result.current.distanceMeters).toBeGreaterThan(1100);
+      expect(result.current.distanceMeters).toBeLessThan(1120);
+
+      // 5. Resume -> re-subscribes watcher
+      await act(async () => {
+        result.current.resume();
+      });
+      await act(async () => {});
+
+      expect(result.current.status).toBe('active');
+      expect(__getActiveWatcherCount()).toBe(1);
+
+      // 6. Stop -> unsubscribes watcher and persists session with distance and routePoints
+      await act(async () => {
+        result.current.stop();
+      });
+
+      expect(result.current.status).toBe('stopped');
+      expect(__getActiveWatcherCount()).toBe(0);
+
+      const sessionId = result.current.lastCompletedSessionId;
+      expect(sessionId).not.toBeNull();
+      const persisted = getSession(sessionId!);
+      expect(persisted).not.toBeNull();
+      expect(persisted?.stats.distanceMeters).toBeGreaterThan(1100);
+      expect(persisted?.routePoints).toHaveLength(2);
+
+      await act(async () => {
+        await unmount();
+      });
+    });
+
+    it('gracefully handles location permission denial without crashing', async () => {
+      __setLocationPermissionStatus('denied');
+      const { result, unmount } = await renderHook(() => useWorkoutSession());
+
+      await act(async () => {
+        result.current.start();
+      });
+      await act(async () => {});
+
+      expect(result.current.status).toBe('active');
+      expect(__getActiveWatcherCount()).toBe(0);
+      expect(result.current.distanceMeters).toBeNull();
+
+      await act(async () => {
+        result.current.stop();
+      });
+
+      expect(result.current.status).toBe('stopped');
+      const sessionId = result.current.lastCompletedSessionId;
+      expect(sessionId).not.toBeNull();
+      const persisted = getSession(sessionId!);
+      expect(persisted).not.toBeNull();
+      expect(persisted?.stats.distanceMeters).toBeNull();
+      expect(persisted?.routePoints).toBeUndefined();
 
       await act(async () => {
         await unmount();
