@@ -1,3 +1,30 @@
+# =============================================================================
+# CI — what happens and when
+# =============================================================================
+#
+# STEP 1  Every PR and every push to main: install, lint, typecheck, test.
+# STEP 2  Detect what changed (native files vs JS/assets).
+# STEP 3  Set up EAS — only if app files changed (docs/CI-only changes stop here).
+#
+# STEP 4a On a PR (feature branch -> main):
+#           Publish an EAS update to a temporary EAS branch named after the PR
+#           and post a QR code comment on the PR so reviewers can preview it.
+#           NOTE: if the PR has native changes, older APKs will show
+#           "No compatible update found" — that is expected.
+#
+# STEP 4b On merge to main:
+#           Native files changed -> start a new Development APK build on EAS
+#                                   (download it from expo.dev > Builds).
+#           Only JS/assets       -> send an OTA update to the "development"
+#                                   channel (dev phones update on next launch).
+#
+# Native files = package.json, pnpm-lock.yaml, app.json, eas.json, plugins/
+# (they feed the runtime fingerprint, so changing them needs a new APK).
+#
+# QA releases are NOT here — they run from .eas/workflows/preview.yml
+# (triggered on-demand from Expo dashboard > Workflows).
+# =============================================================================
+
 name: CI
 
 on:
@@ -20,6 +47,9 @@ jobs:
       pull-requests: write # Required for the EAS preview comment on PRs
 
     steps:
+      # -----------------------------------------------------------------------
+      # STEP 1 — Verify code quality (runs on every PR and every merge)
+      # -----------------------------------------------------------------------
       - name: Checkout code
         uses: actions/checkout@v5
         with:
@@ -49,26 +79,31 @@ jobs:
       - name: Run tests
         run: pnpm test --ci
 
-      # --- EAS Update PR Preview ---
-      # Only publish a preview when app-affecting files changed, not for
-      # config-only PRs (CI workflows, docs, README, etc.)
-      # Docs: https://docs.expo.dev/eas-update/github-actions/
-      - name: Check for app changes
-        if: github.event_name == 'pull_request'
-        id: app_changes
+      # -----------------------------------------------------------------------
+      # STEP 2 — Decide what changed (used by every EAS step below)
+      #   native = true  -> native files changed (needs a new APK)
+      #   app    = true  -> anything app-related changed (native or JS/assets)
+      #   PR compares against main; merge compares against the previous commit.
+      # -----------------------------------------------------------------------
+      - name: Detect changes
+        id: changes
         run: |
-          CHANGES=$(git diff --name-only origin/main...HEAD -- \
-            src/ plugins/ assets/ app.json eas.json package.json \
-            | head -1)
-          if [ -n "$CHANGES" ]; then
-            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            RANGE="origin/main...HEAD"
           else
-            echo "has_changes=false" >> "$GITHUB_OUTPUT"
-            echo "Skipping preview — no app source changes detected."
+            RANGE="HEAD~1 HEAD"
           fi
+          NATIVE=$(git diff --name-only $RANGE -- package.json pnpm-lock.yaml app.json eas.json plugins/ | head -1)
+          APP=$(git diff --name-only $RANGE -- src/ assets/ | head -1)
+          echo "native=$([ -n "$NATIVE" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          echo "app=$([ -n "$NATIVE$APP" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
 
+      # -----------------------------------------------------------------------
+      # STEP 3 — Set up EAS CLI (skipped for docs/CI-only changes)
+      # Token check is from Expo's guide: https://docs.expo.dev/eas-update/github-actions/
+      # -----------------------------------------------------------------------
       - name: Check for EXPO_TOKEN
-        if: github.event_name == 'pull_request' && steps.app_changes.outputs.has_changes == 'true'
+        if: steps.changes.outputs.app == 'true'
         run: |
           if [ -z "${{ secrets.EXPO_TOKEN }}" ]; then
             echo "You must provide an EXPO_TOKEN secret linked to this project's Expo account in this repo's secrets. Learn more: https://docs.expo.dev/eas-update/github-actions"
@@ -76,20 +111,38 @@ jobs:
           fi
 
       - name: Setup EAS
-        if: github.event_name == 'pull_request' && steps.app_changes.outputs.has_changes == 'true'
+        if: steps.changes.outputs.app == 'true'
         uses: expo/expo-github-action@v8
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
+      # -----------------------------------------------------------------------
+      # STEP 4a — PR ONLY: publish preview update + post QR code on the PR
+      # -----------------------------------------------------------------------
       # Attach the PR branch name to the merge commit so `eas update --auto`
       # publishes under the feature branch name in the EAS dashboard instead of "HEAD".
       - name: Attach PR branch name for EAS
-        if: github.event_name == 'pull_request' && steps.app_changes.outputs.has_changes == 'true'
+        if: github.event_name == 'pull_request' && steps.changes.outputs.app == 'true'
         run: git checkout -B ${{ github.head_ref }}
 
       - name: Create preview
-        if: github.event_name == 'pull_request' && steps.app_changes.outputs.has_changes == 'true'
+        if: github.event_name == 'pull_request' && steps.changes.outputs.app == 'true'
         uses: expo/expo-github-action/preview@v8
         with:
           command: eas update --platform android --auto
+
+      # -----------------------------------------------------------------------
+      # STEP 4b — MERGE TO MAIN ONLY: update the development environment
+      #   native changed -> new Development APK build (https://docs.expo.dev/build/building-on-ci/)
+      #   JS-only        -> OTA update to the "development" channel
+      # -----------------------------------------------------------------------
+      - name: Deploy to development
+        if: github.event_name == 'push' && steps.changes.outputs.app == 'true'
+        run: |
+          if [ "${{ steps.changes.outputs.native }}" = "true" ]; then
+            eas build --platform android --profile development --non-interactive --no-wait
+          else
+            eas update --channel development --environment development --platform android \
+              --message "$(git log -1 --pretty=%s)" --non-interactive
+          fi
