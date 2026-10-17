@@ -13,6 +13,7 @@ import { HeaderBar } from '@/components/HeaderBar';
 import { HealthConnectSyncBadge } from '@/components/HealthConnectSyncBadge';
 import { HrTrendChart } from '@/components/HrTrendChart';
 import { ResponsiveContent } from '@/components/ResponsiveContent';
+import { RouteMapView } from '@/components/RouteMapView';
 import { StatCard } from '@/components/StatCard';
 import { useHealthConnectSessionSync } from '@/hooks/useHealthConnectSessionSync';
 import { useSessionDetail } from '@/hooks/useSessionDetail';
@@ -80,7 +81,8 @@ export function SessionSummaryView({
   const { t } = useTranslation();
   const { formatDistance } = useUnitFormat();
   const language = useSettingsStore((state) => state.language);
-  const { record, chartSamples, remove } = useSessionDetail(sessionId);
+  const { record, chartSamples, routePoints, remove } =
+    useSessionDetail(sessionId);
   const isPane = variant === 'pane';
 
   const {
@@ -240,6 +242,9 @@ export function SessionSummaryView({
               </View>
             )}
           </View>
+
+          {/* Route Map — renders nothing when routePoints < 2 */}
+          <RouteMapView routePoints={routePoints} />
 
           {/* HR Trend Chart — renders nothing when no sample is plottable */}
           <HrTrendChart

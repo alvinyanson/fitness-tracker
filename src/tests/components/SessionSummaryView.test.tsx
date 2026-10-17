@@ -260,4 +260,45 @@ describe('SessionSummaryView', () => {
 
     expect(queryByText('DISTANCE')).toBeNull();
   });
+
+  it('renders the route map when route points exist', async () => {
+    saveSession({
+      ...mockSession,
+      id: '2300000000000',
+      routePoints: [
+        {
+          timestamp: 1700000000000,
+          latitude: 37.7749,
+          longitude: -122.4194,
+          altitude: 10,
+          accuracy: 5,
+        },
+        {
+          timestamp: 1700001000000,
+          latitude: 37.7849,
+          longitude: -122.4094,
+          altitude: 12,
+          accuracy: 4,
+        },
+      ],
+    });
+
+    const { getByText, getByTestId } = await render(
+      <SessionSummaryView sessionId="2300000000000" />,
+    );
+
+    expect(getByText('ROUTE MAP')).toBeTruthy();
+    expect(getByTestId('route-map-view')).toBeTruthy();
+  });
+
+  it('omits route map when route points are empty', async () => {
+    saveSession(mockSession);
+
+    const { queryByText, queryByTestId } = await render(
+      <SessionSummaryView sessionId="1700000000000" />,
+    );
+
+    expect(queryByText('ROUTE MAP')).toBeNull();
+    expect(queryByTestId('route-map-view')).toBeNull();
+  });
 });

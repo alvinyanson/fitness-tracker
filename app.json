@@ -64,7 +64,8 @@
       ],
       "./plugins/withHealthConnectManifest",
       "@react-native-firebase/auth",
-      "@react-native-google-signin/google-signin"
+      "@react-native-google-signin/google-signin",
+      "@maplibre/maplibre-react-native"
     ],
     "experiments": {
       "typedRoutes": true
