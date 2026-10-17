@@ -1,7 +1,8 @@
 import React from 'react';
 import { Text } from 'react-native';
 import { act, render } from '@testing-library/react-native';
-import { useSessionDetail } from '@/hooks/useSessionDetail';
+import { useSessionDetail, useSimplifiedRoute } from '@/hooks/useSessionDetail';
+import type { RoutePoint } from '@/interfaces/location';
 import { PersistedSession, SESSION_SCHEMA_VERSION } from '@/interfaces/session';
 import { HR_CHART_MAX_POINTS } from '@/services/session/hrChartSeries';
 import {
@@ -54,6 +55,37 @@ describe('useSessionDetail', () => {
     expect(getByText('1700000000000')).toBeTruthy();
     expect(captured.record?.stats.avgHr).toBe(145);
     expect(captured.chartSamples).toHaveLength(2);
+    expect(captured.routePoints).toEqual([]);
+  });
+
+  it('returns route points loaded from storage when present', async () => {
+    const mockRoutePoints = [
+      {
+        timestamp: 1700000000000,
+        latitude: 37.7749,
+        longitude: -122.4194,
+        altitude: 10,
+        accuracy: 5,
+      },
+      {
+        timestamp: 1700003600000,
+        latitude: 37.7849,
+        longitude: -122.4094,
+        altitude: 12,
+        accuracy: 4,
+      },
+    ];
+    const sessionWithRoute: PersistedSession = {
+      ...mockSession,
+      id: 'session-with-route',
+      routePoints: mockRoutePoints,
+    };
+    saveSession(sessionWithRoute);
+
+    const { getByText } = await render(<Probe id="session-with-route" />);
+
+    expect(getByText('session-with-route')).toBeTruthy();
+    expect(captured.routePoints).toEqual(mockRoutePoints);
   });
 
   it('returns null record and empty chart samples for an unknown id', async () => {
@@ -62,6 +94,7 @@ describe('useSessionDetail', () => {
     expect(getByText('none')).toBeTruthy();
     expect(captured.record).toBeNull();
     expect(captured.chartSamples).toEqual([]);
+    expect(captured.routePoints).toEqual([]);
   });
 
   it('returns null record for a null id without touching storage', async () => {
@@ -72,6 +105,7 @@ describe('useSessionDetail', () => {
     expect(getByText('none')).toBeTruthy();
     expect(captured.record).toBeNull();
     expect(captured.chartSamples).toEqual([]);
+    expect(captured.routePoints).toEqual([]);
   });
 
   it('deletes the session from storage on remove', async () => {
@@ -117,5 +151,41 @@ describe('useSessionDetail', () => {
       HR_CHART_MAX_POINTS * 2,
     );
     expect(captured.chartSamples.length).toBeGreaterThan(0);
+  });
+
+  it('useSimplifiedRoute returns GeoJSON coordinates for >= 2 points and empty for < 2', async () => {
+    let simplified: [number, number][] = [];
+    function RouteProbe({ points }: { points: RoutePoint[] }) {
+      simplified = useSimplifiedRoute(points);
+      return <Text>{String(simplified.length)}</Text>;
+    }
+
+    const { rerender } = await render(<RouteProbe points={[]} />);
+    expect(simplified).toEqual([]);
+
+    await rerender(
+      <RouteProbe
+        points={[
+          {
+            timestamp: 1700000000000,
+            latitude: 37.7749,
+            longitude: -122.4194,
+            altitude: 10,
+            accuracy: 5,
+          },
+          {
+            timestamp: 1700001000000,
+            latitude: 37.7849,
+            longitude: -122.4094,
+            altitude: 12,
+            accuracy: 4,
+          },
+        ]}
+      />,
+    );
+    expect(simplified).toEqual([
+      [-122.4194, 37.7749],
+      [-122.4094, 37.7849],
+    ]);
   });
 });
