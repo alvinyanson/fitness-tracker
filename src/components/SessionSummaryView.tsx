@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { AltitudeProfileChart } from '@/components/AltitudeProfileChart';
 import { HeaderBar } from '@/components/HeaderBar';
 import { HealthConnectSyncBadge } from '@/components/HealthConnectSyncBadge';
 import { HrTrendChart } from '@/components/HrTrendChart';
@@ -245,6 +246,9 @@ export function SessionSummaryView({
 
           {/* Route Map — renders nothing when routePoints < 2 */}
           <RouteMapView routePoints={routePoints} />
+
+          {/* Altitude Profile Chart — renders nothing when altitude data is missing or < 2 points */}
+          <AltitudeProfileChart routePoints={routePoints} />
 
           {/* HR Trend Chart — renders nothing when no sample is plottable */}
           <HrTrendChart

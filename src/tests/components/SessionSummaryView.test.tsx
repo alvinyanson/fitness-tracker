@@ -301,4 +301,75 @@ describe('SessionSummaryView', () => {
     expect(queryByText('ROUTE MAP')).toBeNull();
     expect(queryByTestId('route-map-view')).toBeNull();
   });
+
+  it('renders the altitude profile chart when route points contain altitude', async () => {
+    saveSession({
+      ...mockSession,
+      id: '2400000000000',
+      routePoints: [
+        {
+          timestamp: 1700000000000,
+          latitude: 37.7749,
+          longitude: -122.4194,
+          altitude: 10,
+          accuracy: 5,
+        },
+        {
+          timestamp: 1700001000000,
+          latitude: 37.7849,
+          longitude: -122.4094,
+          altitude: 18,
+          accuracy: 4,
+        },
+      ],
+    });
+
+    const { getByText, getByTestId } = await render(
+      <SessionSummaryView sessionId="2400000000000" />,
+    );
+
+    expect(getByText('ELEVATION PROFILE')).toBeTruthy();
+    expect(getByTestId('altitude-profile-card')).toBeTruthy();
+  });
+
+  it('omits altitude profile chart when route points lack altitude data', async () => {
+    saveSession({
+      ...mockSession,
+      id: '2500000000000',
+      routePoints: [
+        {
+          timestamp: 1700000000000,
+          latitude: 37.7749,
+          longitude: -122.4194,
+          altitude: null,
+          accuracy: 5,
+        },
+        {
+          timestamp: 1700001000000,
+          latitude: 37.7849,
+          longitude: -122.4094,
+          altitude: null,
+          accuracy: 4,
+        },
+      ],
+    });
+
+    const { queryByText, queryByTestId } = await render(
+      <SessionSummaryView sessionId="2500000000000" />,
+    );
+
+    expect(queryByText('ELEVATION PROFILE')).toBeNull();
+    expect(queryByTestId('altitude-profile-card')).toBeNull();
+  });
+
+  it('omits altitude profile chart when route points are empty', async () => {
+    saveSession(mockSession);
+
+    const { queryByText, queryByTestId } = await render(
+      <SessionSummaryView sessionId="1700000000000" />,
+    );
+
+    expect(queryByText('ELEVATION PROFILE')).toBeNull();
+    expect(queryByTestId('altitude-profile-card')).toBeNull();
+  });
 });
