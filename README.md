@@ -56,7 +56,7 @@ Scope is tracked in [`docs/specs.md`](./docs/specs.md), milestone by milestone.
 - **Step counting**: Read aggregated step data via Health Connect.
 - **Calorie estimation**: MET-based calculation with HR-adjusted correction.
 - **Weight tracking**: User weight profile and history chart synced with Health Connect.
-- **GPS-derived altitude profile**: Elevation line chart over distance reusing `LineChart`.
+- ✓ **GPS-derived altitude profile**: Elevation line chart over distance reusing `LineChart`.
 
 ## Tech Stack
 
